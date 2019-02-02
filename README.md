@@ -1,39 +1,33 @@
 # Rbc
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rbc`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'rbc'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install rbc
+```gem install rbc```
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+rbc -- Ruby Command Line Filter -- v0.0.1 -- https://github.com/keithrbennett/rbc
 
-## Development
+Takes standard input and runs the specified code on it, sending the result to standard output.
+Your Ruby code can operate on each line individually (-ms) (the default),
+or operate on the enumerator of all lines (-me). If the latter, you will probably need to
+call chomp on the lines yourself to remove the trailing newlines.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Options:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+-h, --help                       Print help and exit
+-m, --mode MODE                  Mode with which to handle input (-ms for string (default), -me for enumerator)
+-r, --require REQUIRES           Gems and built-in libraries (e.g. shellwords) to require, comma separated
+-v, --[no-]verbose               Verbose mode, writes to stderr
 
-## Contributing
+If there is an .rbcrc file in your home directory, it will be run as Ruby code before processing the input.
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rbc.
+If there is an RBC_OPTIONS environment variable, its content will be prepended to the command line
+so that you can specify options implicitly (e.g. `export RBC_OPTIONS="-r awesome_print,yaml"`)
 
+```
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

@@ -41,4 +41,8 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Examples
 
-* ls | exe/rbc "map { |s| s.reverse }.to_s"
+➜  rbc git:(master) ✗   ls | exe/rbc "map(&:reverse).to_s"
+["\nelifmeG", "\ntxt.ESNECIL", "\ndm.EMDAER", "\nelifekaR", "\nnib", "\nexe", "\nbil", "\ncepsmeg.cbr", "\nceps"]
+
+➜  rbc git:(master) ✗   uptime | exe/rbc -l split.first
+20:51

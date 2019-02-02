@@ -19,7 +19,7 @@ end
 
 
 load_global_config_if_exists
-single_line = ARGV.delete('-l')
+data_mode = ARGV.delete('-l') ? :single_line : :line_enumerator
 code = eval("Proc.new { #{ARGV.join(' ')} }")
-single_line ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)
+data_mode == :single_line ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)
 

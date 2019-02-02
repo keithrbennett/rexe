@@ -1,0 +1,3 @@
+module Rbc
+  VERSION = "0.1.0"
+end

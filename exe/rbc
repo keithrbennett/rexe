@@ -11,8 +11,8 @@ def load_global_config_if_exists
 end
 
 
-def execute(line, code)
-  puts line.instance_eval(&code)
+def execute(line_or_enumerator, code)
+  puts line_or_enumerator.instance_eval(&code)
 rescue Errno::EPIPE
   exit(-13)
 end
@@ -20,6 +20,7 @@ end
 
 load_global_config_if_exists
 data_mode = ARGV.delete('-l') ? :single_line : :line_enumerator
-code = eval("Proc.new { #{ARGV.join(' ')} }")
+source_code = "Proc.new { #{ARGV.join(' ')} }"
+code = eval(source_code)
 data_mode == :single_line ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)
 

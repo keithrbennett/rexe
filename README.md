@@ -8,6 +8,7 @@
 ## Usage
 
 ```
+
 rbc -- Ruby Command Line Filter -- v0.0.1 -- https://github.com/keithrbennett/rbc
 
 Takes standard input and runs the specified code on it, sending the result to standard output.
@@ -17,10 +18,10 @@ call chomp on the lines yourself to remove the trailing newlines.
 
 Options:
 
--h, --help                       Print help and exit
--m, --mode MODE                  Mode with which to handle input (-ms for string (default), -me for enumerator)
--r, --require REQUIRES           Gems and built-in libraries (e.g. shellwords) to require, comma separated
--v, --[no-]verbose               Verbose mode, writes to stderr
+-h, --help               Print help and exit
+-m, --mode MODE          Mode with which to handle input, (-ms for string (default), -me for enumerator)
+-r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
+-v, --[no-]verbose       Verbose mode, writes to stderr
 
 If there is an .rbcrc file in your home directory, it will be run as Ruby code before processing the input.
 

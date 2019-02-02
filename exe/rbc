@@ -14,7 +14,7 @@ end
 def execute(line, code)
   puts line.instance_eval(&code)
 rescue Errno::EPIPE
-  exit
+  exit(-13)
 end
 
 

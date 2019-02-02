@@ -5,22 +5,113 @@
 # Inspired by https://github.com/thisredone/rb
 #
 
-def load_global_config_if_exists
-  filespec = File.join(Dir.home, '.rbcrc')
-  load(filespec) if File.exists?(filespec)
+require 'optparse'
+require 'shellwords'
+
+
+VERSION = '0.0.1'
+
+class Rbc < Struct.new(:line_mode, :requires, :verbose)
+
+  def initialize
+    self.line_mode = :multiple
+    self.requires = []
+    self.verbose = false
+  end
+
+
+  def help_text
+    <<~HEREDOC
+      rbc -- Ruby Command Line Filter -- v#{VERSION}
+  
+      Takes standard input and runs the specified code on it, sending the result to standard output.
+  
+      Options:
+  
+      -s  --single_line                Process a single line
+      -1, --single_line                Process a single line
+      -m, --multiple_lines             Process multiple lines
+      -r, --require REQUIRES           Gems and modules to require, comma separated
+      -v, --[no-]verbose               Verbose mode, outputs to stderr
+    HEREDOC
+  end
+
+
+  def prepend_environment_options
+    env_opt_string = ENV['RBC_OPTIONS']
+    if env_opt_string
+      args_to_prepend = Shellwords.shellsplit(env_opt_string)
+      ARGV.unshift(args_to_prepend).flatten!
+    end
+  end
+
+
+  def parse_command_line
+    prepend_environment_options
+
+    OptionParser.new do |parser|
+
+      parser.on("-h", "--help", "Show help") do |_help_requested|
+        puts help_text
+        exit
+      end
+
+      %w(-s -1).each do |short_flag|
+        parser.on(short_flag, '--single_line', 'Process a single line') do |v|
+          self.line_mode = :single
+        end
+      end
+
+      parser.on('-m', '--multiple_lines', 'Process multiple lines') do |v|
+        self.line_mode = :multiple
+      end
+
+      parser.on('-r', '--require REQUIRES', 'Gems and modules to require, comma separated') do |v|
+        v.split(',').map(&:strip).each { |r| self.requires << r }
+      end
+
+      parser.on('-v', '--[no-]verbose', 'Verbose mode') do |v|
+        self.verbose = v
+      end
+    end.parse!
+  end
+
+
+  def load_global_config_if_exists
+    filespec = File.join(Dir.home, '.rbcrc')
+    exists = File.exists?(filespec)
+    load(filespec) if exists
+    exists ? filespec : nil
+  end
+
+
+  def execute(line_or_enumerator, code)
+    puts line_or_enumerator.instance_eval(&code)
+  rescue Errno::EPIPE
+    exit(-13)
+  end
+
+
+  def log_if_verbose(string)
+    STDERR.puts(string) if verbose
+  end
+
+
+  def call
+    parse_command_line
+
+    log_if_verbose("Requiring #{requires}") if requires.any?
+    requires.each { |r| require r }
+
+    filespec = load_global_config_if_exists
+    log_if_verbose("Loaded #{filespec}") if filespec
+
+    source_code = "Proc.new { #{ARGV.join(' ')} }"
+    log_if_verbose("Source code: #{source_code}")
+    code = eval(source_code)
+
+    line_mode == :single ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)
+  end
 end
 
-
-def execute(line_or_enumerator, code)
-  puts line_or_enumerator.instance_eval(&code)
-rescue Errno::EPIPE
-  exit(-13)
-end
-
-
-load_global_config_if_exists
-data_mode = ARGV.delete('-l') ? :single_line : :line_enumerator
-source_code = "Proc.new { #{ARGV.join(' ')} }"
-code = eval(source_code)
-data_mode == :single_line ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)
-
+Rbc.new.call

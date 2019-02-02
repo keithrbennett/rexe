@@ -41,8 +41,56 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Examples
 
+```
 ➜  rbc git:(master) ✗   ls | exe/rbc "map(&:reverse).to_s"
 ["\nelifmeG", "\ntxt.ESNECIL", "\ndm.EMDAER", "\nelifekaR", "\nnib", "\nexe", "\nbil", "\ncepsmeg.cbr", "\nceps"]
 
 ➜  rbc git:(master) ✗   uptime | exe/rbc -l split.first
 20:51
+
+
+➜  rbc git:(master) ✗   ls | exe/rbc -r json "to_a.to_json"
+["Gemfile\n","LICENSE.txt\n","README.md\n","Rakefile\n","bin\n","exe\n","lib\n","rbc.gemspec\n","spec\n"]
+
+
+➜  rbc git:(master) ✗   ls | exe/rbc -r yaml "map(&:chomp).to_a.to_yaml"
+---
+- Gemfile
+- LICENSE.txt
+- README.md
+- Rakefile
+- bin
+- exe
+- lib
+- rbc.gemspec
+- spec
+
+
+➜  rbc git:(master) ✗   export RBC_OPTIONS="-r yaml,awesome_print"
+
+➜  rbc git:(master) ✗   ls | exe/rbc "map(&:chomp).to_a.to_yaml"
+---
+- Gemfile
+- LICENSE.txt
+- README.md
+- Rakefile
+- bin
+- exe
+- lib
+- rbc.gemspec
+- spec
+
+➜  rbc git:(master) ✗   ls | exe/rbc "map(&:chomp).to_a.ai"
+[
+    [0] "Gemfile",
+    [1] "LICENSE.txt",
+    [2] "README.md",
+    [3] "Rakefile",
+    [4] "bin",
+    [5] "exe",
+    [6] "lib",
+    [7] "rbc.gemspec",
+    [8] "spec"
+]
+
+```

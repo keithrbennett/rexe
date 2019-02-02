@@ -11,8 +11,8 @@ def load_global_config_if_exists
 end
 
 
-def execute(_, code)
-  puts _.instance_eval(&code)
+def execute(line, code)
+  puts line.instance_eval(&code)
 rescue Errno::EPIPE
   exit
 end

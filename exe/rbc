@@ -5,7 +5,11 @@
 # Inspired by https://github.com/thisredone/rb
 #
 
-File.join(Dir.home, '.rbrc').tap { |f| load f if File.exists?(f) }
+def load_global_config_if_exists
+  filespec = File.join(Dir.home, '.rbcrc')
+  load(filespec) if File.exists?(filespec)
+end
+
 
 def execute(_, code)
   puts _.instance_eval(&code)
@@ -13,6 +17,8 @@ rescue Errno::EPIPE
   exit
 end
 
+
+load_global_config_if_exists
 single_line = ARGV.delete('-l')
 code = eval("Proc.new { #{ARGV.join(' ')} }")
 single_line ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)

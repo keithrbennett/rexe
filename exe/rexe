@@ -9,12 +9,12 @@ require 'optparse'
 require 'shellwords'
 
 # Rexe - Ruby Executor
-class Rexe < Struct.new(:line_mode, :loads, :requires, :verbose)
+class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
   VERSION = '0.0.2'
 
   def initialize
-    self.line_mode = :string
+    self.input_mode = :string
     self.loads = []
     self.requires = []
     self.verbose = false
@@ -39,6 +39,7 @@ class Rexe < Struct.new(:line_mode, :loads, :requires, :verbose)
                                -ms for each line to be handled separately as a string (default)
                                -me for an enumerator of lines (least memory consumption for big data)
                                -mb for 1 big string (all lines combined into single multiline string)
+                               -mn to execute the specified Ruby code on no input at all 
     -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
     -v, --[no-]verbose       Verbose mode, writes to stderr
 
@@ -76,17 +77,19 @@ class Rexe < Struct.new(:line_mode, :loads, :requires, :verbose)
 
       parser.on('-m', '--mode MODE',
                 'Mode with which to handle input (-ms for string (default), -me for enumerator)') do |v|
-        self.line_mode = case v
-                         when 's'
-                           self.line_mode = :string
-                         when 'e'
-                           self.line_mode = :enumerator
-                         when 'b'
-                           self.line_mode = :one_big_string
-                         else
-                           puts "Mode must be either 's' for string, 'e' for enumerator, or 'b' for 1 big string."
-                           exit -1
-                         end
+
+        modes = {
+            's' => :string,
+            'e' => :enumerator,
+            'b' => :one_big_string,
+            'n' => :no_input
+        }
+
+        self.input_mode = modes[v]
+        if self.input_mode.nil?
+          puts help_text
+          raise "Input mode must be one of #{modes.keys}."
+        end
       end
 
       parser.on('-r', '--require REQUIRES', 'Gems and modules to require, comma separated') do |v|
@@ -108,8 +111,12 @@ class Rexe < Struct.new(:line_mode, :loads, :requires, :verbose)
   end
 
 
-  def execute(line_or_enumerator, code)
-    puts line_or_enumerator.instance_eval(&code)
+  def execute(eval_context_object, code)
+    if eval_context_object
+      puts eval_context_object.instance_eval(&code)
+    else
+      puts code.call
+    end
   rescue Errno::EPIPE
     exit(-13)
   end
@@ -135,15 +142,16 @@ class Rexe < Struct.new(:line_mode, :loads, :requires, :verbose)
     log_if_verbose("Source code: #{source_code}")
     code = eval(source_code)
 
-    case line_mode
-    when :string
-      STDIN.each { |l| execute(l.chomp, code) }
-    when :enumerator
-      execute(STDIN.each_line, code)
-    when :one_big_string
-      big_string = STDIN.each_line.to_a.join
-      execute(big_string, code)
-    end
+
+    actions = {
+        string:         -> { STDIN.each { |l| execute(l.chomp, code) } },
+        enumerator:     -> { execute(STDIN.each_line, code) },
+        one_big_string: -> { big_string = STDIN.each_line.to_a.join; execute(big_string, code) },
+        no_input:       -> { execute(nil, code) }
+    }
+
+    actions[input_mode].()
+
   end
 end
 

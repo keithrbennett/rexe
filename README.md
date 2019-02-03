@@ -33,6 +33,7 @@ Options:
                            -ms for each line to be handled separately as a string (default)
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
+                           -mn to execute the specified Ruby code on no input at all
 -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
 -v, --[no-]verbose       Verbose mode, writes to stderr
 
@@ -103,4 +104,7 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 
 cat prod.yaml | exe/rexe -r awesome_print,yaml -mb "YAML.load(self).to_h.ai"
+
+rexe -mn -r awesome_print "ENV.to_h.ai"
+
 ```

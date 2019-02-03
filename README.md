@@ -18,7 +18,7 @@ chmod +x rexe
 
 ```
 
-rexe -- Ruby Command Line Filter -- v0.0.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Filter -- v0.0.2 -- https://github.com/keithrbennett/rexe
 
 Takes standard input and runs the specified code on it, sending the result to standard output.
 Your Ruby code can operate on each line individually (-ms) (the default),
@@ -28,7 +28,11 @@ call chomp on the lines yourself to remove the trailing newlines.
 Options:
 
 -h, --help               Print help and exit
--m, --mode MODE          Mode with which to handle input, (-ms for string (default), -me for enumerator)
+-l, --load               Load this Ruby source code file
+-m, --mode MODE          Mode with which to handle input (i.e. what `self` will be in the code):
+                           -ms for each line to be handled separately as a string (default)
+                           -me for an enumerator of lines (least memory consumption for big data)
+                           -mb for 1 big string (all lines combined into single multiline string)
 -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
 -v, --[no-]verbose       Verbose mode, writes to stderr
 
@@ -97,4 +101,6 @@ The gem is available as open source under the terms of the [MIT License](https:/
     [8] "spec"
 ]
 
+
+cat prod.yaml | exe/rexe -r awesome_print,yaml -mb "YAML.load(self).to_h.ai"
 ```

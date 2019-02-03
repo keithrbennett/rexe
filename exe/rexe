@@ -1,20 +1,21 @@
 #!/usr/bin/env ruby
 #
-# rexe - Ruby Command Line Filter
+# rexe - Ruby Command Line Executor Filter
 #
 # Inspired by https://github.com/thisredone/rb
-#
+
 
 require 'optparse'
 require 'shellwords'
 
-
-class Rexe < Struct.new(:line_mode, :requires, :verbose)
+# Rexe - Ruby Executor
+class Rexe < Struct.new(:line_mode, :loads, :requires, :verbose)
 
   VERSION = '0.0.2'
 
   def initialize
     self.line_mode = :string
+    self.loads = []
     self.requires = []
     self.verbose = false
   end
@@ -33,7 +34,11 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
     Options:
 
     -h, --help               Print help and exit
-    -m, --mode MODE          Mode with which to handle input, (-ms for string (default), -me for enumerator)
+    -l, --load               Load this Ruby source code file
+    -m, --mode MODE          Mode with which to handle input (i.e. what `self` will be in the code):
+                               -ms for each line to be handled separately as a string (default)
+                               -me for an enumerator of lines (least memory consumption for big data)
+                               -mb for 1 big string (all lines combined into single multiline string)
     -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
     -v, --[no-]verbose       Verbose mode, writes to stderr
 
@@ -65,6 +70,10 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
         exit
       end
 
+      parser.on('-l', '--load RUBY_FILE', 'Loads and runs this Ruby file') do |v|
+        self.loads << v
+      end
+
       parser.on('-m', '--mode MODE',
                 'Mode with which to handle input (-ms for string (default), -me for enumerator)') do |v|
         self.line_mode = case v
@@ -72,8 +81,10 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
                            self.line_mode = :string
                          when 'e'
                            self.line_mode = :enumerator
+                         when 'b'
+                           self.line_mode = :one_big_string
                          else
-                           puts "Mode must be either 's' for string or 'e' for enumerator"
+                           puts "Mode must be either 's' for string, 'e' for enumerator, or 'b' for 1 big string."
                            exit -1
                          end
       end
@@ -118,14 +129,27 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
     filespec = load_global_config_if_exists
     log_if_verbose("Loaded #{filespec}") if filespec
 
+    loads.each { |file| load(file) }
+
     source_code = "Proc.new { #{ARGV.join(' ')} }"
     log_if_verbose("Source code: #{source_code}")
     code = eval(source_code)
 
-    (line_mode == :string) ? STDIN.each { |l| execute(l.chomp, code) } : execute(STDIN.each_line, code)
+    case line_mode
+    when :string
+      STDIN.each { |l| execute(l.chomp, code) }
+    when :enumerator
+      execute(STDIN.each_line, code)
+    when :one_big_string
+      big_string = STDIN.each_line.to_a.join
+      execute(big_string, code)
+    end
   end
 end
 
-Rexe.new.call if File.basename($0) == File.basename(__FILE__)
+# This is needed because the gemspec file loads this file to access Rexe::VERSION
+# and must not have it run at that time:
+called_as_script = (File.basename($0) == File.basename(__FILE__))
+Rexe.new.call if called_as_script
 
 

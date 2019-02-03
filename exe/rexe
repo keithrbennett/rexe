@@ -9,9 +9,9 @@ require 'optparse'
 require 'shellwords'
 
 
-VERSION = '0.0.1'
-
 class Rexe < Struct.new(:line_mode, :requires, :verbose)
+
+  VERSION = '0.0.1'
 
   def initialize
     self.line_mode = :string
@@ -126,4 +126,5 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
   end
 end
 
-Rexe.new.call
+Rexe.new.call if $0 == __FILE__
+

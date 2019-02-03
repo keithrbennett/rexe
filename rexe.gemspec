@@ -1,7 +1,6 @@
-
-# lib = File.expand_path("../lib", __FILE__)
-# $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "rexe/version"
+lib = File.expand_path("../exe", __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+load File.expand_path(File.join(File.dirname(__FILE__), 'exe', 'rexe'))
 
 Gem::Specification.new do |spec|
   spec.name          = "rexe"

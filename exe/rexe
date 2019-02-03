@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 #
-# rbc - Ruby Command Line Filter
+# rexe - Ruby Command Line Filter
 #
 # Inspired by https://github.com/thisredone/rb
 #
@@ -11,7 +11,7 @@ require 'shellwords'
 
 VERSION = '0.0.1'
 
-class Rbc < Struct.new(:line_mode, :requires, :verbose)
+class Rexe < Struct.new(:line_mode, :requires, :verbose)
 
   def initialize
     self.line_mode = :string
@@ -23,7 +23,7 @@ class Rbc < Struct.new(:line_mode, :requires, :verbose)
   def help_text
     <<~HEREDOC
 
-    rbc -- Ruby Command Line Filter -- v#{VERSION} -- https://github.com/keithrbennett/rbc
+    rexe -- Ruby Command Line Filter -- v#{VERSION} -- https://github.com/keithrbennett/rexe
 
     Takes standard input and runs the specified code on it, sending the result to standard output.
     Your Ruby code can operate on each line individually (-ms) (the default),
@@ -37,17 +37,17 @@ class Rbc < Struct.new(:line_mode, :requires, :verbose)
     -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
     -v, --[no-]verbose       Verbose mode, writes to stderr
 
-    If there is an .rbcrc file in your home directory, it will be run as Ruby code before processing the input.
+    If there is an .rexerc file in your home directory, it will be run as Ruby code before processing the input.
 
-    If there is an RBC_OPTIONS environment variable, its content will be prepended to the command line
-    so that you can specify options implicitly (e.g. `export RBC_OPTIONS="-r awesome_print,yaml"`)
+    If there is an REXE_OPTIONS environment variable, its content will be prepended to the command line
+    so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
     HEREDOC
   end
 
 
   def prepend_environment_options
-    env_opt_string = ENV['RBC_OPTIONS']
+    env_opt_string = ENV['REXE_OPTIONS']
     if env_opt_string
       args_to_prepend = Shellwords.shellsplit(env_opt_string)
       ARGV.unshift(args_to_prepend).flatten!
@@ -90,7 +90,7 @@ class Rbc < Struct.new(:line_mode, :requires, :verbose)
 
 
   def load_global_config_if_exists
-    filespec = File.join(Dir.home, '.rbcrc')
+    filespec = File.join(Dir.home, '.rexerc')
     exists = File.exists?(filespec)
     load(filespec) if exists
     exists ? filespec : nil
@@ -126,4 +126,4 @@ class Rbc < Struct.new(:line_mode, :requires, :verbose)
   end
 end
 
-Rbc.new.call
+Rexe.new.call

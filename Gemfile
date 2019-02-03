@@ -1,4 +1,4 @@
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in rbc.gemspec
+# Specify your gem's dependencies in rexe.gemspec
 gemspec

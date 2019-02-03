@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "rbc"
+require "rexe"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

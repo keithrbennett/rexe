@@ -1,17 +1,17 @@
 
-lib = File.expand_path("../lib", __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "rbc/version"
+# lib = File.expand_path("../lib", __FILE__)
+# $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require "rexe/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "rbc"
-  spec.version       = Rbc::VERSION
+  spec.name          = "rexe"
+  spec.version       = Rexe::VERSION
   spec.authors       = ["Keith Bennett"]
   spec.email         = ["keithrbennett@gmail.com"]
 
   spec.summary       = %q{Ruby Command Line Executor}
   spec.description   = %q{Ruby Command Line Executor}
-  spec.homepage      = "https://github.com/keithrbennett/rbc"
+  spec.homepage      = "https://github.com/keithrbennett/rexe"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -20,8 +20,8 @@ Gem::Specification.new do |spec|
     spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
     spec.metadata["homepage_uri"] = spec.homepage
-    spec.metadata["source_code_uri"] = "https://github.com/keithrbennett/rbc"
-    spec.metadata["changelog_uri"] = "https://github.com/keithrbennett/rbc/blob/master/README.md"
+    spec.metadata["source_code_uri"] = "https://github.com/keithrbennett/rexe"
+    spec.metadata["changelog_uri"] = "https://github.com/keithrbennett/rexe/blob/master/README.md"
   else
     raise "RubyGems 2.0 or newer is required to protect against " \
       "public gem pushes."

@@ -1,6 +1,6 @@
-require "rbc/version"
+require "rexe/version"
 
-module Rbc
+module Rexe
   class Error < StandardError; end
   # Your code goes here...
 end

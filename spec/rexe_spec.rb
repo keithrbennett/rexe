@@ -1,6 +1,6 @@
-RSpec.describe Rbc do
+RSpec.describe Rexe do
   it "has a version number" do
-    expect(Rbc::VERSION).not_to be nil
+    expect(Rexe::VERSION).not_to be nil
   end
 
   it "does something useful" do

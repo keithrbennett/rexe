@@ -1,24 +1,24 @@
-# Rbc
+# Rexe
 
 
 ## Installation
 
 Installation can be performed by either installing the gem or copying the single executable file to your system and ensuring that it is executable:
 
-```gem install rbc```
+```gem install rexe```
 
 or
 
 ```
-curl https://raw.githubusercontent.com/keithrbennett/rbc/master/exe/rbc > rbc
-chmod +x rbc
+curl https://raw.githubusercontent.com/keithrbennett/rexe/master/exe/rexe > rexe
+chmod +x rexe
 ```
 
 ## Usage
 
 ```
 
-rbc -- Ruby Command Line Filter -- v0.0.1 -- https://github.com/keithrbennett/rbc
+rexe -- Ruby Command Line Filter -- v0.0.1 -- https://github.com/keithrbennett/rexe
 
 Takes standard input and runs the specified code on it, sending the result to standard output.
 Your Ruby code can operate on each line individually (-ms) (the default),
@@ -32,10 +32,10 @@ Options:
 -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
 -v, --[no-]verbose       Verbose mode, writes to stderr
 
-If there is an .rbcrc file in your home directory, it will be run as Ruby code before processing the input.
+If there is an .rexerc file in your home directory, it will be run as Ruby code before processing the input.
 
-If there is an RBC_OPTIONS environment variable, its content will be prepended to the command line
-so that you can specify options implicitly (e.g. `export RBC_OPTIONS="-r awesome_print,yaml"`)
+If there is an REXE_OPTIONS environment variable, its content will be prepended to the command line
+so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
 ```
 ## License
@@ -46,18 +46,18 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Examples
 
 ```
-➜  rbc git:(master) ✗   ls | exe/rbc "map(&:reverse).to_s"
+➜  rexe git:(master) ✗   ls | exe/rexe "map(&:reverse).to_s"
 ["\nelifmeG", "\ntxt.ESNECIL", "\ndm.EMDAER", "\nelifekaR", "\nnib", "\nexe", "\nbil", "\ncepsmeg.cbr", "\nceps"]
 
-➜  rbc git:(master) ✗   uptime | exe/rbc -l split.first
+➜  rexe git:(master) ✗   uptime | exe/rexe -l split.first
 20:51
 
 
-➜  rbc git:(master) ✗   ls | exe/rbc -r json "to_a.to_json"
-["Gemfile\n","LICENSE.txt\n","README.md\n","Rakefile\n","bin\n","exe\n","lib\n","rbc.gemspec\n","spec\n"]
+➜  rexe git:(master) ✗   ls | exe/rexe -r json "to_a.to_json"
+["Gemfile\n","LICENSE.txt\n","README.md\n","Rakefile\n","bin\n","exe\n","lib\n","rexe.gemspec\n","spec\n"]
 
 
-➜  rbc git:(master) ✗   ls | exe/rbc -r yaml "map(&:chomp).to_a.to_yaml"
+➜  rexe git:(master) ✗   ls | exe/rexe -r yaml "map(&:chomp).to_a.to_yaml"
 ---
 - Gemfile
 - LICENSE.txt
@@ -66,13 +66,13 @@ The gem is available as open source under the terms of the [MIT License](https:/
 - bin
 - exe
 - lib
-- rbc.gemspec
+- rexe.gemspec
 - spec
 
 
-➜  rbc git:(master) ✗   export RBC_OPTIONS="-r yaml,awesome_print"
+➜  rexe git:(master) ✗   export REXE_OPTIONS="-r yaml,awesome_print"
 
-➜  rbc git:(master) ✗   ls | exe/rbc "map(&:chomp).to_a.to_yaml"
+➜  rexe git:(master) ✗   ls | exe/rexe "map(&:chomp).to_a.to_yaml"
 ---
 - Gemfile
 - LICENSE.txt
@@ -81,10 +81,10 @@ The gem is available as open source under the terms of the [MIT License](https:/
 - bin
 - exe
 - lib
-- rbc.gemspec
+- rexe.gemspec
 - spec
 
-➜  rbc git:(master) ✗   ls | exe/rbc "map(&:chomp).to_a.ai"
+➜  rexe git:(master) ✗   ls | exe/rexe "map(&:chomp).to_a.ai"
 [
     [0] "Gemfile",
     [1] "LICENSE.txt",
@@ -93,7 +93,7 @@ The gem is available as open source under the terms of the [MIT License](https:/
     [4] "bin",
     [5] "exe",
     [6] "lib",
-    [7] "rbc.gemspec",
+    [7] "rexe.gemspec",
     [8] "spec"
 ]
 

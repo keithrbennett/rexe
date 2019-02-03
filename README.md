@@ -3,7 +3,16 @@
 
 ## Installation
 
+Installation can be performed by either installing the gem or copying the single executable file to your system and ensuring that it is executable:
+
 ```gem install rbc```
+
+or
+
+```
+curl https://raw.githubusercontent.com/keithrbennett/rbc/master/exe/rbc > rbc
+chmod +x rbc
+```
 
 ## Usage
 

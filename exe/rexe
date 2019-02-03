@@ -11,7 +11,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:line_mode, :requires, :verbose)
 
-  VERSION = '0.0.1'
+  VERSION = '0.0.2'
 
   def initialize
     self.line_mode = :string
@@ -126,5 +126,6 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
   end
 end
 
-Rexe.new.call if $0 == __FILE__
+Rexe.new.call if File.basename($0) == File.basename(__FILE__)
+
 

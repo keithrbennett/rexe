@@ -126,5 +126,6 @@ class Rexe < Struct.new(:line_mode, :requires, :verbose)
   end
 end
 
-Rexe.new.call if $0 == __FILE__
+Rexe.new.call if File.basename($0) == File.basename(__FILE__)
+
 

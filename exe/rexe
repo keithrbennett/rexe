@@ -129,6 +129,8 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
 
   def call
+    start_time = Time.now
+
     parse_command_line
 
     log_if_verbose("rexe version #{VERSION} -- #{Time.now}")
@@ -159,6 +161,8 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     actions[input_mode].()
 
+    duration = Time.now - start_time
+    log_if_verbose("rexe time elapsed: #{duration} seconds.")
   end
 end
 

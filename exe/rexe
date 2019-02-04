@@ -26,10 +26,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     rexe -- Ruby Command Line Filter -- v#{VERSION} -- https://github.com/keithrbennett/rexe
 
-    Takes standard input and runs the specified code on it, sending the result to standard output.
-    Your Ruby code can operate on each line individually (-ms) (the default),
-    or operate on the enumerator of all lines (-me). If the latter, you will probably need to
-    call chomp on the lines yourself to remove the trailing newlines.
+    Optionally takes standard input and runs the specified code on it, sending the result to standard output.
 
     Options:
 
@@ -129,6 +126,9 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
   def call
     parse_command_line
+
+    log_if_verbose("rexe version #{VERSION} -- #{Time.now}")
+    log_if_verbose($0 + ' ' + ARGV.join(' '))
 
     log_if_verbose("Requiring #{requires}") if requires.any?
     requires.each { |r| require r }

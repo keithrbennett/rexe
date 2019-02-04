@@ -19,9 +19,34 @@ chmod +x rexe
 
 ## Usage
 
+
+rexe is a _filter_ in that it can consume standard input and emit standard output; but it is also an _executor_, meaning it can be used without either standard input or output.
+
+### Input Mode
+
+When it is used as a filter, the input is accessed differently in the source code depending on the mode that was specified (see example section below for examples). The mode letter is appended to `-m` on the command line; `s` (_string_) mode is the default.
+
+* `s` - _string_ mode - the source code is run once on each line of input, and `self` is each line of text
+* `e` - _enumerator_ mode - the code is run once on the enumerator of all lines; `self` is the enumerator, so you can call `map`, `to_a`, `select`, etc without explicitly specifying `self`.
+* `b` - _big string_ mode - all input is treated as one large (probably) multiline string with the newlines intact; `self` is this large string; this mode is required, for example, for parsing the text into a single object from JSON or YAML formatted data.
+* `n` - _no input_ mode - this instructs the program to proceed without looking for input
+
+
+### Verbose Mode
+
+Verbose mode outputs information to standard error (stderr). This information can be redirected, for example to a file named `rexe.log`, by adding `2>& rexe.log` to the command line.
+
+Here is an example of some text that might be output in verbose mode:
+
+```
+Requiring ["awesome_print"]
+Loaded /Users/kbennett/.rexerc
+Source code: Proc.new { sort.to_a.ai }
 ```
 
 
+
+```
 rexe -- Ruby Command Line Filter -- v1.1.0 -- https://github.com/keithrbennett/rexe
 
 Takes standard input and runs the specified code on it, sending the result to standard output.
@@ -45,8 +70,16 @@ If there is an .rexerc file in your home directory, it will be run as Ruby code 
 
 If there is an REXE_OPTIONS environment variable, its content will be prepended to the command line
 so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
-
 ```
+
+### Troubleshooting
+
+One common problem relates to the shell's special handling of characters. Remember that the shell will process special characters, thereby changing your text before passing it on to the Ruby code. It is good to get in the habit of putting your source code in double quotes; and if the source code itself uses quotes, use `q{}` or `Q{}` instead. For example:
+
+```➜   rexe -mn "puts %Q{The time is now #{Time.now}}"
+The time is now 2019-02-04 18:49:31 +0700
+```
+
 
 
 ## License

@@ -1,5 +1,8 @@
 # Rexe
 
+A configurable Ruby command line filter/executor.
+
+
 
 ## Installation
 
@@ -18,19 +21,23 @@ chmod +x rexe
 
 ```
 
-rexe -- Ruby Command Line Filter -- v0.0.2 -- https://github.com/keithrbennett/rexe
+
+rexe -- Ruby Command Line Filter -- v1.1.0 -- https://github.com/keithrbennett/rexe
 
 Takes standard input and runs the specified code on it, sending the result to standard output.
+Your Ruby code can operate on each line individually (-ms) (the default),
+or operate on the enumerator of all lines (-me). If the latter, you will probably need to
+call chomp on the lines yourself to remove the trailing newlines.
 
 Options:
 
 -h, --help               Print help and exit
--l, --load A_RUBY_FILE              Load this Ruby source code file
+-l, --load A_RUBY_FILE   Load this Ruby source code file
 -m, --mode MODE          Mode with which to handle input (i.e. what `self` will be in the code):
                            -ms for each line to be handled separately as a string (default)
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
-                           -mn to execute the specified Ruby code on no input at all
+                           -mn to execute the specified Ruby code on no input at all 
 -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
 -v, --[no-]verbose       Verbose mode, writes to stderr
 
@@ -40,6 +47,8 @@ If there is an REXE_OPTIONS environment variable, its content will be prepended 
 so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
 ```
+
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
@@ -120,6 +129,8 @@ Traceback (most recent call last):
 # Contents of this variable will be prepended to the arguments
 # specified on the command line.
 ➜  /etc   export REXE_OPTIONS="-r json,yaml,awesome_print"
+
+# Now that command that previously failed will succeed:
 ➜  /etc   rexe -mn "[JSON, YAML, AwesomePrint].to_s"
 [JSON, Psych, AwesomePrint]
 

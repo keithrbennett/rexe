@@ -40,7 +40,8 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
     -v, --[no-]verbose       Verbose mode, writes to stderr
 
-    If there is an .rexerc file in your home directory, it will be run as Ruby code before processing the input.
+    If there is an .rexerc file in your home directory, it will be run as Ruby code 
+    before processing the input.
 
     If there is an REXE_OPTIONS environment variable, its content will be prepended to the command line
     so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
@@ -103,7 +104,10 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
   def load_global_config_if_exists
     filespec = File.join(Dir.home, '.rexerc')
     exists = File.exists?(filespec)
-    load(filespec) if exists
+    if exists
+      log_if_verbose("Loading global config file #{filespec}")
+      load(filespec)
+    end
     exists ? filespec : nil
   end
 
@@ -128,18 +132,21 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     parse_command_line
 
     log_if_verbose("rexe version #{VERSION} -- #{Time.now}")
-    log_if_verbose($0 + ' ' + ARGV.join(' '))
+    log_if_verbose('Source Code: ' + ARGV.join(' '))
 
-    log_if_verbose("Requiring #{requires}") if requires.any?
-    requires.each { |r| require r }
+    requires.each do |r|
+      log_if_verbose("Requiring #{r}")
+      require(r)
+    end
 
-    filespec = load_global_config_if_exists
-    log_if_verbose("Loaded #{filespec}") if filespec
+    load_global_config_if_exists
 
-    loads.each { |file| load(file) }
+    loads.each do |file|
+      log_if_verbose("Loading #{file}")
+      load(file)
+    end
 
     source_code = "Proc.new { #{ARGV.join(' ')} }"
-    log_if_verbose("Source code: #{source_code}")
     code = eval(source_code)
 
 

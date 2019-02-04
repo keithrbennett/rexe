@@ -21,14 +21,11 @@ chmod +x rexe
 rexe -- Ruby Command Line Filter -- v0.0.2 -- https://github.com/keithrbennett/rexe
 
 Takes standard input and runs the specified code on it, sending the result to standard output.
-Your Ruby code can operate on each line individually (-ms) (the default),
-or operate on the enumerator of all lines (-me). If the latter, you will probably need to
-call chomp on the lines yourself to remove the trailing newlines.
 
 Options:
 
 -h, --help               Print help and exit
--l, --load               Load this Ruby source code file
+-l, --load A_RUBY_FILE              Load this Ruby source code file
 -m, --mode MODE          Mode with which to handle input (i.e. what `self` will be in the code):
                            -ms for each line to be handled separately as a string (default)
                            -me for an enumerator of lines (least memory consumption for big data)
@@ -51,60 +48,101 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Examples
 
 ```
-➜  rexe git:(master) ✗   ls | exe/rexe "map(&:reverse).to_s"
-["\nelifmeG", "\ntxt.ESNECIL", "\ndm.EMDAER", "\nelifekaR", "\nnib", "\nexe", "\nbil", "\ncepsmeg.cbr", "\nceps"]
+# Call reverse on listed file.
+# No need to specify the mode, since it defaults to "s" ("-ms"),
+# which treats every line separately.
+➜  rexe git:(master) ✗   ls | head -2 | exe/rexe "self + ' --> ' + reverse"
+CHANGELOG.md --> dm.GOLEGNAHC
+Gemfile --> elifmeG
 
-➜  rexe git:(master) ✗   uptime | exe/rexe -l split.first
-20:51
+----
 
+# Use input data to create a human friendly message:
+➜  ~   uptime | rexe "%Q{System has been up: #{split.first}.}"
+System has been up: 17:10.
 
-➜  rexe git:(master) ✗   ls | exe/rexe -r json "to_a.to_json"
-["Gemfile\n","LICENSE.txt\n","README.md\n","Rakefile\n","bin\n","exe\n","lib\n","rexe.gemspec\n","spec\n"]
+----
 
+# Create a JSON array of a file listing.
+# Use the "-me" flag so that all input is treated as a single enumerator of lines.
+➜  /etc   ls | head -3 | rexe -me -r json "map(&:strip).to_a.to_json"
+["AFP.conf","afpovertcp.cfg","afpovertcp.cfg~orig"]
 
-➜  rexe git:(master) ✗   ls | exe/rexe -r yaml "map(&:chomp).to_a.to_yaml"
----
-- Gemfile
-- LICENSE.txt
-- README.md
-- Rakefile
-- bin
-- exe
-- lib
-- rexe.gemspec
-- spec
+----
 
-
-➜  rexe git:(master) ✗   export REXE_OPTIONS="-r yaml,awesome_print"
-
-➜  rexe git:(master) ✗   ls | exe/rexe "map(&:chomp).to_a.to_yaml"
----
-- Gemfile
-- LICENSE.txt
-- README.md
-- Rakefile
-- bin
-- exe
-- lib
-- rexe.gemspec
-- spec
-
-➜  rexe git:(master) ✗   ls | exe/rexe "map(&:chomp).to_a.ai"
+# Create a "pretty" JSON array of a file listing:
+➜  /etc   ls | head -3 | rexe -me -r json "JSON.pretty_generate(map(&:strip).to_a)"
 [
-    [0] "Gemfile",
-    [1] "LICENSE.txt",
-    [2] "README.md",
-    [3] "Rakefile",
-    [4] "bin",
-    [5] "exe",
-    [6] "lib",
-    [7] "rexe.gemspec",
-    [8] "spec"
+  "AFP.conf",
+  "afpovertcp.cfg",
+  "afpovertcp.cfg~orig"
 ]
 
+----
 
-cat prod.yaml | exe/rexe -r awesome_print,yaml -mb "YAML.load(self).to_h.ai"
+# Create a YAML array of a file listing:
+➜  /etc   ls | head -3 | rexe -me -r yaml "map(&:strip).to_a.to_yaml"
+---
+- AFP.conf
+- afpovertcp.cfg
+- afpovertcp.cfg~orig
 
-rexe -mn -r awesome_print "ENV.to_h.ai"
+----
 
+# Use AwesomePrint to print a file listing.
+# (Rather than calling the `ap` method on the object to print, 
+# call the `ai` method _on_ the object to print:
+➜  /etc   ls | head -3 | rexe -me -r awesome_print "map(&:chomp).ai"
+[
+    [0] "AFP.conf",
+    [1] "afpovertcp.cfg",
+    [2] "afpovertcp.cfg~orig"
+]
+
+----
+
+# Don't use input at all, so use "-mn" to tell rexe not to expect input.
+➜  /etc   rexe -mn "%Q{The time is now #{Time.now}}"
+The time is now 2019-02-04 17:20:03 +0700
+
+----
+
+# Use REXE_OPTIONS environment variable to eliminate the need to specify
+# options on each invocation:
+
+# First it will fail since these symbols have not been loaded via require:
+➜  /etc   rexe -mn "[JSON, YAML, AwesomePrint]"
+Traceback (most recent call last):
+...
+(eval):1:in `block in call': uninitialized constant Rexe::JSON (NameError)
+
+# Now we specify the requires in the REXE_OPTIONS environment variable.
+# Contents of this variable will be prepended to the arguments
+# specified on the command line.
+➜  /etc   export REXE_OPTIONS="-r json,yaml,awesome_print"
+➜  /etc   rexe -mn "[JSON, YAML, AwesomePrint].to_s"
+[JSON, Psych, AwesomePrint]
+
+----
+
+Access public JSON data and print it with awesome_print:
+
+➜  /etc   curl https://data.lacity.org/api/views/nxs9-385f/rows.json\?accessType\=DOWNLOAD \
+ | rexe -mb -r awesome_print,json "JSON.parse(self).ai"
+ {
+     "meta" => {
+         "view" => {
+                                   "id" => "nxs9-385f",
+                                 "name" => "2010 Census Populations by Zip Code",
+...
+
+----
+
+# Print the environment variables, sorted, with Awesome Print:
+➜  /etc   env | rexe -me -r awesome_print sort.to_a.ai
+[
+...
+    [ 4] "COLORFGBG=15;0\n",
+    [ 5] "COLORTERM=truecolor\n",
+...    
 ```

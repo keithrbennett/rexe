@@ -1,6 +1,10 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.2.0
+
+* Improve README and verbose logging.
+
 ### v0.1.0
 
 * Add ability to handle input as a single multiline string (using -mb option).

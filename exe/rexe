@@ -62,6 +62,10 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
   def parse_command_line
     prepend_environment_options
 
+    add_comma_sep_tokens_to_array = ->(string, array) do
+      string.split(',').map(&:strip).each { |r| array << r }
+    end
+
     OptionParser.new do |parser|
 
       parser.on("-h", "--help", "Show help") do |_help_requested|
@@ -69,8 +73,8 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         exit
       end
 
-      parser.on('-l', '--load RUBY_FILE', 'Loads and runs this Ruby file') do |v|
-        self.loads << v
+      parser.on('-l', '--load RUBY_FILE(S)', 'Ruby file(s) to load, comma separated') do |v|
+        add_comma_sep_tokens_to_array.(v, self.loads)
       end
 
       parser.on('-m', '--mode MODE',
@@ -91,7 +95,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
       end
 
       parser.on('-r', '--require REQUIRES', 'Gems and modules to require, comma separated') do |v|
-        v.split(',').map(&:strip).each { |r| self.requires << r }
+        add_comma_sep_tokens_to_array.(v, self.requires)
       end
 
       parser.on('-v', '--[no-]verbose', 'Verbose mode') do |v|
@@ -135,22 +139,22 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     log_if_verbose("rexe version #{VERSION} -- #{Time.now}")
     log_if_verbose('Source Code: ' + ARGV.join(' '))
+    log_if_verbose('Options: ' + self.to_h.to_s)
 
     requires.each do |r|
-      log_if_verbose("Requiring #{r}")
       require(r)
     end
 
     load_global_config_if_exists
 
     loads.each do |file|
-      log_if_verbose("Loading #{file}")
+      puts '^'
       load(file)
+      puts 'v'
     end
 
     source_code = "Proc.new { #{ARGV.join(' ')} }"
     code = eval(source_code)
-
 
     actions = {
         string:         -> { STDIN.each { |l| execute(l.chomp, code) } },
@@ -170,5 +174,3 @@ end
 # and must not have it run at that time:
 called_as_script = (File.basename($0) == File.basename(__FILE__))
 Rexe.new.call if called_as_script
-
-

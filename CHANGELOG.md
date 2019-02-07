@@ -1,6 +1,12 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.3.0
+
+* For consistency with requires, specifying multiple load files on the command line can be done
+  with comma separated filespecs.
+
+
 ### v0.2.0
 
 * Improve README and verbose logging.

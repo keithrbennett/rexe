@@ -11,7 +11,7 @@ require 'shellwords'
 # Rexe - Ruby Executor
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
-  VERSION = '0.2.0'
+  VERSION = '0.3.0'
 
   def initialize
     self.input_mode = :string
@@ -148,9 +148,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     load_global_config_if_exists
 
     loads.each do |file|
-      puts '^'
       load(file)
-      puts 'v'
     end
 
     source_code = "Proc.new { #{ARGV.join(' ')} }"

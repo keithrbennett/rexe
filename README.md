@@ -81,10 +81,16 @@ Verbose mode outputs information to standard error (stderr). This information ca
 Here is an example of some text that might be output in verbose mode:
 
 ```
-rexe version 1.1.0 -- 2019-02-04 21:50:34 +0700
-Source Code: sort.to_a.first(3).ai
-Requiring awesome_print
+➜  ~   rexe -r yaml -mn -v "%w(foo bar baz).to_yaml"
+rexe version 0.3.0 -- 2019-02-08 02:21:27 +0700
+Source Code: %w(foo bar baz).to_yaml
+Options: {:input_mode=>:no_input, :loads=>[], :requires=>["yaml"], :verbose=>true}
 Loading global config file /Users/kbennett/.rexerc
+---
+- foo
+- bar
+- baz
+rexe time elapsed: 0.03874 seconds.
 ```
 
 ### The REXE_OPTIONS Environment Variable

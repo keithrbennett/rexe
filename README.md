@@ -98,6 +98,25 @@ rexe time elapsed: 0.03874 seconds.
 Very often you will want to call `rexe` several times with similar options. Instead of having to clutter the command line each time with these options, you can put them in an environment variable named `REXE_OPTIONS`, and they will be prepended automatically. Since they will be processed before the options on the command line, they are of lower precedence and can be overridden.
 
 
+### The ~/.rexerc Configuation File
+
+The `.rexerc` file in your home directory (if it exists) is loaded unconditionally. Here is a place to put things that you will _always_ want. You can include commonly needed requires, but be careful because the impact on startup time may be more than you want. You can test this using verbose mode, which outputs the execution time after completing.
+
+
+### Directory-Specific Configuration Files
+
+Although there is no built-in feature for directory-specific configuration files, this can be easily accomplished by inserting something like this in your global configuration file (~/.rexerc):
+
+```
+dir_specific_config_file = './rexe.rc'
+load dir_specific_config_file' if File.exist?(dir_specific_config_file)
+```
+ 
+You should probably put this at the very end of this global configuration file so that the directory specific file will always be able to override global settings.
+
+Note that the directory specific filename used differs from the global config filename. This is a) so that there is no recursive loading of the file when in the home directory, and b) because it is more convenient for these files that they not be hidden.
+
+
 ## Troubleshooting
 
 One common problem relates to the shell's special handling of characters. Remember that the shell will process special characters, thereby changing your text before passing it on to the Ruby code. It is good to get in the habit of putting your source code in double quotes; and if the source code itself uses quotes, use `q{}` or `Q{}` instead. For example:

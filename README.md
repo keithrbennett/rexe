@@ -26,30 +26,27 @@ rexe is a _filter_ in that it can consume standard input and emit standard outpu
 As a summary, here is the help text printed out by the application:
 
 ```
-
-
-rexe -- Ruby Command Line Filter -- v1.1.0 -- https://github.com/keithrbennett/rexe
+exe -- Ruby Command Line Filter -- v0.3.1 -- https://github.com/keithrbennett/rexe
 
 Optionally takes standard input and runs the specified code on it, sending the result to standard output.
 
 Options:
 
 -h, --help               Print help and exit
--l, --load A_RUBY_FILE   Load this Ruby source code file
+-l, --load RUBY_FILE(S)  Ruby file(s) to load, comma separated
 -m, --mode MODE          Mode with which to handle input (i.e. what `self` will be in the code):
                            -ms for each line to be handled separately as a string (default)
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
-                           -mn to execute the specified Ruby code on no input at all 
+                           -mn to execute the specified Ruby code on no input at all
 -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
--v, --[no-]verbose       Verbose mode, writes to stderr
+-v, --[no-]verbose       Verbose mode (logs to stderr) Verbose off short options: -v n, -v false
 
-If there is an .rexerc file in your home directory, it will be run as Ruby code 
+If there is an .rexerc file in your home directory, it will be run as Ruby code
 before processing the input.
 
 If there is an REXE_OPTIONS environment variable, its content will be prepended to the command line
 so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
-
 ```
 
 ### Input Mode
@@ -92,6 +89,8 @@ Loading global config file /Users/kbennett/.rexerc
 - baz
 rexe time elapsed: 0.03874 seconds.
 ```
+
+To set verbose mode _off_ on the command line, the option parser accepts the long option `--no-verbose`, of course, but you could use instead `-v false` or `-v n`. If you should need to pass a value to `-v` to turn verbose mode _on_, then you can use `-v y` or `-v true`. 
 
 ### The REXE_OPTIONS Environment Variable
 

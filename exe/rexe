@@ -38,7 +38,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
                                -mb for 1 big string (all lines combined into single multiline string)
                                -mn to execute the specified Ruby code on no input at all 
     -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
-    -v, --[no-]verbose       Verbose mode (logs to stderr)
+    -v, --[no-]verbose       Verbose mode (logs to stderr) Verbose off short options: -v n, -v false
 
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
     before processing the input.
@@ -99,8 +99,12 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         add_comma_sep_tokens_to_array.(v, self.requires)
       end
 
-      parser.on('-v', '--[no-]verbose', 'Verbose mode (logs to stderr)') do |v|
-        self.verbose = v
+      # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
+      # for an excellent explanation of this optparse incantation.
+      # According to the answer, valid options are:
+      # -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -.
+      parser.on('-v', '--[no-]verbose [FLAG]', TrueClass, 'Verbose mode (logs to stderr)') do |v|
+        self.verbose = (v.nil? ? true : v)
       end
     end.parse!
   end

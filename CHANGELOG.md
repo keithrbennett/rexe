@@ -1,6 +1,13 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.4.0
+
+* Add -u option for loading files at current directory or above.
+* Fix command line option handling for disabling verbose mode previously enabled.
+* Improve README.
+
+
 ### v0.3.1
 
 * Help text fixes.

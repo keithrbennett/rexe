@@ -32,9 +32,10 @@ Optionally takes standard input and runs the specified code on it, sending the r
 
 Options:
 
--h, --help               Print help and exit
--l, --load RUBY_FILE(S)  Ruby file(s) to load, comma separated
--m, --mode MODE          Mode with which to handle input (i.e. what `self` will be in the code):
+-h, --help                  Print help and exit
+-l, --load RUBY_FILE(S)     Ruby file(s) to load, comma separated
+-u, --load-up RUBY_FILE(S)  Ruby file(s) to load, searching up tree, comma separated
+-m, --mode MODE             Mode with which to handle input (i.e. what `self` will be in the code):
                            -ms for each line to be handled separately as a string (default)
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
@@ -70,6 +71,13 @@ Other Ruby files can be loaded by `rexe`, to, for example, define classes and me
 
 If there is a file named `.rexerc` in the home directory, that will always be loaded without explicitly requesting it on the command line.
 
+#### Searching for Load Files in the Current Directory and Above
+
+Using the `-u` option, you can specify that the file you want to load should be searched for at the specified directory _and above_. This can be handy when you have project specific configuration and you may be multiple levels below the project root.
+
+For example, if you run `rexe` from `~/my_project/a/b/c`, and specify `-u load-me.rb`, and `load-me.rb` is located in `~/my_project`, then it will be loaded from there.
+
+If the file is not found, the failure will be silent and the program will proceed. (Preferred behavior could go either way on this, but the current approach enables you to unconditionally specify a `-u` file in your default `REXE_OPTIONS` environment variable value and have it work regardless of the presence or absence of the file.) If verbose mode is enabled, a message about the failure to find the file will be displayed.
 
 ### Verbose Mode
 

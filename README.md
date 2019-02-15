@@ -26,7 +26,7 @@ rexe is a _filter_ in that it can consume standard input and emit standard outpu
 As a summary, here is the help text printed out by the application:
 
 ```
-exe -- Ruby Command Line Filter -- v0.3.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Filter -- v0.4.1 -- https://github.com/keithrbennett/rexe
 
 Optionally takes standard input and runs the specified code on it, sending the result to standard output.
 

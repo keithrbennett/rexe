@@ -10,7 +10,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
-  VERSION = '0.4.0'
+  VERSION = '0.4.1'
 
   def initialize
     self.input_mode = :string
@@ -104,7 +104,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
       parser.on('-r', '--require REQUIRE(S)',
                 'Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated') do |v|
-        add_comma_sep_tokens_to_array.(v, self.requires)
+        v.split(',').map(&:strip).each { |r| self.requires << r }
       end
 
       # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option

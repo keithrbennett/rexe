@@ -1,6 +1,11 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.4.1
+
+* Fix -r (require) bug.
+
+
 ### v0.4.0
 
 * Add -u option for loading files at current directory or above.

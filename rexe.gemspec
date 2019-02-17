@@ -1,10 +1,13 @@
-# lib = File.expand_path("../exe", __FILE__)
-# $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-load File.expand_path(File.join(File.dirname(__FILE__), 'exe', 'rexe'))
 
 Gem::Specification.new do |spec|
   spec.name          = "rexe"
-  spec.version       = Rexe::VERSION
+
+  spec.version       = -> do
+    rexe_file = File.join(File.dirname(__FILE__), 'exe', 'rexe')
+    version_line = File.readlines(rexe_file).grep(/\s*VERSION\s*=\s*'/).first.chomp
+    version_line.match(/'(.+)'/)[0].gsub("'", '')
+  end.()
+
   spec.authors       = ["Keith Bennett"]
   spec.email         = ["keithrbennett@gmail.com"]
 

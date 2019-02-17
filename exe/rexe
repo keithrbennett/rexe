@@ -7,7 +7,6 @@
 require 'optparse'
 require 'shellwords'
 
-
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
   VERSION = '0.4.1'
@@ -23,7 +22,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
   def help_text
     <<~HEREDOC
 
-    rexe -- Ruby Command Line Filter -- v#{VERSION} -- https://github.com/keithrbennett/rexe
+    rexe -- Ruby Command Line Filter/Executor -- v#{VERSION} -- https://github.com/keithrbennett/rexe
 
     Optionally takes standard input and runs the specified code on it, sending the result to standard output.
 
@@ -113,6 +112,12 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
       # -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -.
       parser.on('-v', '--[no-]verbose [FLAG]', TrueClass, 'Verbose mode (logs to stderr)') do |v|
         self.verbose = (v.nil? ? true : v)
+      end
+
+
+      parser.on('', '--version', 'Print version') do
+        puts VERSION
+        exit
       end
     end.parse!
   end

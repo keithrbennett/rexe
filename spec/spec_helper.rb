@@ -1,5 +1,6 @@
 require "bundler/setup"
-require "rexe"
+
+REXE_FILE = File.join(File.dirname(__FILE__), '..', 'exe', 'rexe')
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

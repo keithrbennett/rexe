@@ -153,7 +153,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     if eval_context_object
       puts eval_context_object.instance_eval(&code)
     else
-      puts code.call
+      code.call
     end
   rescue Errno::EPIPE
     exit(-13)

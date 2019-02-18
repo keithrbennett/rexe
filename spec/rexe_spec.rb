@@ -32,7 +32,7 @@ RSpec.describe 'rexe' do
   end
 
   specify 'in no input mode (-mn), code is executed without input' do
-    expect(`#{REXE_FILE} -mn "64.to_s(8)"`.chomp).to eq('100')
+    expect(`#{REXE_FILE} -mn "puts(64.to_s(8))"`.chomp).to eq('100')
   end
 
   specify '-v option enables verbose mode' do
@@ -43,6 +43,8 @@ RSpec.describe 'rexe' do
     expect(`#{REXE_FILE} -v n -mn 3 2>&1`).not_to include('rexe version')
   end
 
-
+  specify '-mn option does not output anything not explicitly output' do
+    expect(`#{REXE_FILE} -mn 42`.chomp).to eq('')
+  end
 
 end

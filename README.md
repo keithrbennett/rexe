@@ -26,21 +26,21 @@ rexe is a _filter_ in that it can consume standard input and emit standard outpu
 As a summary, here is the help text printed out by the application:
 
 ```
-rexe -- Ruby Command Line Filter -- v0.4.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Filter/Executor -- v0.5.0 -- https://github.com/keithrbennett/rexe
 
-Optionally takes standard input and runs the specified code on it, sending the result to standard output.
+Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
 Options:
 
 -h, --help                  Print help and exit
--l, --load RUBY_FILE(S)     Ruby file(s) to load, comma separated
--u, --load-up RUBY_FILE(S)  Ruby file(s) to load, searching up tree, comma separated
+-l, --load RUBY_FILE(S)     Ruby file(s) to load, comma separated, or ! to clear
+-u, --load-up RUBY_FILE(S)  Ruby file(s) to load, searching up tree, comma separated, or ! to clear
 -m, --mode MODE             Mode with which to handle input (i.e. what `self` will be in the code):
                            -ms for each line to be handled separately as a string (default)
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
                            -mn to execute the specified Ruby code on no input at all
--r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
+-r, --require REQUIRES   Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose       Verbose mode (logs to stderr) Verbose off short options: -v n, -v false
 
 If there is an .rexerc file in your home directory, it will be run as Ruby code

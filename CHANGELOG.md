@@ -1,6 +1,13 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.5.0
+
+* Add '!' to require and load command options to clear respective file lists.
+* In 'no input' mode (-mn), fix so that only output explicitly sent to stdout is output (unlike other modes).
+* Gemspec now parses version from text instead of loading the script.
+* Add tests.
+
 ### v0.4.1
 
 * Fix -r (require) bug.

@@ -9,7 +9,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
-  VERSION = '0.4.1'
+  VERSION = '0.5.0'
 
   def initialize
     self.input_mode = :string
@@ -24,7 +24,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     rexe -- Ruby Command Line Filter/Executor -- v#{VERSION} -- https://github.com/keithrbennett/rexe
 
-    Optionally takes standard input and runs the specified code on it, sending the result to standard output.
+    Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
     Options:
 

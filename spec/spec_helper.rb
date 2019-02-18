@@ -2,6 +2,9 @@ require "bundler/setup"
 
 REXE_FILE = File.join(File.dirname(__FILE__), '..', 'exe', 'rexe')
 
+# Use this so that testing rexe with requires not in the bundle will load successfully:
+RUN = ->(command) { ENV['REXE_OPTIONS'] = ''; Bundler.with_clean_env { `#{command}` } }
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

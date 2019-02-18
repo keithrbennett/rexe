@@ -29,14 +29,14 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     Options:
 
     -h, --help                  Print help and exit
-    -l, --load RUBY_FILE(S)     Ruby file(s) to load, comma separated
-    -u, --load-up RUBY_FILE(S)  Ruby file(s) to load, searching up tree, comma separated
+    -l, --load RUBY_FILE(S)     Ruby file(s) to load, comma separated, or ! to clear
+    -u, --load-up RUBY_FILE(S)  Ruby file(s) to load, searching up tree, comma separated, or ! to clear
     -m, --mode MODE             Mode with which to handle input (i.e. what `self` will be in the code):
                                -ms for each line to be handled separately as a string (default)
                                -me for an enumerator of lines (least memory consumption for big data)
                                -mb for 1 big string (all lines combined into single multiline string)
                                -mn to execute the specified Ruby code on no input at all 
-    -r, --require REQUIRES   Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated
+    -r, --require REQUIRES   Gems and built-in libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose       Verbose mode (logs to stderr) Verbose off short options: -v n, -v false
 
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
@@ -68,18 +68,26 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         exit
       end
 
-      parser.on('-l', '--load RUBY_FILE(S)', 'Ruby file(s) to load, comma separated') do |v|
-        v.split(',').map(&:strip).each { |r| self.loads << r }
+      parser.on('-l', '--load RUBY_FILE(S)', 'Ruby file(s) to load, comma separated, or ! to clear') do |v|
+        if v == '!'
+          self.loads.clear
+        else
+          v.split(',').map(&:strip).each { |r| self.loads << r }
+        end
       end
 
-      parser.on('-u', '--load_up RUBY_FILE(S)', 'Ruby file(s) to load, searching up tree, comma separated') do |v|
-        filespecs = v.split(',').map(&:strip)
-        filespecs.each do |filespec|
-          found_file = find_file_up_tree(filespec)
-          if found_file
-            self.loads << found_file
-          else
-            log_if_verbose("Did not find load file #{filespec} in this directory or higher.")
+      parser.on('-u', '--load_up RUBY_FILE(S)', 'Ruby file(s) to load, searching up tree, comma separated, or ! to clear') do |v|
+        if v == '!'
+          self.loads.clear
+        else
+          filespecs = v.split(',').map(&:strip)
+          filespecs.each do |filespec|
+            found_file = find_file_up_tree(filespec)
+            if found_file
+              self.loads << found_file
+            else
+              log_if_verbose("Did not find load file #{filespec} in this directory or higher.")
+            end
           end
         end
       end
@@ -102,8 +110,12 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
       end
 
       parser.on('-r', '--require REQUIRE(S)',
-                'Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated') do |v|
-        v.split(',').map(&:strip).each { |r| self.requires << r }
+                'Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated, or ! to clear') do |v|
+        if v == '!'
+          self.requires.clear
+        else
+          v.split(',').map(&:strip).each { |r| self.requires << r }
+        end
       end
 
       # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option

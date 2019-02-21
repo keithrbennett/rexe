@@ -1,6 +1,6 @@
 # Rexe
 
-A configurable Ruby command line filter/executor.
+A configurable Ruby command line executor and filter.
 
 
 
@@ -26,7 +26,7 @@ rexe is a _filter_ in that it can consume standard input and emit standard outpu
 As a summary, here is the help text printed out by the application:
 
 ```
-rexe -- Ruby Command Line Filter/Executor -- v0.5.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Filter/Executor -- v0.6.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -36,10 +36,10 @@ Options:
 -l, --load RUBY_FILE(S)     Ruby file(s) to load, comma separated, or ! to clear
 -u, --load-up RUBY_FILE(S)  Ruby file(s) to load, searching up tree, comma separated, or ! to clear
 -m, --mode MODE             Mode with which to handle input (i.e. what `self` will be in the code):
-                           -ms for each line to be handled separately as a string (default)
+                           -ms for each line to be handled separately as a string
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
-                           -mn to execute the specified Ruby code on no input at all
+                           -mn to execute the specified Ruby code on no input at all (default)
 -r, --require REQUIRES   Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose       Verbose mode (logs to stderr) Verbose off short options: -v n, -v false
 
@@ -52,7 +52,10 @@ so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesom
 
 ### Input Mode
 
-When it is used as a filter, the input is accessed differently in the source code depending on the mode that was specified (see example section below for examples). The mode letter is appended to `-m` on the command line; `s` (_string_) mode is the default.
+When it is used as a filter, the input is accessed differently in the source code 
+depending on the mode that was specified (see example section below for examples). 
+The mode letter is appended to `-m` on the command line;
+`n` (_no input_) mode is the default.
 
 * `s` - _string_ mode - the source code is run once on each line of input, and `self` is each line of text
 * `e` - _enumerator_ mode - the code is run once on the enumerator of all lines; `self` is the enumerator, so you can call `map`, `to_a`, `select`, etc without explicitly specifying `self`.
@@ -139,29 +142,29 @@ If you are troubleshooting the setup (i.e. the command line options, loaded file
 
 ```
 # Call reverse on listed file.
-# No need to specify the mode, since it defaults to "s" ("-ms"),
+# Need to specify the mode, since it defaults to "n" ("-mn"),
 # which treats every line separately.
-➜  rexe git:(master) ✗   ls | head -2 | exe/rexe "self + ' --> ' + reverse"
+➜  rexe git:(master) ✗   ls | head -2 | exe/rexe -ms "self + ' --> ' + reverse"
 CHANGELOG.md --> dm.GOLEGNAHC
 Gemfile --> elifmeG
 
 ----
 
 # Use input data to create a human friendly message:
-➜  ~   uptime | rexe "%Q{System has been up: #{split.first}.}"
+➜  ~   uptime | rexe -ms "%Q{System has been up: #{split.first}.}"
 System has been up: 17:10.
 
 ----
 
 # Create a JSON array of a file listing.
 # Use the "-me" flag so that all input is treated as a single enumerator of lines.
-➜  /etc   ls | head -3 | rexe -me -r json "map(&:strip).to_a.to_json"
+➜  ~   ls | head -3 | rexe -me -r json "map(&:strip).to_a.to_json"
 ["AFP.conf","afpovertcp.cfg","afpovertcp.cfg~orig"]
 
 ----
 
 # Create a "pretty" JSON array of a file listing:
-➜  /etc   ls | head -3 | rexe -me -r json "JSON.pretty_generate(map(&:strip).to_a)"
+➜  ~   ls | head -3 | rexe -me -r json "JSON.pretty_generate(map(&:strip).to_a)"
 [
   "AFP.conf",
   "afpovertcp.cfg",
@@ -171,7 +174,7 @@ System has been up: 17:10.
 ----
 
 # Create a YAML array of a file listing:
-➜  /etc   ls | head -3 | rexe -me -r yaml "map(&:strip).to_a.to_yaml"
+➜  ~   ls | head -3 | rexe -me -r yaml "map(&:strip).to_a.to_yaml"
 ---
 - AFP.conf
 - afpovertcp.cfg
@@ -182,7 +185,7 @@ System has been up: 17:10.
 # Use AwesomePrint to print a file listing.
 # (Rather than calling the `ap` method on the object to print, 
 # call the `ai` method _on_ the object to print:
-➜  /etc   ls | head -3 | rexe -me -r awesome_print "map(&:chomp).ai"
+➜  ~   ls | head -3 | rexe -me -r awesome_print "map(&:chomp).ai"
 [
     [0] "AFP.conf",
     [1] "afpovertcp.cfg",
@@ -192,7 +195,9 @@ System has been up: 17:10.
 ----
 
 # Don't use input at all, so use "-mn" to tell rexe not to expect input.
-➜  /etc   rexe -mn "%Q{The time is now #{Time.now}}"
+# -mn is the default, so it works with or without specifying that option:
+➜  ~   rexe     "puts %Q{The time is now #{Time.now}}"
+➜  ~   rexe -mn "puts %Q{The time is now #{Time.now}}"
 The time is now 2019-02-04 17:20:03 +0700
 
 ----
@@ -200,8 +205,9 @@ The time is now 2019-02-04 17:20:03 +0700
 # Use REXE_OPTIONS environment variable to eliminate the need to specify
 # options on each invocation:
 
-# First it will fail since these symbols have not been loaded via require:
-➜  /etc   rexe -mn "[JSON, YAML, AwesomePrint]"
+# First it will fail since these symbols have not been loaded via require
+(unless these requires have been specified elsewhere in the configuration):
+➜  ~   rexe "[JSON, YAML, AwesomePrint]"
 Traceback (most recent call last):
 ...
 (eval):1:in `block in call': uninitialized constant Rexe::JSON (NameError)
@@ -209,35 +215,67 @@ Traceback (most recent call last):
 # Now we specify the requires in the REXE_OPTIONS environment variable.
 # Contents of this variable will be prepended to the arguments
 # specified on the command line.
-➜  /etc   export REXE_OPTIONS="-r json,yaml,awesome_print"
+➜  ~   export REXE_OPTIONS="-r json,yaml,awesome_print"
 
 # Now that command that previously failed will succeed:
-➜  /etc   rexe -mn "[JSON, YAML, AwesomePrint].to_s"
+➜  ~   rexe "[JSON, YAML, AwesomePrint].to_s"
 [JSON, Psych, AwesomePrint]
 
 ----
 
-Access public JSON data and print it with awesome_print:
+Access public JSON data and print it with awesome_print, using the ruby interpreter directly:
 
-➜  /etc   curl https://data.lacity.org/api/views/nxs9-385f/rows.json\?accessType\=DOWNLOAD \
- | rexe -mb -r awesome_print,json "JSON.parse(self).ai"
- {
-     "meta" => {
-         "view" => {
-                                   "id" => "nxs9-385f",
-                                 "name" => "2010 Census Populations by Zip Code",
-...
+➜  ~   export JSON_TEXT=`curl https://api.exchangeratesapi.io/latest`
+➜  ~   echo $JSON_TEXT | ruby -r json -r awesome_print -e 'ap JSON.parse(STDIN.read)'
+
+{
+     "base" => "EUR",
+     "date" => "2019-02-20",
+    "rates" => {
+        "NZD" => 1.6513,
+        "CAD" => 1.4956,
+        "MXN" => 21.7301,
+    ...
+}
+
+
+This `rexe` command will have the same effect:
+
+➜  ~   echo $JSON_TEXT | rexe -mb -r awesome_print,json "JSON.parse(self).ai"
+
+The input modes that directly support standard input will send the last evaluated value to standard output.
+So instead of calling AwesomePrint's `ap`, we call `ai` (awesome inspect) on the object we want to display.
+
+In "no input" mode, there's nothing preventing us from handling the input ourselves (e.g. as `STDIN.read`,
+so we could have accomplished the same thing like this:
+
+echo $JSON_TEXT | rexe -r awesome_print,json "ap JSON.parse(STDIN.read)"
 
 ----
 
-# Print the environment variables, sorted, with Awesome Print:
-➜  /etc   env | rexe -me -r awesome_print sort.to_a.ai
+Often we want to treat input as an array. Assuming there won't be too much to fit in memory,
+we can instruct `rexe` to treat input as an `Enumerable` (using the `-me` option), and then
+calling `to_a` on it. The following code prints the environment variables, sorted, with Awesome Print:
+➜  ~   env | rexe -me -r awesome_print sort.to_a.ai
 [
 ...
     [ 4] "COLORFGBG=15;0\n",
     [ 5] "COLORTERM=truecolor\n",
 ...    
 ```
+
+----
+
+Here are two ways to print the number of entries in a directory.
+Notice that the two number differ by 1.
+
+```
+➜  ~   rexe -mn "puts %Q{This directory has #{Dir['*'].size} entries.}"
+This directory has 210 entries.
+➜  ~   echo `ls -l | wc -l` | rexe -ms "%Q{This directory has #{self} entries.}"
+This directory has 211 entries.
+```
+
 
 ## License
 

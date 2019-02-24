@@ -1,6 +1,18 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.6.1
+
+* Improve handling of nonexistent load files (-l, -u options).
+
+
+### v0.6.0
+
+* Change default input mode from :string to :no_input.
+* Improve readme.
+* Add post install message warning about change of default input mode.
+
+
 ### v0.5.0
 
 * Add '!' to require and load command options to clear respective file lists.

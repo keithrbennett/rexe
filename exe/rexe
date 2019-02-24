@@ -9,7 +9,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
-  VERSION = '0.6.0'
+  VERSION = '0.6.1'
 
   def initialize
     self.input_mode = :no_input

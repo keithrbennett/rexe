@@ -19,7 +19,8 @@ chmod +x rexe
 
 ## Usage
 
-rexe is a _filter_ in that it can consume standard input and emit standard output; but it is also an _executor_, meaning it can be used without either standard input or output.
+rexe is an _executor_, meaning it can execute Ruby without either standard input or output,
+but it is also a _filter_ in that it can implicitly consume standard input and emit standard output.
 
 ### Help Text
 
@@ -41,7 +42,7 @@ Options:
                            -mb for 1 big string (all lines combined into single multiline string)
                            -mn to execute the specified Ruby code on no input at all (default)
 -r, --require REQUIRES   Gems and built-in libraries to require, comma separated, or ! to clear
--v, --[no-]verbose       Verbose mode (logs to stderr) Verbose off short options: -v n, -v false
+-v, --[no-]verbose       verbose mode (logs to stderr); to disable, short options: -v n, -v false
 
 If there is an .rexerc file in your home directory, it will be run as Ruby code
 before processing the input.

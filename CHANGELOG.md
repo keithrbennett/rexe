@@ -1,6 +1,11 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.7.0
+
+* Remove -u option to address issue #1.
+
+
 ### v0.6.1
 
 * Improve handling of nonexistent load files (-l, -u options).

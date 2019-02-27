@@ -27,7 +27,7 @@ but it is also a _filter_ in that it can implicitly consume standard input and e
 As a summary, here is the help text printed out by the application:
 
 ```
-rexe -- Ruby Command Line Filter/Executor -- v0.6.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Filter/Executor -- v0.7.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -35,16 +35,15 @@ Options:
 
 -h, --help                 Print help and exit
 -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
--u, --load-up RUBY_FILE(S) Ruby file(s) to load, searching up tree, comma separated, or ! to clear
 -m, --mode MODE            Mode with which to handle input (i.e. what `self` will be in the code):
                            -ms for each line to be handled separately as a string
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
-                           -mn to execute the specified Ruby code on no input at all (default)
+                           -mn to execute the specified Ruby code on no input at all (default) 
 -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose         verbose mode (logs to stderr); to disable, short options: -v n, -v false
 
-If there is an .rexerc file in your home directory, it will be run as Ruby code
+If there is an .rexerc file in your home directory, it will be run as Ruby code 
 before processing the input.
 
 If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
@@ -74,14 +73,6 @@ As with the Ruby interpreter itself, `require`s can be specified on the command 
 Other Ruby files can be loaded by `rexe`, to, for example, define classes and methods to use, set up resources, etc. They are specified with the `-l` option.
 
 If there is a file named `.rexerc` in the home directory, that will always be loaded without explicitly requesting it on the command line.
-
-#### Searching for Load Files in the Current Directory and Above
-
-Using the `-u` option, you can specify that the file you want to load should be searched for at the specified directory _and above_. This can be handy when you have project specific configuration and you may be multiple levels below the project root.
-
-For example, if you run `rexe` from `~/my_project/a/b/c`, and specify `-u load-me.rb`, and `load-me.rb` is located in `~/my_project`, then it will be loaded from there.
-
-If the file is not found, the failure will be silent and the program will proceed. (Preferred behavior could go either way on this, but the current approach enables you to unconditionally specify a `-u` file in your default `REXE_OPTIONS` environment variable value and have it work regardless of the presence or absence of the file.) If verbose mode is enabled, a message about the failure to find the file will be displayed.
 
 ### Verbose Mode
 
@@ -148,22 +139,28 @@ If you are troubleshooting the setup (i.e. the command line options, loaded file
 ➜  rexe git:(master) ✗   ls | head -2 | exe/rexe -ms "self + ' --> ' + reverse"
 CHANGELOG.md --> dm.GOLEGNAHC
 Gemfile --> elifmeG
+```
 
 ----
 
+```
 # Use input data to create a human friendly message:
 ➜  ~   uptime | rexe -ms "%Q{System has been up: #{split.first}.}"
 System has been up: 17:10.
+```
 
 ----
 
+```
 # Create a JSON array of a file listing.
 # Use the "-me" flag so that all input is treated as a single enumerator of lines.
 ➜  ~   ls | head -3 | rexe -me -r json "map(&:strip).to_a.to_json"
 ["AFP.conf","afpovertcp.cfg","afpovertcp.cfg~orig"]
+```
 
 ----
 
+```
 # Create a "pretty" JSON array of a file listing:
 ➜  ~   ls | head -3 | rexe -me -r json "JSON.pretty_generate(map(&:strip).to_a)"
 [
@@ -171,18 +168,22 @@ System has been up: 17:10.
   "afpovertcp.cfg",
   "afpovertcp.cfg~orig"
 ]
+```
 
 ----
 
+```
 # Create a YAML array of a file listing:
 ➜  ~   ls | head -3 | rexe -me -r yaml "map(&:strip).to_a.to_yaml"
 ---
 - AFP.conf
 - afpovertcp.cfg
 - afpovertcp.cfg~orig
+```
 
 ----
 
+```
 # Use AwesomePrint to print a file listing.
 # (Rather than calling the `ap` method on the object to print, 
 # call the `ai` method _on_ the object to print:
@@ -192,17 +193,21 @@ System has been up: 17:10.
     [1] "afpovertcp.cfg",
     [2] "afpovertcp.cfg~orig"
 ]
+```
 
 ----
 
+```
 # Don't use input at all, so use "-mn" to tell rexe not to expect input.
 # -mn is the default, so it works with or without specifying that option:
 ➜  ~   rexe     "puts %Q{The time is now #{Time.now}}"
 ➜  ~   rexe -mn "puts %Q{The time is now #{Time.now}}"
 The time is now 2019-02-04 17:20:03 +0700
+```
 
 ----
 
+```
 # Use REXE_OPTIONS environment variable to eliminate the need to specify
 # options on each invocation:
 
@@ -221,11 +226,13 @@ Traceback (most recent call last):
 # Now that command that previously failed will succeed:
 ➜  ~   rexe "[JSON, YAML, AwesomePrint].to_s"
 [JSON, Psych, AwesomePrint]
+```
 
 ----
 
 Access public JSON data and print it with awesome_print, using the ruby interpreter directly:
 
+```
 ➜  ~   export JSON_TEXT=`curl https://api.exchangeratesapi.io/latest`
 ➜  ~   echo $JSON_TEXT | ruby -r json -r awesome_print -e 'ap JSON.parse(STDIN.read)'
 
@@ -238,11 +245,14 @@ Access public JSON data and print it with awesome_print, using the ruby interpre
         "MXN" => 21.7301,
     ...
 }
+```
 
 
 This `rexe` command will have the same effect:
 
+```
 ➜  ~   echo $JSON_TEXT | rexe -mb -r awesome_print,json "JSON.parse(self).ai"
+```
 
 The input modes that directly support standard input will send the last evaluated value to standard output.
 So instead of calling AwesomePrint's `ap`, we call `ai` (awesome inspect) on the object we want to display.
@@ -250,13 +260,16 @@ So instead of calling AwesomePrint's `ap`, we call `ai` (awesome inspect) on the
 In "no input" mode, there's nothing preventing us from handling the input ourselves (e.g. as `STDIN.read`,
 so we could have accomplished the same thing like this:
 
+```
 echo $JSON_TEXT | rexe -r awesome_print,json "ap JSON.parse(STDIN.read)"
+```
 
 ----
 
 Often we want to treat input as an array. Assuming there won't be too much to fit in memory,
 we can instruct `rexe` to treat input as an `Enumerable` (using the `-me` option), and then
 calling `to_a` on it. The following code prints the environment variables, sorted, with Awesome Print:
+```
 ➜  ~   env | rexe -me -r awesome_print sort.to_a.ai
 [
 ...

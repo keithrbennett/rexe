@@ -9,7 +9,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
-  VERSION = '0.6.1'
+  VERSION = '0.7.0'
 
   def initialize
     self.input_mode = :no_input
@@ -30,7 +30,6 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     -h, --help                 Print help and exit
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
-    -u, --load-up RUBY_FILE(S) Ruby file(s) to load, searching up tree, comma separated, or ! to clear
     -m, --mode MODE            Mode with which to handle input (i.e. what `self` will be in the code):
                                -ms for each line to be handled separately as a string
                                -me for an enumerator of lines (least memory consumption for big data)
@@ -82,22 +81,6 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         end
       end
 
-      parser.on('-u', '--load_up RUBY_FILE(S)', 'Ruby file(s) to load, searching up tree, comma separated, or ! to clear') do |v|
-        if v == '!'
-          self.loads.clear
-        else
-          filespecs = v.split(',').map(&:strip)
-          filespecs.each do |filespec|
-            found_file = find_file_up_tree(filespec)
-            if found_file
-              self.loads << found_file
-            else
-              log_if_verbose("\nDid not find load file '#{filespec}' in this directory or higher.\n\n")
-            end
-          end
-        end
-      end
-
       parser.on('-m', '--mode MODE',
                 'Mode with which to handle input (-ms (default), -me, -mb, mn)') do |v|
 
@@ -141,21 +124,6 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
   end
 
 
-  # Looks in this directory and all above it for the filename
-  # @return the first match found, or nil if none
-  def find_file_up_tree(filespec)
-    filespec = File.expand_path(filespec)
-    basename = File.basename(filespec)
-
-    loop do
-      return filespec if File.exist?(filespec)
-      return nil if File.dirname(filespec) == File::SEPARATOR
-      new_dir = File.expand_path(File.join(File.dirname(filespec), '..'))
-      filespec = File.join(new_dir, basename)
-    end
-  end
-
-
   def load_global_config_if_exists
     filespec = File.join(Dir.home, '.rexerc')
     exists = File.exists?(filespec)
@@ -192,15 +160,11 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     log_if_verbose('Source Code: ' + ARGV.join(' '))
     log_if_verbose('Options: ' + self.to_h.to_s)
 
-    requires.each do |r|
-      require(r)
-    end
+    requires.each { |r| require(r) }
 
     load_global_config_if_exists
 
-    loads.each do |file|
-      load(file)
-    end
+    loads.each { |file| load(file) }
 
     source_code = "Proc.new { #{ARGV.join(' ')} }"
     code = eval(source_code)

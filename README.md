@@ -39,7 +39,7 @@ Options:
                            -ms for each line to be handled separately as a string
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
-                           -mn to execute the specified Ruby code on no input at all (default) 
+                           -mn don't do special handling of input; self is not the input (default) 
 -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose         verbose mode (logs to stderr); to disable, short options: -v n, -v false
 

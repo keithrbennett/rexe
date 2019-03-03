@@ -34,7 +34,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
                                -ms for each line to be handled separately as a string
                                -me for an enumerator of lines (least memory consumption for big data)
                                -mb for 1 big string (all lines combined into single multiline string)
-                               -mn to execute the specified Ruby code on no input at all (default) 
+                               -mn don't do special handling of input; self is not the input (default) 
     -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose         verbose mode (logs to stderr); to disable, short options: -v n, -v false
 
@@ -172,7 +172,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     actions = {
         string:         -> { STDIN.each { |l| execute(l.chomp, code) } },
         enumerator:     -> { execute(STDIN.each_line, code) },
-        one_big_string: -> { big_string = STDIN.each_line.to_a.join; execute(big_string, code) },
+        one_big_string: -> { big_string = STDIN.read; execute(big_string, code) },
         no_input:       -> { execute(nil, code) }
     }
 

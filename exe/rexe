@@ -7,7 +7,7 @@
 require 'optparse'
 require 'shellwords'
 
-class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
+class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
 
   VERSION = '0.7.0'
 
@@ -22,6 +22,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
     self.loads = []
     self.requires = []
     self.verbose = false
+    self.noop = false
   end
 
 
@@ -42,6 +43,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
                                -me for an enumerator of lines (least memory consumption for big data)
                                -mb for 1 big string (all lines combined into single multiline string)
                                -mn don't do special handling of input; self is not the input (default) 
+    -n', --[no-]noop           Do not execute the code (useful with -v)
     -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose         verbose mode (logs to stderr); to disable, short options: -v n, -v false
 
@@ -50,6 +52,9 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
     so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+
+    For boolean verbose and noop options, the following are valid:
+    -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 
     HEREDOC
   end
@@ -126,11 +131,18 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         clear_options
       end
 
+      parser.on('-n', '--[no-]noop [FLAG]', TrueClass, "Do not execute the code (useful with -v)") do |v|
+        self.noop = (v.nil? ? true : v)
+      end
+
       parser.on('', '--version', 'Print version') do
         puts VERSION
         exit
       end
     end.parse!
+
+    requires.uniq!
+    loads.uniq!
   end
 
 
@@ -186,7 +198,11 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         no_input:       -> { execute(nil, code) }
     }
 
-    actions[input_mode].()
+    if self.noop
+      log_if_verbose("No-op mode requested; not executing code.")
+    else
+      actions[input_mode].()
+    end
 
     duration = Time.now - start_time
     log_if_verbose("rexe time elapsed: #{duration} seconds.")

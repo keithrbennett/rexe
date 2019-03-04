@@ -12,6 +12,12 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
   VERSION = '0.7.0'
 
   def initialize
+    clear_options
+  end
+
+
+  # Used as an initializer and also when `-!` is specified on the command line.
+  def clear_options
     self.input_mode = :no_input
     self.loads = []
     self.requires = []
@@ -28,6 +34,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
 
     Options:
 
+    -c  --clear_options        Clear all previous command line options specified up to now
     -h, --help                 Print help and exit
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
     -m, --mode MODE            Mode with which to handle input (i.e. what `self` will be in the code):
@@ -115,6 +122,9 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose)
         self.verbose = (v.nil? ? true : v)
       end
 
+      parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
+        clear_options
+      end
 
       parser.on('', '--version', 'Print version') do
         puts VERSION

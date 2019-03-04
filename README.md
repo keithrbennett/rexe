@@ -27,12 +27,13 @@ but it is also a _filter_ in that it can implicitly consume standard input and e
 As a summary, here is the help text printed out by the application:
 
 ```
-rexe -- Ruby Command Line Filter/Executor -- v0.7.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Filter/Executor -- v0.8.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
 Options:
 
+-c  --clear_options        Clear all previous command line options specified up to now
 -h, --help                 Print help and exit
 -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
 -m, --mode MODE            Mode with which to handle input (i.e. what `self` will be in the code):
@@ -40,6 +41,7 @@ Options:
                            -me for an enumerator of lines (least memory consumption for big data)
                            -mb for 1 big string (all lines combined into single multiline string)
                            -mn don't do special handling of input; self is not the input (default) 
+-n', --[no-]noop           Do not execute the code (useful with -v)
 -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose         verbose mode (logs to stderr); to disable, short options: -v n, -v false
 
@@ -48,6 +50,9 @@ before processing the input.
 
 If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
 so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+
+For boolean verbose and noop options, the following are valid:
+-v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 ```
 
 ### Input Mode

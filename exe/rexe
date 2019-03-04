@@ -9,7 +9,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
 
-  VERSION = '0.7.0'
+  VERSION = '0.8.0'
 
   def initialize
     clear_options

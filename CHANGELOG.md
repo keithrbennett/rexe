@@ -1,5 +1,9 @@
 ## rexe -- Ruby Command Line Executor
 
+### v0.8.0
+
+* Add no-op mode to suppress execution of code (useful with -v).
+* Add clear mode to clear all options specified up to that point (useful to ignore REXE_OPTIONS environment variable settings).
 
 ### v0.7.0
 

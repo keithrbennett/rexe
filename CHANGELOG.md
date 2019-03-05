@@ -1,5 +1,11 @@
 ## rexe -- Ruby Command Line Executor
 
+
+### v0.8.1
+
+* Fix and improve help text.
+
+
 ### v0.8.0
 
 * Add no-op mode to suppress execution of code (useful with -v).

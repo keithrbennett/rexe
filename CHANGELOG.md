@@ -1,6 +1,12 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.9.0
+
+* Change -ms (single or separate string) mode to -ml (line) mode.
+* Use article text for readme.
+
+
 ### v0.8.1
 
 * Fix and improve help text.

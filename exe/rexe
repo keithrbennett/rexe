@@ -9,7 +9,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
 
-  VERSION = '0.8.1'
+  VERSION = '0.9.0'
 
   def initialize
     clear_options
@@ -39,10 +39,10 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
     -h, --help                 Print help and exit
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
     -m, --mode MODE            Mode with which to handle input (i.e. what `self` will be in your code):
-                               -ms for each line to be handled as a separate string
-                               -me for an enumerator of lines (least memory consumption for big data)
-                               -mb for 1 big string (all lines combined into single multiline string)
-                               -mn don't do special handling of input; self is not the input (default) 
+                               -ml line mode; each line is ingested as a separate string
+                               -me enumerator mode
+                               -mb big string mode; all lines combined into single multiline string
+                               -mn (default) no input mode; no special handling of input; self is not input 
     -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
     -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
@@ -53,7 +53,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
     If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
     so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
-    (1) For boolean verbose and noop options, the following are valid:
+    (1) For boolean 'verbose' and 'noop' options, the following are valid:
     -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 
     HEREDOC
@@ -94,10 +94,10 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
       end
 
       parser.on('-m', '--mode MODE',
-                'Mode with which to handle input (-ms (default), -me, -mb, mn)') do |v|
+                'Mode with which to handle input (-ml, -me, -mb, -mn (default)') do |v|
 
         modes = {
-            's' => :string,
+            'l' => :line,
             'e' => :enumerator,
             'b' => :one_big_string,
             'n' => :no_input
@@ -192,7 +192,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
     code = eval(source_code)
 
     actions = {
-        string:         -> { STDIN.each { |l| execute(l.chomp, code) } },
+        line:           -> { STDIN.each { |l| execute(l.chomp, code) } },
         enumerator:     -> { execute(STDIN.each_line, code) },
         one_big_string: -> { big_string = STDIN.read; execute(big_string, code) },
         no_input:       -> { execute(nil, code) }

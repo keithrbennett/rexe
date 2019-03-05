@@ -43,5 +43,20 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 12.3"
   spec.add_development_dependency "rspec", "~> 3.0"
 
-  spec.post_install_message = "\n\nWARNING! The default input mode was changed from -ms to -mn in version 0.6.0.\n\n"
+  spec.post_install_message =
+      <<~HEREDOC
+      
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      WARNING!
+
+      The default rexe input mode was changed from -ms to -mn in version 0.6.0
+      and
+      the -ms (separate string mode) mode name was changed
+      to -ml (line mode) in version 0.9.0.
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      HEREDOC
+
 end

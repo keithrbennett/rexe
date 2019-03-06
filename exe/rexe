@@ -4,6 +4,7 @@
 #
 # Inspired by https://github.com/thisredone/rb
 
+require 'bundler'
 require 'optparse'
 require 'shellwords'
 
@@ -212,4 +213,6 @@ end
 # This is needed because the gemspec file loads this file to access Rexe::VERSION
 # and must not have it run at that time:
 called_as_script = (File.basename($0) == File.basename(__FILE__))
-Rexe.new.call if called_as_script
+if called_as_script
+  Bundler.with_clean_env { Rexe.new.call }
+end

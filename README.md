@@ -55,13 +55,22 @@ Options:
 
 -c  --clear_options        Clear all previous command line options specified up to now
 -h, --help                 Print help and exit
--l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
 -i, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
-                           -il line mode; each line is ingested as a separate string
-                           -ie enumerator mode
-                           -ib big string mode; all lines combined into single multiline string
-                           -in (default) no input mode; no special handling of input; self is not input 
+                             -il line mode; each line is ingested as a separate string
+                             -ie enumerator mode
+                             -ib big string mode; all lines combined into single multiline string
+                             -in (default) no input mode; no special handling of input; self is not input 
+-l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
 -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
+-o, --output_mode MODE     Output formatting mode (puts is default):
+                             'a' => awesome_print
+                             'i' => inspect
+                             'j' => json
+                             'J' => pretty_json
+                             'n' => no_output
+                             'p' => puts (default)
+                             's' => to_string
+                             'y' => yaml
 -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 

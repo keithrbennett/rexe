@@ -9,7 +9,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
 
-  VERSION = '0.9.0'
+  VERSION = '0.10.0'
 
   def initialize
     clear_options
@@ -38,11 +38,11 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
     -c  --clear_options        Clear all previous command line options specified up to now
     -h, --help                 Print help and exit
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
-    -m, --mode MODE            Mode with which to handle input (i.e. what `self` will be in your code):
-                               -ml line mode; each line is ingested as a separate string
-                               -me enumerator mode
-                               -mb big string mode; all lines combined into single multiline string
-                               -mn (default) no input mode; no special handling of input; self is not input 
+    -i, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
+                               -il line mode; each line is ingested as a separate string
+                               -ie enumerator mode
+                               -ib big string mode; all lines combined into single multiline string
+                               -in (default) no input mode; no special handling of input; self is not input 
     -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
     -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
@@ -93,8 +93,8 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
         end
       end
 
-      parser.on('-m', '--mode MODE',
-                'Mode with which to handle input (-ml, -me, -mb, -mn (default)') do |v|
+      parser.on('-i', '--input_mode MODE',
+                'Mode with which to handle input (-il, -ie, -ib, -in (default)') do |v|
 
         modes = {
             'l' => :line,

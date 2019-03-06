@@ -159,11 +159,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
 
 
   def execute(eval_context_object, code)
-    if eval_context_object
-      puts eval_context_object.instance_eval(&code)
-    else
-      code.call
-    end
+    puts eval_context_object.instance_eval(&code)
   rescue Errno::EPIPE
     exit(-13)
   end
@@ -196,7 +192,7 @@ class Rexe < Struct.new(:input_mode, :loads, :requires, :verbose, :noop)
         line:           -> { STDIN.each { |l| execute(l.chomp, code) } },
         enumerator:     -> { execute(STDIN.each_line, code) },
         one_big_string: -> { big_string = STDIN.read; execute(big_string, code) },
-        no_input:       -> { execute(nil, code) }
+        no_input:       -> { execute(Object.new, code) }
     }
 
     if self.noop

@@ -48,14 +48,14 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
     -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
     -o, --output_mode MODE     Output formatting mode (puts is default):
-                                 'a' => awesome_print
-                                 'i' => inspect
-                                 'j' => json
-                                 'J' => pretty_json
-                                 'n' => no_output
-                                 'p' => puts (default)
-                                 's' => to_string
-                                 'y' => yaml
+                                 'a' => Awesome Print
+                                 'i' => Inspect
+                                 'j' => JSON
+                                 'J' => Pretty JSON
+                                 'n' => No Output
+                                 'p' => Puts (default)
+                                 's' => to_s
+                                 'y' => YAML
     -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 
@@ -123,7 +123,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
       end
 
       parser.on('-o', '--output_mode MODE',
-                'Mode with which to format values for output (-il, -ie, -ib, -in (default)') do |v|
+                'Mode with which to format values for output (`-o` + [aijJnpsy])') do |v|
 
         modes = {
             'a' => :awesome_print,
@@ -132,7 +132,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
             'J' => :pretty_json,
             'n' => :no_output,
             'p' => :puts,         # default
-            's' => :to_string,
+            's' => :to_s,
             'y' => :yaml,
         }
 
@@ -261,7 +261,7 @@ def output_formatter
         no_output:     ->(_obj) { nil },
         pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
         puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
-        to_string:     ->(obj)  { obj.to_s + "\n" },
+        to_s:          ->(obj)  { obj.to_s + "\n" },
         yaml:          ->(obj)  { obj.to_yaml },
     }
 

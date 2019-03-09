@@ -8,7 +8,7 @@ require 'bundler'
 require 'optparse'
 require 'shellwords'
 
-class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, :noop)
+class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose, :noop)
 
   VERSION = '0.10.0'
 
@@ -20,7 +20,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
   # Used as an initializer and also when `-!` is specified on the command line.
   def clear_options
     self.input_mode = :no_input
-    self.output_mode = :puts
+    self.output_format = :puts
     self.loads = []
     self.requires = []
     self.verbose = false
@@ -40,23 +40,22 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
 
     -c  --clear_options        Clear all previous command line options specified up to now
     -h, --help                 Print help and exit
-    -i, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
-                                 -il line mode; each line is ingested as a separate string
-                                 -ie enumerator mode
-                                 -ib big string mode; all lines combined into single multiline string
-                                 -in (default) no input mode; no special handling of input; self is not input 
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
+    -m, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
+                                 -ml  line mode; each line is ingested as a separate string
+                                 -me  enumerator mode
+                                 -mb  big string mode; all lines combined into single multiline string
+                                 -mn  (default) no input mode; no special handling of input; self is not input 
     -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
-    -o, --output_mode MODE     Output formatting mode (puts is default):
-                                 'a' => Awesome Print
-                                 'i' => Inspect
-                                 'j' => JSON
-                                 'J' => Pretty JSON
-                                 'n' => No Output
-                                 'p' => Puts (default)
-                                 's' => to_s
-                                 'y' => YAML
-    -r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
+    -o, --output_format FORMAT Output format (puts is default):
+                                 -oi  Inspect
+                                 -oj  JSON
+                                 -oJ  Pretty JSON
+                                 -on  No Output
+                                 -op  Puts (default)
+                                 -os  to_s
+                                 -oy  YAML
+    -r, --require REQUIRES     Gems and built-mn libraries to require, comma separated, or ! to clear
     -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
@@ -105,8 +104,8 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
         end
       end
 
-      parser.on('-i', '--input_mode MODE',
-                'Mode with which to handle input (-il, -ie, -ib, -in (default)') do |v|
+      parser.on('-m', '--input_mode MODE',
+                'Mode with which to handle input (-ml, -me, -mb, -mn (default)') do |v|
 
         modes = {
             'l' => :line,
@@ -122,7 +121,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
         end
       end
 
-      parser.on('-o', '--output_mode MODE',
+      parser.on('-o', '--output_format FORMAT',
                 'Mode with which to format values for output (`-o` + [aijJnpsy])') do |v|
 
         modes = {
@@ -136,8 +135,8 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
             'y' => :yaml,
         }
 
-        self.output_mode = modes[v]
-        if self.output_mode.nil?
+        self.output_format = modes[v]
+        if self.output_format.nil?
           puts help_text
           raise "Output mode must be one of #{modes.keys}."
         end
@@ -193,7 +192,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_mode, :requires, :verbose, 
 
   def execute(eval_context_object, code)
     value = eval_context_object.instance_eval(&code)
-    unless output_mode == :no_output
+    unless output_format == :no_output
       print output_formatter.(value)
     end
   rescue Errno::EPIPE
@@ -246,11 +245,11 @@ end
 def output_formatter
   if @output_formatter.nil?
 
-    if %i(json  pretty_json).include?(output_mode)
+    if %i(json  pretty_json).include?(output_format)
       require 'json'
-    elsif output_mode == :yaml
+    elsif output_format == :yaml
       require 'yaml'
-    elsif output_mode == :awesome_print
+    elsif output_format == :awesome_print
       require 'awesome_print'
     end
 
@@ -265,7 +264,7 @@ def output_formatter
         yaml:          ->(obj)  { obj.to_yaml },
     }
 
-    @output_formatter = formatters[output_mode]
+    @output_formatter = formatters[output_format]
   end
   @output_formatter
 end

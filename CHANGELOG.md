@@ -1,6 +1,11 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.10.2
+
+* Fix problem in :none input format mode.
+
+
 ### v0.10.1
 
 * Fix help text for input formats.

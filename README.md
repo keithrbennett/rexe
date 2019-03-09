@@ -3,6 +3,9 @@ title: The `rexe` Command Line Executor and Filter
 date: 2019-02-15
 ---
 
+[Caution: This is a long article! If you lose patience reading it, I suggest skimming the headings
+and the source code, and at minimum, reading the Conclusion.]
+
 I love the power of the command line, but not the awkwardness of shell scripting
 languages. Sure, there's a lot that can be done with them, but it doesn't take
 long before I get frustrated with their bluntness and verbosity.
@@ -21,24 +24,31 @@ An excerpt of the output follows the code:
 
 ```
 ➜  ~   export EUR_RATES_JSON=`curl https://api.exchangeratesapi.io/latest`
-➜  ~   echo $EUR_RATES_JSON | ruby -r json -r awesome_print -e 'ap JSON.parse(STDIN.read)'
-{
-    "rates" => {
-        "MXN" => 21.781,
-        ...
-        "DKK" => 7.462
-    },
-     "base" => "EUR",
-     "date" => "2019-02-22"
-}
+➜  ~   echo $EUR_RATES_JSON | ruby -r json -r yaml -e 'puts JSON.parse(STDIN.read).to_yaml'
+---
+rates:
+  MXN: 21.96
+  AUD: 1.5964
+  HKD: 8.8092
+  ...
+base: EUR
+date: '2019-03-08'
 ```
 
-However, the configuration setup (the `require`s) make the command long and tedious, discouraging this
-approach.
+However, the configuration setup (the `require`s) along with the reading, parsing, and formatting
+make the command long and tedious, discouraging this approach.
 
 ### Rexe
 
-Enter the `rexe` script. [^1]
+Enter the `rexe` script: [^1]
+
+Among other things, `rexe` provides switch-activated input parsing and output formatting so that converting 
+from one format to another is trivial.
+This command does the same thing as the previous `ruby` command:
+
+```
+➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
+```
  
 `rexe` is at https://github.com/keithrbennett/rexe and can be installed with
 `gem install rexe`. `rexe` provides several ways to simplify Ruby on the command
@@ -47,9 +57,11 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.10.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.10.2 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
+
+rexe [options] 'Ruby source code'
 
 Options:
 
@@ -65,7 +77,7 @@ Options:
                              -ml  line mode; each line is ingested as a separate string
                              -me  enumerator mode
                              -mb  big string mode; all lines combined into single multiline string
-                             -mn  (default) no input mode; no special handling of input; self is not input 
+                             -mn  (default) no input mode; no special handling of input; self is an Object.new 
 -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
 -o, --output_format FORMAT Output format (puts is default):
                              -oi  Inspect
@@ -76,7 +88,7 @@ Options:
                              -op  Puts (default)
                              -os  to_s
                              -oy  YAML
--r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
+-r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 
 If there is an .rexerc file in your home directory, it will be run as Ruby code 
@@ -88,16 +100,6 @@ so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesom
 (1) For boolean 'verbose' and 'noop' options, the following are valid:
 -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 ```
-
-For consistency with the `ruby` interpreter we called previously, `rexe` supports requires with the `-r` option, but as one tiny improvement it also allows grouping them together using commas:
-
-```
-                                    vvvvvvvvvvvvvvvvvvvvv
-➜  ~   echo $EUR_RATES_JSON | rexe -r json,awesome_print 'ap JSON.parse(STDIN.read)'
-                                    ^^^^^^^^^^^^^^^^^^^^^
-```
-
-This command produces the same results as the previous `ruby` one.
 
 ### Simplifying the Rexe Invocation with Configuration
 
@@ -271,9 +273,12 @@ eybdoog
 `reverse` is implicitly called on each line of standard input.  `self`
  is the input line in each call (we could also have used `self.reverse` but the `self` would have been redundant.).
   
-Be aware that there is no way to selectively exclude records from being output. Even if the result of the code
-is nil or the empty string, a newline will be output. If this is an issue, you might be better off using Enumerator
-mode and calling `select`, `filter`, `reject`, etc.
+Be aware that although you can control the _content_ of output records, 
+there is no way to selectively _exclude_ records from being output. Even if the result of the code
+is nil or the empty string, a newline will be output. If this is an issue, you could do one of the following:
+ 
+ * use Enumerator mode and call `select`, `filter`, `reject`, etc.
+ * use the `-on` _no output_ mode and call `puts` explicitly for the output you _do_ want
 
 
 #### -me "Enumerator" Filter Mode
@@ -299,23 +304,21 @@ Since `self` is an enumerable, we can call `first` and then `each_with_index`.
 
 #### -mb "Big String" Filter Mode
 
-In this mode, all standard input is combined into a single, (possibly)
-large string, with newline characters joining the lines in the string.
+In this mode, all standard input is combined into a single, (possibly
+large) string, with newline characters joining the lines in the string.
 
-A good example of when you would use this is when you parse JSON or YAML text; you need to pass the entire (probably) multiline string to the parse method.
+A good example of when you would use this is when you parse JSON or YAML text; 
+you need to pass the entire (probably) multiline string to the parse method. 
+This is the mode that was used in the first `rexe` example in this article.
 
-An earlier example would be more simply specified using this mode, since `STDIN.read` could be replaced with `self`:
-
-```
-➜  ~   echo $EUR_RATES_JSON | rexe -mb -r awesome_print,json 'ap JSON.parse(self)'
-```
 
 #### -mn "No Input" Executor Mode -- The Default
 
-Examples up until this point have all used the default
-`-mn` mode. This is the simplest use case, where `self`
-does not evaluate to anything useful, and if you cared about standard
-input, you would have to code it yourself (e.g. as we did earlier with `STDIN.read`).
+In this mode, no special handling of standard input is done at all;
+if you want standard input you need to code it yourself (e.g. with `STDIN.read`).
+
+`self` evaluates to a new instance of `Object`, which would be used 
+if you defined methods, constants, instance variables, etc., in your code.
 
 
 #### Filter Input Mode Memory Considerations
@@ -325,9 +328,9 @@ If you may have more input than would fit in memory, you can do the following:
 * use `-ml` (line) mode so you are fed only 1 line at a time
 * use an Enumerator, either by specifying the `-me` (enumerator) mode option,
  or using `-mn` (no input) mode in conjunction with something like `STDIN.each_line`. Then: 
-** Make sure not to call any methods (e.g. `map`, `select`)
+  * Make sure not to call any methods (e.g. `map`, `select`)
  that will produce an array of all the input because that will pull all the records into memory, or:
-** use lazy enumerators
+  * use [lazy enumerators](https://www.honeybadger.io/blog/using-lazy-enumerators-to-work-with-large-files-in-ruby/)
  
 
 
@@ -396,7 +399,8 @@ so calls to your custom methods _look_ like built in language commands and keywo
 
 One complication of using utilities like `rexe` where Ruby code is specified on the shell command line is that
 you need to be careful about the shell's special treatment of certain characters. For this reason, it is often
-necessary to quote the Ruby code. You can use single or double quotes. 
+necessary to quote the Ruby code. You can use single or double quotes to have the shell treat your source code
+as a single argument. 
 An excellent reference for how they differ is [here](https://stackoverflow.com/questions/6697753/difference-between-single-and-double-quotes-in-bash).
 
 Feel free to fall back on Ruby's super useful `%q{}` and `%Q{}`, equivalent to single and double quotes, respectively.
@@ -453,6 +457,70 @@ After copying this line to the clipboard, I could run this:
 If I add `| pbcopy` to the rexe command, then that output text would be copied into the clipboard instead of
 displayed in the terminal, and I could then paste it in my editor.
 
+
+### Multiline Ruby Commands
+
+Although `rexe` is cleanest with short one liners, you may want to use it to include nontrivial Ruby code
+in your shell script as well. If you do this, you may need to:
+
+* add trailing backslashes to lines of Ruby code
+* use %q{} and %Q{} in your Ruby code instead of single and double quotes, 
+  since the quotes have special meaning to the shell
+
+
+### The Use of Semicolons
+
+You will probably find yourself using semicolons much more often than usual when you use `rexe`.
+Obviously you would need them to separate statements on the same line:
+
+```
+➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; puts to_a"
+```
+
+What might not be so obvious is that you _also_ need them if each statement is on its own line.
+For example, here is an example without a semicolon:
+
+```
+➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m} \
+puts to_a"
+
+/Users/kbennett/.rvm/gems/ruby-2.6.0/gems/rexe-0.10.1/exe/rexe:256:in `eval':
+   (eval):1: syntax error, unexpected tIDENTIFIER, expecting '}' (SyntaxError)
+...new { print %Q{\u001b[33m} puts to_a }
+...                           ^~~~
+```
+
+The shell combines all backslash terminated lines into a single line of text, so when the Ruby
+interpreter sees your code, it's all in a single line. Adding the semicolon fixes the problem:
+
+```
+➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; \
+puts to_a"
+
+eval_context_object: #<Enumerator:0x00007f92b1972840>
+ _______
+< hello >
+ -------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+```
+
+
+### Comma Separated Requires and Loads
+
+For consistency with the `ruby` interpreter, `rexe` supports requires with the `-r` option, but 
+also allows grouping them together using commas:
+
+```
+                                    vvvvvvvvvvvvvvvvvvvvv
+➜  ~   echo $EUR_RATES_JSON | rexe -r json,awesome_print 'ap JSON.parse(STDIN.read)'
+                                    ^^^^^^^^^^^^^^^^^^^^^
+```
+
+Files loaded with the `-l` option are treated the same way.
 
 ### More Examples
 
@@ -642,15 +710,20 @@ configuration from your command line so that you can focus on the high level
 task at hand.
 
 When we think of a new piece of software, we usually think "what would this be
-helpful with now?". However, the power of `rexe` is not so much what can be done
-with it in a single use case now, but rather what will it do for me as I get
-used to the concept and my supporting code and its uses evolve.
+helpful with now?". However, for me, the power of `rexe` is not so much what I can do
+with it in a single use case now, but rather what will I be able to do with it over time
+as I get used to the concept and my supporting code and its uses evolve.
 
 I suggest starting to use `rexe` even for modest improvements in workflow, even
 if it doesn't seem compelling. There's a good chance that as you use it over
 time, new ideas will come to you and the workflow improvements will increase
 exponentially.
 
+A word of caution though -- 
+the complexity and difficulty of sharing your `rexe` scripts across systems
+will be proportional to the extent to which you use environment variables
+and loaded files for configuration and shared code.
+Be responsible and disciplined in making this configuration as organized as possible.
 
 #### Footnotes
 

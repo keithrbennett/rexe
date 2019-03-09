@@ -76,7 +76,7 @@ Options:
                              -op  Puts (default)
                              -os  to_s
                              -oy  YAML
--r, --require REQUIRES     Gems and built-mn libraries to require, comma separated, or ! to clear
+-r, --require REQUIRES     Gems and built-in libraries to require, comma separated, or ! to clear
 -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 
 If there is an .rexerc file in your home directory, it will be run as Ruby code 

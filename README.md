@@ -47,7 +47,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.10.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.10.1 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -56,10 +56,10 @@ Options:
 -c  --clear_options        Clear all previous command line options specified up to now
 -h, --help                 Print help and exit
 -i, --input_format FORMAT  Input format (none is default)
-                             -oj  JSON
-                             -om  Marshal
-                             -on  None
-                             -oy  YAML
+                             -ij  JSON
+                             -im  Marshal
+                             -in  None
+                             -iy  YAML
 -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
 -m, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
                              -ml  line mode; each line is ingested as a separate string

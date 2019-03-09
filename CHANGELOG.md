@@ -1,6 +1,11 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.10.1
+
+* Fix help text for input formats.
+
+
 ### v0.10.0
 
 * Add input format option -i to simplify ingesting JSON, YAML, Marshal formats.

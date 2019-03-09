@@ -8,7 +8,7 @@ require 'bundler'
 require 'optparse'
 require 'shellwords'
 
-class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose, :noop)
+class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :requires, :verbose, :noop)
 
   VERSION = '0.10.0'
 
@@ -40,6 +40,11 @@ class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose
 
     -c  --clear_options        Clear all previous command line options specified up to now
     -h, --help                 Print help and exit
+    -i, --input_format FORMAT  Input format (none is default)
+                                 -oj  JSON
+                                 -om  Marshal
+                                 -on  None
+                                 -oy  YAML
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
     -m, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
                                  -ml  line mode; each line is ingested as a separate string
@@ -51,6 +56,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose
                                  -oi  Inspect
                                  -oj  JSON
                                  -oJ  Pretty JSON
+                                 -om  Marshal
                                  -on  No Output
                                  -op  Puts (default)
                                  -os  to_s
@@ -91,6 +97,23 @@ class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose
         exit
       end
 
+      parser.on('-i', '--input_format FORMAT',
+                'Mode with which to parse input values (n = none (default), j = JSON, m = Marshal, y = YAML') do |v|
+
+        modes = {
+            'j' => :json,
+            'm' => :marshal,
+            'n' => :none,
+            'y' => :yaml,
+        }
+
+        self.input_format = modes[v]
+        if self.input_format.nil?
+          puts help_text
+          raise "Input mode must be one of #{modes.keys}."
+        end
+      end
+
       parser.on('-l', '--load RUBY_FILE(S)', 'Ruby file(s) to load, comma separated, or ! to clear') do |v|
         if v == '!'
           self.loads.clear
@@ -129,6 +152,7 @@ class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose
             'i' => :inspect,
             'j' => :json,
             'J' => :pretty_json,
+            'm' => :marshal,
             'n' => :no_output,
             'p' => :puts,         # default
             's' => :to_s,
@@ -191,6 +215,10 @@ class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose
 
 
   def execute(eval_context_object, code)
+    unless input_format == :none
+      eval_context_object = input_parser.(eval_context_object)
+    end
+
     value = eval_context_object.instance_eval(&code)
     unless output_format == :no_output
       print output_formatter.(value)
@@ -242,6 +270,25 @@ class Rexe < Struct.new(:input_mode, :loads, :output_format, :requires, :verbose
 end
 
 
+def input_parser
+  if @input_parser.nil?
+
+    require 'json' if input_format == :json
+    require 'yaml' if input_format == :yaml
+
+    parsers = {
+        json:  ->(obj)   { JSON.parse(obj) },
+        marshal: ->(obj) { Marshal.load(obj) },
+        none:  ->(_obj)  { obj },
+        yaml:  ->(obj)   { YAML.load(obj) },
+    }
+
+    @input_parser = parsers[input_format]
+  end
+  @input_parser
+end
+
+
 def output_formatter
   if @output_formatter.nil?
 
@@ -257,6 +304,7 @@ def output_formatter
         awesome_print: ->(obj)  { obj.ai },
         inspect:       ->(obj)  { obj.inspect + "\n" },
         json:          ->(obj)  { obj.to_json },
+        marshal:       ->(obj)  { Marshal.dump(obj) },
         no_output:     ->(_obj) { nil },
         pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
         puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default

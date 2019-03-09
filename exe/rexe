@@ -145,7 +145,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
       end
 
       parser.on('-o', '--output_format FORMAT',
-                'Mode with which to format values for output (`-o` + [aijJnpsy])') do |v|
+                'Mode with which to format values for output (`-o` + [aijJmnpsy])') do |v|
 
         modes = {
             'a' => :awesome_print,

@@ -1,6 +1,16 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.10.0
+
+* Add input format option -i to simplify ingesting JSON, YAML, Marshal formats.
+* Add Marshal output option.
+* In -mn mode:
+  * change output behavior; now outputs last evaluated value like other modes.
+  * self is now a newly created object (Object.new), providing a clean slate for adding instance variables, methods, etc.
+* Wrap execution in Bundler.with_clean_env to enable loading of gems not in Gemfile.
+
+
 ### v0.9.0
 
 * Change -ms (single or separate string) mode to -ml (line) mode.

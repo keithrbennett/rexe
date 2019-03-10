@@ -10,7 +10,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :requires, :verbose, :noop)
 
-  VERSION = '0.10.2'
+  VERSION = '0.10.3'
 
   def initialize
     clear_options
@@ -218,7 +218,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
 
   def execute(eval_context_object, code)
-    unless input_format == :none
+    if input_format != :none && input_mode != :no_input
       eval_context_object = input_parser.(eval_context_object)
     end
 

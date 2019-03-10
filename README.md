@@ -3,8 +3,10 @@ title: The `rexe` Command Line Executor and Filter
 date: 2019-02-15
 ---
 
-[Caution: This is a long article! If you lose patience reading it, I suggest skimming the headings
-and the source code, and at minimum, reading the Conclusion.]
+_[Caution: This is a long article! If you lose patience reading it, I suggest skimming the headings
+and the source code, and at minimum, reading the Conclusion.]_
+
+----
 
 I love the power of the command line, but not the awkwardness of shell scripting
 languages. Sure, there's a lot that can be done with them, but it doesn't take
@@ -57,7 +59,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.10.2 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.10.3 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -101,15 +103,13 @@ so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesom
 -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 ```
 
-### Simplifying the Rexe Invocation with Configuration
+### Simplifying the Rexe Invocation
 
-`rexe` provides two approaches to configuration:
+There are two main ways we can simplify the `rexe` command line:
 
-* the `REXE_OPTIONS` environment variable
-* loading Ruby files before executing the code using `-l`, or implicitly with `~/.rexerc`
-
-These approaches enable removing configuration information from your `rexe` command,
-making it shorter and simpler to read.
+* by extracting configuration into the `REXE_OPTIONS` environment variable
+* by extracting low level and/or shared code into files that are loaded using `-l`,
+  or implicitly with `~/.rexerc`
 
 
 ### The REXE_OPTIONS Environment Variable
@@ -333,19 +333,35 @@ If you may have more input than would fit in memory, you can do the following:
   * use [lazy enumerators](https://www.honeybadger.io/blog/using-lazy-enumerators-to-work-with-large-files-in-ruby/)
  
 
+### Input Formats
+
+`rexe` can parse your input in any of several formats if you like. 
+You would request this in the _input format_ (`-i`) option.
+Legal values are:
+
+* `-ij` - JSON
+* `-im` - Marshal
+* `-in` - [None] (default)
+* `-iy` - YAML
+
+Except for `-in`, which passes the text to your code untouched, your input will be parsed
+in the specified format, and the resulting object passed into your code as `self`.
+
+The input format option is ignored if the input _mode_ is `-mn` ("no input" executor mode, the default),
+since there is no preprocessing of standard input in that mode.
 
 ### Output Formats
 
-Several output formats are provided for your convenience. Here they are in alphabetical order:
+Several output formats are provided for your convenience. Here they are:
 
-* `-oa` (Awesome Print) - calls `.ai` on the object to get the string that `ap` would print
-* `-oi` (Inspect) - calls `inspect` on the object
-* `-oj` (JSON) - calls `to_json` on the object
-* `-oJ` (Pretty JSON) calls `JSON.pretty_generate` with the object
-* `-on` (No Output) - output is suppressed
-* `-op` (Puts) - produces what `puts` would output
-* `-os` (To String) - calls `to_s` on the object
-* `-oy` (YAML) - calls `to_yaml` on the object
+* `-oa` - Awesome Print - calls `.ai` on the object to get the string that `ap` would print
+* `-oi` - Inspect - calls `inspect` on the object
+* `-oj` - JSON - calls `to_json` on the object
+* `-oJ` - Pretty JSON calls `JSON.pretty_generate` with the object
+* `-on` - No Output - output is suppressed
+* `-op` - Puts - produces what `puts` would output
+* `-os` - To String - calls `to_s` on the object
+* `-oy` - YAML - calls `to_yaml` on the object
 
 All formats will implicitly `require` anything needed to accomplish their task (e.g. `require 'yaml'`).
 
@@ -496,8 +512,6 @@ interpreter sees your code, it's all in a single line. Adding the semicolon fixe
 ```
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; \
 puts to_a"
-
-eval_context_object: #<Enumerator:0x00007f92b1972840>
  _______
 < hello >
  -------
@@ -723,7 +737,7 @@ A word of caution though --
 the complexity and difficulty of sharing your `rexe` scripts across systems
 will be proportional to the extent to which you use environment variables
 and loaded files for configuration and shared code.
-Be responsible and disciplined in making this configuration as organized as possible.
+Be responsible and disciplined in making this configuration and code as organized as possible.
 
 #### Footnotes
 

@@ -1,6 +1,11 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.10.3
+
+* Fix: parsing should not be attempted if in no input mode.
+* Improve README.
+
 ### v0.10.2
 
 * Fix problem in :none input format mode.

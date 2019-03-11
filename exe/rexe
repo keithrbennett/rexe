@@ -289,18 +289,19 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
     callable = eval("Proc.new { #{user_source_code} }")
 
     actions = {
-        line:           -> { STDIN.each { |l| execute(l.chomp, callable) } },
-        enumerator:     -> { execute(STDIN.each_line, callable) },
-        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable) },
+        line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $REXE_CONTEXT[:count] += 1 } },
+        enumerator:     -> { execute(STDIN.each_line, callable);                     $REXE_CONTEXT[:count] += 1 },
+        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $REXE_CONTEXT[:count] += 1 },
         no_input:       -> { execute(Object.new, callable) }
     }
 
     # This global is available in your user code.
     $REXE_CONTEXT = {
-        rexe_version: VERSION,
-        start_time: start_time.iso8601,
-        source_code: user_source_code,
-        options: self.to_h,
+        count:         0,
+        rexe_version:  VERSION,
+        start_time:    start_time.iso8601,
+        source_code:   user_source_code,
+        options:       self.to_h,
     }
 
     actions[input_mode].() unless self.noop

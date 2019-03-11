@@ -1,6 +1,15 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.11.0
+
+* Make global $RC (Rexe Context) OpenStruct available to user code; added `count` for record count in `-ml` mode.
+* Change verbose output to YAML format.
+* Failure to load a file now raises an error.
+* Add pretty print output format.
+* Fix tests.
+
+
 ### v0.10.3
 
 * Fix: parsing should not be attempted if in no input mode.

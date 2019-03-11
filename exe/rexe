@@ -12,7 +12,7 @@ require 'shellwords'
 
 class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :requires, :verbose, :noop)
 
-  VERSION = '0.10.3'
+  VERSION = '0.11.0'
 
 
   def initialize
@@ -311,7 +311,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
     if verbose
       $RC.duration_secs = Time.now - start_time.to_time
       require 'yaml'
-      STDERR.puts($RC.to_yaml)
+      STDERR.puts($RC.to_h.to_yaml)
     end
   end
 end

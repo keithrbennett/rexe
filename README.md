@@ -56,10 +56,12 @@ This command does the same thing as the previous `ruby` command:
 `gem install rexe`. `rexe` provides several ways to simplify Ruby on the command
 line, tipping the scale so that it is practical to do it more often.
 
+----
+
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.10.3 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.11.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -126,29 +128,9 @@ Like any environment variable, `REXE_OPTIONS` could also be set in your startup 
 
 ### Loading Files
 
-The environment variable approach works well for command line _options_, but what if we want to specify Ruby _code_ (e.g. methods) that can be used by multiple invocations of `rexe`?
+The environment variable approach works well for command line _options_, but what if we want to specify Ruby _code_ (e.g. methods) that can be used by your `rexe` code?
 
-For this, `rexe` lets you _load_ Ruby files, using the `-l` option, or implicitly (without your specifying it) in the case of the `~/.rexerc` file. Here is an example of something you might include in such a file (this is an alternate approach to specifying `-r` in the `REXE_OPTIONS` environment variable):
-
-```
-require 'json'
-require 'yaml'
-require 'awesome_print'
-```
-
-Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that nokogiri takes about 0.7 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated):
-
-```
-➜  ~   rexe -v
-rexe time elapsed: 0.094946 seconds.
-
-➜  ~   rexe -v -r nokogiri
-rexe time elapsed: 0.165996 seconds.
-```
-
-### Using Loaded Files in Your Commands
-
-Here's something else you could include in such a load file:
+For this, `rexe` lets you _load_ Ruby files, using the `-l` option, or implicitly (without your specifying it) in the case of the `~/.rexerc` file. Here is an example of something you might include in such a file:
 
 ```
 # Open YouTube to Wagner's "Ride of the Valkyries"
@@ -166,7 +148,9 @@ an explicitly loaded file:
 ➜  ~   tar czf /tmp/my-whole-user-space.tar.gz ~ ; rexe valkyries
 ```
 
-You might be thinking that creating an alias or a minimal shell script for this open would be a simpler and more natural
+(Note that `;` is used rather than `&&` because we want to hear the music whether or not the command succeeds.)
+
+You might be thinking that creating an alias or a minimal shell script for this `open` would be a simpler and more natural
 approach, and I would agree with you. However, over time the number of these could become unmanageable, whereas using Ruby
 you could build a pretty extensive and well organized library of functionality. Moreover, that functionality could be made available to _all_ your Ruby code (for example, by putting it in a gem), and not just command line one liners.
 
@@ -194,40 +178,38 @@ end
 Alternatively you could escape the parentheses with backslashes.)
 
 
-### Clearing the Require and Load Lists
-
-There may be times when you have specified a load or require on the command line
-or in the `REXE_OPTIONS` environment variable,
-but you want to override it for a single invocation. Currently you cannot
-unspecify a single resource, but you can unspecify _all_ the requires or loads
-with the `-r!` and `-l!` command line options, respectively.
-
-
-### Clearing _All_ Options
-
-You can also clear _all_ options specified up to a certain point in time with the _clear options_ option (`-c`).
-This is especially useful if you have specified options in the `REXE_OPTIONS` environment variable, 
-and want to ignore all of them.
-
-
 ### Verbose Mode
 
-In addition to displaying the execution time, verbose mode will display the version, date/time of execution, source code
-to be evaluated, options specified (by all approaches), and that the global file has been loaded (if it was found):
+Verbose mode will display the version, date/time of execution, source code
+to be evaluated, options specified (by all approaches), that the global file has been loaded (if it was found),
+and the execution time of your Ruby code:
  
 ```
 ➜  ~   echo $EUR_RATES_JSON | rexe -v -rjson,awesome_print "ap JSON.parse(STDIN.read)"
-rexe version 0.7.0 -- 2019-03-03 18:18:14 +0700
-Source Code: ap JSON.parse(STDIN.read)
-Options: {:input_mode=>:no_input, :loads=>[], :requires=>["json", "awesome_print"], :verbose=>true}
-Loading global config file /Users/kbennett/.rexerc
-...
-rexe time elapsed: 0.085913 seconds.
+---
+:count: 0
+:rexe_version: 0.11.0
+:start_time: '2019-03-11T20:16:02+07:00'
+:source_code: ap JSON.parse(STDIN.read)
+:options:
+  :input_format: :none
+  :input_mode: :no_input
+  :loads: []
+  :output_format: :puts
+  :requires:
+  - json
+  - awesome_print
+  :verbose: true
+  :noop: false
+:duration_secs: 0.032174
 ``` 
  
 This extra output is sent to standard error (_stderr_) instead of standard output
 (_stdout_) so that it will not pollute the "real" data when stdout is piped to
 another command.
+
+As you can see, the data is the YAML representation of a hash, so you could easily ingest it and
+use it programatically.
 
 If you would like to append this informational output to a file, you could do something like this:
 
@@ -373,6 +355,24 @@ could be included in the custom code instead. Here's why:
 parameterization of the output format.
 
 
+### The $RC Global OpenStruct
+
+For your convenience, the information displayed in verbose mode is available to your code at runtime
+by accessing the `$RC` global variable, which contains an OpenStruct. Probably most useful in that object
+is the record count (as `$RC.count`). This is only really useful in line mode, because in the others
+it will always be 0 or 1. Here is an example of how you might use it:
+
+```
+➜  ~   ➜  ~   find / | rexe -ml -on \
+'n = $RC.count; if n % 1000 == 0; puts %Q{File entry ##{n} is #{self}}; end'
+
+...
+File entry #106000 is /usr/local/Cellar/go/1.11.5/libexec/src/cmd/vendor/github.com/google/pprof/internal/driver/driver_test.go
+File entry #107000 is /usr/local/Cellar/go/1.11.5/libexec/src/go/types/testdata/cycles1.src
+File entry #108000 is /usr/local/Cellar/go/1.11.5/libexec/src/runtime/os_linux_novdso.go
+...
+```
+
 ### Implementing Domain Specific Languages (DSL's)
 
 Defining methods in your loaded files enables you to effectively define a [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for your command line use. You could use different load files for different projects, domains, or contexts, and define aliases or one line scripts to give them meaningful names. For example, if I wrote code to work with Ansible and put it in `~/projects/rexe-ansible.rb`, I could define an alias in my startup script:
@@ -473,6 +473,10 @@ After copying this line to the clipboard, I could run this:
 If I add `| pbcopy` to the rexe command, then that output text would be copied into the clipboard instead of
 displayed in the terminal, and I could then paste it in my editor.
 
+Using the clipboard in manual operations is handy, but using it in automated scripts is a very bad idea, since
+there is only one clipboard per user session. If you use the clipboard in an automated script you risk
+an error situation if its content is changed by others, or, conversely, you could mess up another task
+when you change the content of the clipboard. 
 
 ### Multiline Ruby Commands
 
@@ -523,6 +527,22 @@ puts to_a"
 ```
 
 
+### Clearing the Require and Load Lists
+
+There may be times when you have specified a load or require on the command line
+or in the `REXE_OPTIONS` environment variable,
+but you want to override it for a single invocation. Currently you cannot
+unspecify a single resource, but you can unspecify _all_ the requires or loads
+with the `-r!` and `-l!` command line options, respectively.
+
+
+### Clearing _All_ Options
+
+You can also clear _all_ options specified up to a certain point in time with the _clear options_ option (`-c`).
+This is especially useful if you have specified options in the `REXE_OPTIONS` environment variable, 
+and want to ignore all of them.
+
+
 ### Comma Separated Requires and Loads
 
 For consistency with the `ruby` interpreter, `rexe` supports requires with the `-r` option, but 
@@ -535,6 +555,21 @@ also allows grouping them together using commas:
 ```
 
 Files loaded with the `-l` option are treated the same way.
+
+
+### Beware of Configured Requires
+
+Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that nokogiri takes about 0.15 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using the redirection and grep):
+
+```
+➜  ~   rexe -v 2>&1 | grep duration
+:duration_secs: 0.0012
+
+➜  ~   rexe -v -r nokogiri 2>&1 | grep duration
+:duration_secs: 0.148671
+```
+
+
 
 ### More Examples
 
@@ -737,7 +772,7 @@ A word of caution though --
 the complexity and difficulty of sharing your `rexe` scripts across systems
 will be proportional to the extent to which you use environment variables
 and loaded files for configuration and shared code.
-Be responsible and disciplined in making this configuration and code as organized as possible.
+Be responsible and disciplined in making this configuration and code as clean and organized as possible.
 
 #### Footnotes
 

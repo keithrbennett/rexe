@@ -41,10 +41,10 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
   def input_parsers
     @input_parsers ||= {
-        json:  ->(obj)   { JSON.parse(obj) },
-        marshal: ->(obj) { Marshal.load(obj) },
-        none:  ->(_obj)  { obj },
-        yaml:  ->(obj)   { YAML.load(obj) },
+        json:    ->(obj)  { JSON.parse(obj) },
+        marshal: ->(obj)  { Marshal.load(obj) },
+        none:    ->(obj)  { obj },
+        yaml:    ->(obj)  { YAML.load(obj) },
     }
   end
 
@@ -166,8 +166,6 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
   def parse_command_line
 
-    prepend_environment_options
-
     OptionParser.new do |parser|
 
       parser.on("-h", "--help", "Show help") do |_help_requested|
@@ -279,6 +277,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
   def call
     start_time = DateTime.now
 
+    prepend_environment_options
     parse_command_line
     user_source_code = ARGV.join(' ')
 
@@ -289,27 +288,29 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
     callable = eval("Proc.new { #{user_source_code} }")
 
     actions = {
-        line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $REXE_CONTEXT[:count] += 1 } },
-        enumerator:     -> { execute(STDIN.each_line, callable);                     $REXE_CONTEXT[:count] += 1 },
-        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $REXE_CONTEXT[:count] += 1 },
+        line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC[:count] += 1 } },
+        enumerator:     -> { execute(STDIN.each_line, callable);                     $RC[:count] += 1 },
+        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $RC[:count] += 1 },
         no_input:       -> { execute(Object.new, callable) }
     }
 
-    # This global is available in your user code.
-    $REXE_CONTEXT = {
-        count:         0,
-        rexe_version:  VERSION,
-        start_time:    start_time.iso8601,
-        source_code:   user_source_code,
-        options:       self.to_h,
-    }
+    # This global $RC (Rexe Context) hash is available in your user code.
+    # In order to make it possible to access this hash in your loaded files, we are not initializing
+    # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
+    # in your loaded code.
+    $RC ||= {}
+    $RC[:count]         = 0
+    $RC[:rexe_version]  = VERSION
+    $RC[:start_time]    = start_time.iso8601
+    $RC[:source_code]   = user_source_code
+    $RC[:options]       = self.to_h
 
     actions[input_mode].() unless self.noop
 
     if verbose
-      $REXE_CONTEXT[:duration_secs] = Time.now - start_time.to_time
+      $RC[:duration_secs] = Time.now - start_time.to_time
       require 'yaml'
-      STDERR.puts($REXE_CONTEXT.to_yaml)
+      STDERR.puts($RC.to_yaml)
     end
   end
 end

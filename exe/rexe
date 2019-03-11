@@ -5,6 +5,7 @@
 # Inspired by https://github.com/thisredone/rb
 
 require 'bundler'
+require 'date'
 require 'optparse'
 require 'shellwords'
 
@@ -124,9 +125,10 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
           loadfiles = v.split(',').map(&:strip)
           existent, nonexistent = loadfiles.partition { |filespec| File.exists?(filespec) }
           if nonexistent.any?
-            log_if_verbose("\nDid not find the following files to load: #{nonexistent.to_s}\n\n")
+            raise("\nDid not find the following files to load: #{nonexistent.to_s}\n\n")
+          else
+            existent.each { |filespec| self.loads << filespec }
           end
-          existent.each { |filespec| self.loads << filespec }
         end
       end
 
@@ -208,12 +210,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
   def load_global_config_if_exists
     filespec = File.join(Dir.home, '.rexerc')
-    exists = File.exists?(filespec)
-    if exists
-      log_if_verbose("Loading global config file #{filespec}")
-      load(filespec)
-    end
-    exists ? filespec : nil
+    load(filespec) if File.exists?(filespec)
   end
 
 
@@ -231,28 +228,17 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
   end
 
 
-  def log_if_verbose(string)
-    STDERR.puts(string) if verbose
-  end
-
-
   def call
-    start_time = Time.now
+    start_time = DateTime.now
 
     parse_command_line
-
-    log_if_verbose("rexe version #{VERSION} -- #{Time.now}")
-    log_if_verbose('Source Code: ' + ARGV.join(' '))
-    log_if_verbose('Options: ' + self.to_h.to_s)
+    user_source_code = ARGV.join(' ')
 
     requires.each { |r| require(r) }
-
     load_global_config_if_exists
-
     loads.each { |file| load(file) }
 
-    source_code = "Proc.new { #{ARGV.join(' ')} }"
-    code = eval(source_code)
+    code = eval("Proc.new { #{user_source_code} }")
 
     actions = {
         line:           -> { STDIN.each { |l| execute(l.chomp, code) } },
@@ -261,14 +247,21 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
         no_input:       -> { execute(Object.new, code) }
     }
 
-    if self.noop
-      log_if_verbose("No-op mode requested; not executing code.")
-    else
-      actions[input_mode].()
-    end
+    # This global is available in your user code.
+    $REXE_CONTEXT = {
+        rexe_version: VERSION,
+        start_time: start_time.iso8601,
+        source_code: user_source_code,
+        options: self.to_h,
+    }
 
-    duration = Time.now - start_time
-    log_if_verbose("rexe time elapsed: #{duration} seconds.")
+    actions[input_mode].() unless self.noop
+
+    if verbose
+      $REXE_CONTEXT[:duration_secs] = Time.now - start_time.to_time
+      require 'yaml'
+      STDERR.puts($REXE_CONTEXT.to_yaml)
+    end
   end
 end
 

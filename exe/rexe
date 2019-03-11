@@ -160,6 +160,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
             'm' => :marshal,
             'n' => :no_output,
             'p' => :puts,         # default
+            'P' => :pretty_print,
             's' => :to_s,
             'y' => :yaml,
         }
@@ -288,11 +289,15 @@ end
 def output_formatter
   if @output_formatter.nil?
 
-    if %i(json  pretty_json).include?(output_format)
+    case output_format
+    when :json
+    when :pretty_json
       require 'json'
-    elsif output_format == :yaml
+    when :pretty_print
+      require 'pp'
+    when :yaml
       require 'yaml'
-    elsif output_format == :awesome_print
+    when :awesome_print
       require 'awesome_print'
     end
 
@@ -303,6 +308,7 @@ def output_formatter
         marshal:       ->(obj)  { Marshal.dump(obj) },
         no_output:     ->(_obj) { nil },
         pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
+        pretty_print:  ->(obj)  { obj.pretty_inspect },
         puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
         to_s:          ->(obj)  { obj.to_s + "\n" },
         yaml:          ->(obj)  { obj.to_yaml },

@@ -21,40 +21,44 @@ RSpec.describe 'rexe' do
   end
 
   specify 'in big string mode (-mb) all input is considered a single string object' do
-    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -mb reverse})).to eq("\ndc\nba\n")
+    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -mb reverse})).to eq("\ndc\nba\n")
   end
 
   specify 'in each line separate mode (-ms) each line is processed separately' do
-    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -ms reverse})).to eq("ba\ndc\n")
+    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -ml reverse})).to eq("ba\ndc\n")
   end
 
   specify 'in enumerator mode (-me) self is an Enumerator' do
-    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -me self.class.to_s}).chomp).to eq('Enumerator')
+    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -me self.class.to_s}).chomp).to eq('Enumerator')
   end
 
   specify 'in no input mode (-mn), code is executed without input' do
-    expect(RUN.(%Q{#{REXE_FILE} -mn "puts(64.to_s(8))"}).chomp).to eq('100')
+    expect(RUN.(%Q{#{REXE_FILE} -c -mn "puts(64.to_s(8))"})).to start_with('100')
   end
 
   specify '-v option enables verbose mode' do
-    expect(RUN.(%Q{#{REXE_FILE} -mn -v 3 2>&1})).to include('rexe version')
+    expect(RUN.(%Q{#{REXE_FILE} -c -mn -v 3 2>&1})).to include('rexe_version')
   end
 
   specify '-v n option disables verbose mode' do
-    expect(RUN.(%Q{#{REXE_FILE} -v n -mn 3 2>&1})).not_to include('rexe version')
+    expect(RUN.(%Q{#{REXE_FILE} -c -v n -mn 3 2>&1})).not_to include('rexe version')
   end
 
-  specify '-mn option does not output anything not explicitly output' do
-    expect(RUN.(%Q{#{REXE_FILE} -mn 42}).chomp).to eq('')
+  specify '-mn option outputs last evaluated value' do
+    expect(RUN.(%Q{#{REXE_FILE} -c -mn 42}).chomp).to eq('42')
+  end
+
+  specify '-on output foramt results in no output' do
+    expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 42}).chomp).to eq('')
   end
 
   specify 'requiring using -r works' do
-    RUN.("#{REXE_FILE} -mn -r! -r yaml YAML") # just refer to the YAML module and see if it breaks
+    RUN.("#{REXE_FILE} -c -mn -r! -r yaml YAML") # just refer to the YAML module and see if it breaks
     expect($?.exitstatus).to eq(0)
   end
 
   specify 'clearing requires using -r ! works' do
-    command = "#{REXE_FILE} -mn -r yaml -r! YAML"
+    command = "#{REXE_FILE} -c -mn -r yaml -r! YAML"
 
     # Suppress distracting error output, but the redirection requires Posix compatibility:
     command << " 2>/dev/null" if OS.posix?

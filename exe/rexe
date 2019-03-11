@@ -13,8 +13,82 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
   VERSION = '0.10.3'
 
+
   def initialize
     clear_options
+  end
+
+
+  def input_modes
+    @input_modes ||= {
+        'l' => :line,
+        'e' => :enumerator,
+        'b' => :one_big_string,
+        'n' => :no_input
+    }
+  end
+
+
+  def input_formats
+    @input_formats ||=  {
+        'j' => :json,
+        'm' => :marshal,
+        'n' => :none,
+        'y' => :yaml,
+    }
+  end
+
+
+  def input_parsers
+    @input_parsers ||= {
+        json:  ->(obj)   { JSON.parse(obj) },
+        marshal: ->(obj) { Marshal.load(obj) },
+        none:  ->(_obj)  { obj },
+        yaml:  ->(obj)   { YAML.load(obj) },
+    }
+  end
+
+
+  def output_formats
+    @output_formats ||= {
+        'a' => :awesome_print,
+        'i' => :inspect,
+        'j' => :json,
+        'J' => :pretty_json,
+        'm' => :marshal,
+        'n' => :no_output,
+        'p' => :puts,         # default
+        'P' => :pretty_print,
+        's' => :to_s,
+        'y' => :yaml,
+    }
+  end
+
+
+  def formatters
+    @formatters ||=  {
+        awesome_print: ->(obj)  { obj.ai },
+        inspect:       ->(obj)  { obj.inspect + "\n" },
+        json:          ->(obj)  { obj.to_json },
+        marshal:       ->(obj)  { Marshal.dump(obj) },
+        no_output:     ->(_obj) { nil },
+        pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
+        pretty_print:  ->(obj)  { obj.pretty_inspect },
+        puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
+        to_s:          ->(obj)  { obj.to_s + "\n" },
+        yaml:          ->(obj)  { obj.to_yaml },
+    }
+  end
+
+
+  def parser_and_format_requires
+    @format_requires ||= {
+        json:          'json',
+        pretty_json:   'json',
+        awesome_print: 'awesome_print',
+        pretty_print:  'pp',
+        yaml:          'yaml'
+    }
   end
 
 
@@ -104,17 +178,10 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
       parser.on('-i', '--input_format FORMAT',
                 'Mode with which to parse input values (n = none (default), j = JSON, m = Marshal, y = YAML') do |v|
 
-        modes = {
-            'j' => :json,
-            'm' => :marshal,
-            'n' => :none,
-            'y' => :yaml,
-        }
-
-        self.input_format = modes[v]
+        self.input_format = input_formats[v]
         if self.input_format.nil?
           puts help_text
-          raise "Input mode must be one of #{modes.keys}."
+          raise "Input mode was '#{v}' but must be one of #{input_formats.keys}."
         end
       end
 
@@ -135,40 +202,20 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
       parser.on('-m', '--input_mode MODE',
                 'Mode with which to handle input (-ml, -me, -mb, -mn (default)') do |v|
 
-        modes = {
-            'l' => :line,
-            'e' => :enumerator,
-            'b' => :one_big_string,
-            'n' => :no_input
-        }
-
-        self.input_mode = modes[v]
+        self.input_mode = input_modes[v]
         if self.input_mode.nil?
           puts help_text
-          raise "Input mode must be one of #{modes.keys}."
+          raise "Input mode was '#{v}' but must be one of #{input_modes.keys}."
         end
       end
 
       parser.on('-o', '--output_format FORMAT',
                 'Mode with which to format values for output (`-o` + [aijJmnpsy])') do |v|
 
-        modes = {
-            'a' => :awesome_print,
-            'i' => :inspect,
-            'j' => :json,
-            'J' => :pretty_json,
-            'm' => :marshal,
-            'n' => :no_output,
-            'p' => :puts,         # default
-            'P' => :pretty_print,
-            's' => :to_s,
-            'y' => :yaml,
-        }
-
-        self.output_format = modes[v]
+        self.output_format = output_formats[v]
         if self.output_format.nil?
           puts help_text
-          raise "Output mode must be one of #{modes.keys}."
+          raise "Output mode was '#{v}' but must be one of #{output_formats.keys}."
         end
       end
 
@@ -239,13 +286,13 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
     load_global_config_if_exists
     loads.each { |file| load(file) }
 
-    code = eval("Proc.new { #{user_source_code} }")
+    callable = eval("Proc.new { #{user_source_code} }")
 
     actions = {
-        line:           -> { STDIN.each { |l| execute(l.chomp, code) } },
-        enumerator:     -> { execute(STDIN.each_line, code) },
-        one_big_string: -> { big_string = STDIN.read; execute(big_string, code) },
-        no_input:       -> { execute(Object.new, code) }
+        line:           -> { STDIN.each { |l| execute(l.chomp, callable) } },
+        enumerator:     -> { execute(STDIN.each_line, callable) },
+        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable) },
+        no_input:       -> { execute(Object.new, callable) }
     }
 
     # This global is available in your user code.
@@ -269,18 +316,9 @@ end
 
 def input_parser
   if @input_parser.nil?
-
-    require 'json' if input_format == :json
-    require 'yaml' if input_format == :yaml
-
-    parsers = {
-        json:  ->(obj)   { JSON.parse(obj) },
-        marshal: ->(obj) { Marshal.load(obj) },
-        none:  ->(_obj)  { obj },
-        yaml:  ->(obj)   { YAML.load(obj) },
-    }
-
-    @input_parser = parsers[input_format]
+    require_spec = parser_and_format_requires[input_format]
+    require require_spec if require_spec
+    @input_parser = input_parsers[input_format]
   end
   @input_parser
 end
@@ -288,32 +326,8 @@ end
 
 def output_formatter
   if @output_formatter.nil?
-
-    case output_format
-    when :json
-    when :pretty_json
-      require 'json'
-    when :pretty_print
-      require 'pp'
-    when :yaml
-      require 'yaml'
-    when :awesome_print
-      require 'awesome_print'
-    end
-
-    formatters = {
-        awesome_print: ->(obj)  { obj.ai },
-        inspect:       ->(obj)  { obj.inspect + "\n" },
-        json:          ->(obj)  { obj.to_json },
-        marshal:       ->(obj)  { Marshal.dump(obj) },
-        no_output:     ->(_obj) { nil },
-        pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
-        pretty_print:  ->(obj)  { obj.pretty_inspect },
-        puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
-        to_s:          ->(obj)  { obj.to_s + "\n" },
-        yaml:          ->(obj)  { obj.to_yaml },
-    }
-
+    require_spec = parser_and_format_requires[output_format]
+    require require_spec if require_spec
     @output_formatter = formatters[output_format]
   end
   @output_formatter

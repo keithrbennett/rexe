@@ -7,6 +7,7 @@
 require 'bundler'
 require 'date'
 require 'optparse'
+require 'ostruct'
 require 'shellwords'
 
 class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :requires, :verbose, :noop)
@@ -294,21 +295,21 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
         no_input:       -> { execute(Object.new, callable) }
     }
 
-    # This global $RC (Rexe Context) hash is available in your user code.
+    # This global $RC (Rexe Context) OpenStruct is available in your user code.
     # In order to make it possible to access this hash in your loaded files, we are not initializing
     # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
     # in your loaded code.
-    $RC ||= {}
-    $RC[:count]         = 0
-    $RC[:rexe_version]  = VERSION
-    $RC[:start_time]    = start_time.iso8601
-    $RC[:source_code]   = user_source_code
-    $RC[:options]       = self.to_h
+    $RC ||= OpenStruct.new
+    $RC.count         = 0
+    $RC.rexe_version  = VERSION
+    $RC.start_time    = start_time.iso8601
+    $RC.source_code   = user_source_code
+    $RC.options       = self.to_h
 
     actions[input_mode].() unless self.noop
 
     if verbose
-      $RC[:duration_secs] = Time.now - start_time.to_time
+      $RC.duration_secs = Time.now - start_time.to_time
       require 'yaml'
       STDERR.puts($RC.to_yaml)
     end

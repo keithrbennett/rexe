@@ -66,4 +66,8 @@ RSpec.describe 'rexe' do
     RUN.(command) # just refer to the YAML module and see if it breaks
     expect($?.exitstatus).not_to eq(0)
   end
+
+  specify 'the record count is available as $RC[:count]' do
+    expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC[:count].to_s'})).to eq("a0\nb1\nc2\n")
+  end
 end

@@ -10,113 +10,136 @@ require 'optparse'
 require 'ostruct'
 require 'shellwords'
 
-class Rexe < Struct.new(
-    :input_format,
-    :input_mode,
-    :loads,
-    :output_format,
-    :requires,
-    :log_format,
-    :noop)
+class Rexe
+
+
+
+
+  class Options < Struct.new(
+      :input_format,
+      :input_mode,
+      :loads,
+      :output_format,
+      :requires,
+      :log_format,
+      :noop)
+
+
+    def initialize
+      super
+      clear
+    end
+
+
+    def clear
+      self.input_format  = :none
+      self.input_mode    = :no_input
+      self.output_format = :puts
+      self.loads         = []
+      self.requires      = []
+      self.log_format    = :none
+      self.noop          = false
+    end
+  end
+
+
+
+
+
+  class Lookups
+    def input_modes
+      @input_modes ||= {
+          'l' => :line,
+          'e' => :enumerator,
+          'b' => :one_big_string,
+          'n' => :no_input
+      }
+    end
+
+
+    def input_formats
+      @input_formats ||=  {
+          'j' => :json,
+          'm' => :marshal,
+          'n' => :none,
+          'y' => :yaml,
+      }
+    end
+
+
+    def input_parsers
+      @input_parsers ||= {
+          json:    ->(obj)  { JSON.parse(obj) },
+          marshal: ->(obj)  { Marshal.load(obj) },
+          none:    ->(obj)  { obj },
+          yaml:    ->(obj)  { YAML.load(obj) },
+      }
+    end
+
+
+    def output_formats
+      @output_formats ||= {
+          'a' => :awesome_print,
+          'i' => :inspect,
+          'j' => :json,
+          'J' => :pretty_json,
+          'm' => :marshal,
+          'n' => :no_output,
+          'p' => :puts,         # default
+          'P' => :pretty_print,
+          's' => :to_s,
+          'y' => :yaml,
+      }
+    end
+
+
+    def formatters
+      @formatters ||=  {
+          awesome_print: ->(obj)  { obj.ai },
+          inspect:       ->(obj)  { obj.inspect + "\n" },
+          json:          ->(obj)  { obj.to_json },
+          marshal:       ->(obj)  { Marshal.dump(obj) },
+          no_output:     ->(_obj) { nil },
+          pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
+          pretty_print:  ->(obj)  { obj.pretty_inspect },
+          puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
+          to_s:          ->(obj)  { obj.to_s + "\n" },
+          yaml:          ->(obj)  { obj.to_yaml },
+      }
+    end
+
+    def format_requires
+      @format_requires ||= {
+          json:          'json',
+          pretty_json:   'json',
+          awesome_print: 'awesome_print',
+          pretty_print:  'pp',
+          yaml:          'yaml'
+      }
+    end
+  end
+
+
 
 
   VERSION = '0.12.0'
 
 
-  attr_accessor :callable, :input_parser, :output_formatter, :log_formatter, :start_time, :user_source_code
+  attr_accessor :callable, :input_parser, :lookups, :options, :output_formatter,
+                :log_formatter, :start_time, :user_source_code
 
 
   def initialize
     @start_time = DateTime.now
-    clear_options
-  end
-
-
-  def input_modes
-    @input_modes ||= {
-        'l' => :line,
-        'e' => :enumerator,
-        'b' => :one_big_string,
-        'n' => :no_input
-    }
-  end
-
-
-  def input_formats
-    @input_formats ||=  {
-        'j' => :json,
-        'm' => :marshal,
-        'n' => :none,
-        'y' => :yaml,
-    }
-  end
-
-
-  def input_parsers
-    @input_parsers ||= {
-        json:    ->(obj)  { JSON.parse(obj) },
-        marshal: ->(obj)  { Marshal.load(obj) },
-        none:    ->(obj)  { obj },
-        yaml:    ->(obj)  { YAML.load(obj) },
-    }
-  end
-
-
-  def output_formats
-    @output_formats ||= {
-        'a' => :awesome_print,
-        'i' => :inspect,
-        'j' => :json,
-        'J' => :pretty_json,
-        'm' => :marshal,
-        'n' => :no_output,
-        'p' => :puts,         # default
-        'P' => :pretty_print,
-        's' => :to_s,
-        'y' => :yaml,
-    }
-  end
-
-
-  def formatters
-    @formatters ||=  {
-        awesome_print: ->(obj)  { obj.ai },
-        inspect:       ->(obj)  { obj.inspect + "\n" },
-        json:          ->(obj)  { obj.to_json },
-        marshal:       ->(obj)  { Marshal.dump(obj) },
-        no_output:     ->(_obj) { nil },
-        pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
-        pretty_print:  ->(obj)  { obj.pretty_inspect },
-        puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
-        to_s:          ->(obj)  { obj.to_s + "\n" },
-        yaml:          ->(obj)  { obj.to_yaml },
-    }
+    @options = Options.new
+    @lookups = Lookups.new
   end
 
 
   # Requires the 'require' appropriate to the specified format.
   def require_format_require(format)
-    @format_requires ||= {
-        json:          'json',
-        pretty_json:   'json',
-        awesome_print: 'awesome_print',
-        pretty_print:  'pp',
-        yaml:          'yaml'
-    }
-    r = @format_requires[format]
+    r = lookups.format_requires[format]
     require(r) if r
-  end
-
-
-  # Used as an initializer and also when `-c` is specified on the command line.
-  def clear_options
-    self.input_format  = :none
-    self.input_mode    = :no_input
-    self.output_format = :puts
-    self.loads         = []
-    self.requires      = []
-    self.log_format    = :none
-    self.noop          = false
   end
 
 
@@ -185,10 +208,10 @@ class Rexe < Struct.new(
     OptionParser.new do |parser|
 
       parser.on('-g', '--log_format FORMAT', 'Log format, logs to stderr, defaults to none (see -o for format options)') do |v|
-        self.log_format = output_formats[v]
-        if self.log_format.nil?
+        options.log_format = lookups.output_formats[v]
+        if options.log_format.nil?
           puts help_text
-          raise "Output mode was '#{v}' but must be one of #{output_formats.keys}."
+          raise "Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}."
         end
       end
 
@@ -200,23 +223,23 @@ class Rexe < Struct.new(
       parser.on('-i', '--input_format FORMAT',
                 'Mode with which to parse input values (n = none (default), j = JSON, m = Marshal, y = YAML') do |v|
 
-        self.input_format = input_formats[v]
-        if self.input_format.nil?
+        options.input_format = lookups.input_formats[v]
+        if options.input_format.nil?
           puts help_text
-          raise "Input mode was '#{v}' but must be one of #{input_formats.keys}."
+          raise "Input mode was '#{v}' but must be one of #{lookups.input_formats.keys}."
         end
       end
 
       parser.on('-l', '--load RUBY_FILE(S)', 'Ruby file(s) to load, comma separated, or ! to clear') do |v|
         if v == '!'
-          self.loads.clear
+          options.loads.clear
         else
           loadfiles = v.split(',').map(&:strip)
           existent, nonexistent = loadfiles.partition { |filespec| File.exists?(filespec) }
           if nonexistent.any?
             raise("\nDid not find the following files to load: #{nonexistent.to_s}\n\n")
           else
-            existent.each { |filespec| self.loads << filespec }
+            existent.each { |filespec| options.loads << filespec }
           end
         end
       end
@@ -224,34 +247,34 @@ class Rexe < Struct.new(
       parser.on('-m', '--input_mode MODE',
                 'Mode with which to handle input (-ml, -me, -mb, -mn (default)') do |v|
 
-        self.input_mode = input_modes[v]
-        if self.input_mode.nil?
+        options.input_mode = lookups.input_modes[v]
+        if options.input_mode.nil?
           puts help_text
-          raise "Input mode was '#{v}' but must be one of #{input_modes.keys}."
+          raise "Input mode was '#{v}' but must be one of #{lookups.input_modes.keys}."
         end
       end
 
       parser.on('-o', '--output_format FORMAT',
                 'Mode with which to format values for output (`-o` + [aijJmnpsy])') do |v|
 
-        self.output_format = output_formats[v]
-        if self.output_format.nil?
+        options.output_format = lookups.output_formats[v]
+        if options.output_format.nil?
           puts help_text
-          raise "Output mode was '#{v}' but must be one of #{output_formats.keys}."
+          raise "Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}."
         end
       end
 
       parser.on('-r', '--require REQUIRE(S)',
                 'Gems and built-in libraries (e.g. shellwords, yaml) to require, comma separated, or ! to clear') do |v|
         if v == '!'
-          self.requires.clear
+          options.requires.clear
         else
-          v.split(',').map(&:strip).each { |r| self.requires << r }
+          v.split(',').map(&:strip).each { |r| options.requires << r }
         end
       end
 
       parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
-        clear_options
+        options.clear
       end
 
       # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
@@ -259,7 +282,7 @@ class Rexe < Struct.new(
       # According to the answer, valid options are:
       # -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -.
       parser.on('-n', '--[no-]noop [FLAG]', TrueClass, "Do not execute the code (useful with -g)") do |v|
-        self.noop = (v.nil? ? true : v)
+        options.noop = (v.nil? ? true : v)
       end
 
       parser.on('-v', '--version', 'Print version') do
@@ -268,8 +291,8 @@ class Rexe < Struct.new(
       end
     end.parse!
 
-    requires.uniq!
-    loads.uniq!
+    options.requires.uniq!
+    options.loads.uniq!
 
   end
 
@@ -281,23 +304,26 @@ class Rexe < Struct.new(
 
 
   def init_parser_and_formatters
-    [input_format, output_format, log_format].each { |f| require_format_require (f) }
+    [options.input_format, options.output_format, options.log_format].each do |f|
+      require_format_require (f)
+    end
 
-    @input_parser     = input_parsers[input_format]
-    @output_formatter = formatters[output_format]
-    @log_formatter    = formatters[log_format]
+    @input_parser     = lookups.input_parsers[options.input_format]
+    @output_formatter = lookups.formatters[options.output_format]
+    @log_formatter    = lookups.formatters[options.log_format]
   end
 
 
   # Executes the user specified code in the manner appropriate to the input mode.
   # Performs any optionally specified parsing on input and formatting on output.
   def execute(eval_context_object, code)
-    if input_format != :none && input_mode != :no_input
+    if options.input_format != :none && options.input_mode != :no_input
       eval_context_object = input_parser.(eval_context_object)
     end
 
     value = eval_context_object.instance_eval(&code)
-    unless output_format == :no_output
+
+    unless options.output_format == :no_output
       print output_formatter.(value)
     end
   rescue Errno::EPIPE
@@ -316,7 +342,7 @@ class Rexe < Struct.new(
     $RC.rexe_version  = VERSION
     $RC.start_time    = start_time.iso8601
     $RC.source_code   = user_source_code
-    $RC.options       = self.to_h
+    $RC.options       = options.to_h
 
     def $RC.i; count end  # `i` aliases `count` so you can more concisely get the count in your user code
   end
@@ -343,7 +369,7 @@ class Rexe < Struct.new(
 
 
   def output_log_entry
-    if log_format != :none
+    if options.log_format != :none
       $RC.duration_secs = Time.now - start_time.to_time
       STDERR.puts(log_formatter.($RC.to_h))
     end
@@ -356,9 +382,9 @@ class Rexe < Struct.new(
     prepend_environment_options
     parse_command_line
 
-    requires.each { |r| require(r) }
+    options.requires.each { |r| require(r) }
     load_global_config_if_exists
-    loads.each { |file| load(file) }
+    options.loads.each { |file| load(file) }
 
     @user_source_code = ARGV.join(' ')
     @callable = create_callable
@@ -367,7 +393,7 @@ class Rexe < Struct.new(
     init_parser_and_formatters
 
     # This is where the user's source code will be executed; the action will in turn call `execute`.
-    lookup_action(input_mode).call unless self.noop
+    lookup_action(options.input_mode).call unless options.noop
 
     output_log_entry
   end

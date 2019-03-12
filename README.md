@@ -359,13 +359,13 @@ parameterization of the output format.
 
 For your convenience, the information displayed in verbose mode is available to your code at runtime
 by accessing the `$RC` global variable, which contains an OpenStruct. Probably most useful in that object
-is the record count (as `$RC.count`). This is only really useful in line mode, because in the others
+is the record count, accessible with both `$RC.count` and `$RC.i`.
+This is only really useful in line mode, because in the others
 it will always be 0 or 1. Here is an example of how you might use it:
 
 ```
 ➜  ~   ➜  ~   find / | rexe -ml -on \
-'n = $RC.count; if n % 1000 == 0; puts %Q{File entry ##{n} is #{self}}; end'
-
+'if $RC.i % 1000 == 0; puts %Q{File entry ##{$RC.i} is #{self}}; end'
 ...
 File entry #106000 is /usr/local/Cellar/go/1.11.5/libexec/src/cmd/vendor/github.com/google/pprof/internal/driver/driver_test.go
 File entry #107000 is /usr/local/Cellar/go/1.11.5/libexec/src/go/types/testdata/cycles1.src

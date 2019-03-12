@@ -343,6 +343,18 @@ class Rexe < Struct.new(
     end
 
 
+    output_log_entry = ->(start_time) do
+      if log_format != :none
+        $RC.duration_secs = Time.now - start_time.to_time
+        STDERR.puts(log_formatter.($RC.to_h))
+      end
+    end
+
+    # -----------------------------------------------------------------------------------------
+    # The lambdas above were defined in order to extract low level code so that the code below
+    # is a high(er) level narrative of the workflow.
+    # -----------------------------------------------------------------------------------------
+
     start_time = DateTime.now
 
     prepend_environment_options
@@ -356,12 +368,11 @@ class Rexe < Struct.new(
     init_rexe_context.(DateTime.now, user_source_code)
     callable = create_callable.(user_source_code)
     init_parser_and_formatters
+
+    # This is where the user's source code will be executed; the action will in turn call `execute`.
     lookup_action.(input_mode, callable).() unless self.noop
 
-    if log_format != :none
-      $RC.duration_secs = Time.now - start_time.to_time
-      STDERR.puts(log_formatter.($RC.to_h))
-    end
+    output_log_entry.(start_time)
   end
 end
 

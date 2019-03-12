@@ -61,7 +61,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.11.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.12.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -70,8 +70,9 @@ rexe [options] 'Ruby source code'
 Options:
 
 -c  --clear_options        Clear all previous command line options specified up to now
+-g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
 -h, --help                 Print help and exit
--i, --input_format FORMAT  Input format (none is default)
+-i, --input_format FORMAT  Input format (defaults to none)
                              -ij  JSON
                              -im  Marshal
                              -in  None
@@ -81,9 +82,10 @@ Options:
                              -ml  line mode; each line is ingested as a separate string
                              -me  enumerator mode
                              -mb  big string mode; all lines combined into single multiline string
-                             -mn  (default) no input mode; no special handling of input; self is an Object.new 
--n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
--o, --output_format FORMAT Output format (puts is default):
+                             -mn  (default) no input mode; no special handling of input; self is an Object.new
+-n, --[no-]noop            Do not execute the code (useful with -g); the following are valid:
+                             -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -
+-o, --output_format FORMAT Output format (defaults to puts):
                              -oi  Inspect
                              -oj  JSON
                              -oJ  Pretty JSON
@@ -93,16 +95,12 @@ Options:
                              -os  to_s
                              -oy  YAML
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated, or ! to clear
--v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 
-If there is an .rexerc file in your home directory, it will be run as Ruby code 
+If there is an .rexerc file in your home directory, it will be run as Ruby code
 before processing the input.
 
 If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
 so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
-
-(1) For boolean 'verbose' and 'noop' options, the following are valid:
--v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 ```
 
 ### Simplifying the Rexe Invocation
@@ -178,14 +176,16 @@ end
 Alternatively you could escape the parentheses with backslashes.)
 
 
-### Verbose Mode
+### Logging
 
-Verbose mode will display the version, date/time of execution, source code
-to be evaluated, options specified (by all approaches), that the global file has been loaded (if it was found),
+A log entry is optionally output to standard error after completion of the code.
+The entry is a hash containing the version, date/time of execution, source code
+to be evaluated, options (specified by all approaches),
 and the execution time of your Ruby code:
  
 ```
-➜  ~   echo $EUR_RATES_JSON | rexe -v -rjson,awesome_print "ap JSON.parse(STDIN.read)"
+➜  ~   echo $EUR_RATES_JSON | rexe -gy -rjson,awesome_print "ap JSON.parse(STDIN.read)"
+...
 ---
 :count: 0
 :rexe_version: 0.11.0
@@ -214,11 +214,9 @@ use it programatically.
 If you would like to append this informational output to a file, you could do something like this:
 
 ```
-➜  ~   rexe ... -v 2>>rexe.log
+➜  ~   rexe ... -gy 2>>rexe.log
 ```
 
-If verbose mode is enabled in configuration and you want to disable it, you can
-do so by using any of the following: `--[no-]verbose`, `-v n`, or `-v false`.
 
 ### Input Modes
 
@@ -422,6 +420,13 @@ An excellent reference for how they differ is [here](https://stackoverflow.com/q
 Feel free to fall back on Ruby's super useful `%q{}` and `%Q{}`, equivalent to single and double quotes, respectively.
 
 
+### No Op Mode
+
+The `-n` no-op mode will result in the specified source code _not_ being executed. This can sometimes be handy
+in conjunction with a `-g` (logging) option; if you have a command ready to go but 
+you want to see the configuration options before running it for real.
+
+
 ### Mimicking Method Arguments
 
 You may want to support arguments in your code. One of the previous examples downloaded currency conversion rates. Let's find out the available currency codes:
@@ -562,10 +567,10 @@ Files loaded with the `-l` option are treated the same way.
 Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that nokogiri takes about 0.15 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using the redirection and grep):
 
 ```
-➜  ~   rexe -v 2>&1 | grep duration
+➜  ~   rexe -gy 2>&1 | grep duration
 :duration_secs: 0.0012
 
-➜  ~   rexe -v -r nokogiri 2>&1 | grep duration
+➜  ~   rexe -gy -r nokogiri 2>&1 | grep duration
 :duration_secs: 0.148671
 ```
 

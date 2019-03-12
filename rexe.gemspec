@@ -51,9 +51,12 @@ Gem::Specification.new do |spec|
       WARNING!
 
       The default rexe input mode was changed from -ms to -mn in version 0.6.0
-      and
-      the -ms (separate string mode) mode name was changed
+
+      The -ms (separate string mode) mode name was changed
       to -ml (line mode) in version 0.9.0.
+
+      The verbose mode boolean switch (-v) was changed to the
+      log format option (-g) in version 0.12.0. 
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

@@ -10,9 +10,17 @@ require 'optparse'
 require 'ostruct'
 require 'shellwords'
 
-class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :requires, :verbose, :noop)
+class Rexe < Struct.new(
+    :input_format,
+    :input_mode,
+    :loads,
+    :output_format,
+    :requires,
+    :log_format,
+    :noop)
 
-  VERSION = '0.11.0'
+
+  VERSION = '0.12.0'
 
 
   def initialize
@@ -82,7 +90,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
   end
 
 
-  def parser_and_format_requires
+  def require_format_require(format)
     @format_requires ||= {
         json:          'json',
         pretty_json:   'json',
@@ -90,19 +98,20 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
         pretty_print:  'pp',
         yaml:          'yaml'
     }
+    r = @format_requires[format]
+    require(r) if r
   end
 
 
   # Used as an initializer and also when `-!` is specified on the command line.
   def clear_options
-    self.input_format = :none
-    self.input_mode = :no_input
+    self.input_format  = :none
+    self.input_mode    = :no_input
     self.output_format = :puts
-    self.loads = []
-    self.requires = []
-    self.verbose = false
-    self.noop = false
-    @output_formatter = nil
+    self.loads         = []
+    self.requires      = []
+    self.log_format    = :none
+    self.noop          = false
   end
 
 
@@ -118,8 +127,9 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
     Options:
 
     -c  --clear_options        Clear all previous command line options specified up to now
+    -g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
     -h, --help                 Print help and exit
-    -i, --input_format FORMAT  Input format (none is default)
+    -i, --input_format FORMAT  Input format (defaults to none)
                                  -ij  JSON
                                  -im  Marshal
                                  -in  None
@@ -130,8 +140,9 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
                                  -me  enumerator mode
                                  -mb  big string mode; all lines combined into single multiline string
                                  -mn  (default) no input mode; no special handling of input; self is an Object.new 
-    -n, --[no-]noop            Do not execute the code (useful with -v); see note (1) below
-    -o, --output_format FORMAT Output format (puts is default):
+    -n, --[no-]noop            Do not execute the code (useful with -g); the following are valid:
+                                 -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -
+    -o, --output_format FORMAT Output format (defaults to puts):
                                  -oi  Inspect
                                  -oj  JSON
                                  -oJ  Pretty JSON
@@ -141,16 +152,12 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
                                  -os  to_s
                                  -oy  YAML
     -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated, or ! to clear
-    -v, --[no-]verbose         verbose mode (logs to stderr); see note (1) below
 
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
     before processing the input.
 
     If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
     so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
-
-    (1) For boolean 'verbose' and 'noop' options, the following are valid:
-    -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -
 
     HEREDOC
   end
@@ -168,6 +175,14 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
   def parse_command_line
 
     OptionParser.new do |parser|
+
+      parser.on('-g', '--log_format FORMAT', 'Log format, logs to stderr, defaults to none (see -o for format options)') do |v|
+        self.log_format = output_formats[v]
+        if self.log_format.nil?
+          puts help_text
+          raise "Output mode was '#{v}' but must be one of #{output_formats.keys}."
+        end
+      end
 
       parser.on("-h", "--help", "Show help") do |_help_requested|
         puts help_text
@@ -227,23 +242,19 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
         end
       end
 
-      # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
-      # for an excellent explanation of this optparse incantation.
-      # According to the answer, valid options are:
-      # -v no, -v yes, -v false, -v true, -v n, -v y, -v +, but not -v -.
-      parser.on('-v', '--[no-]verbose [FLAG]', TrueClass, 'Verbose mode (logs to stderr)') do |v|
-        self.verbose = (v.nil? ? true : v)
-      end
-
       parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
         clear_options
       end
 
-      parser.on('-n', '--[no-]noop [FLAG]', TrueClass, "Do not execute the code (useful with -v)") do |v|
+      # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
+      # for an excellent explanation of this optparse incantation.
+      # According to the answer, valid options are:
+      # -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -.
+      parser.on('-n', '--[no-]noop [FLAG]', TrueClass, "Do not execute the code (useful with -g)") do |v|
         self.noop = (v.nil? ? true : v)
       end
 
-      parser.on('', '--version', 'Print version') do
+      parser.on('-v', '--version', 'Print version') do
         puts VERSION
         exit
       end
@@ -315,10 +326,9 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
     actions[input_mode].() unless self.noop
 
-    if verbose
+    if log_format != :none
       $RC.duration_secs = Time.now - start_time.to_time
-      require 'yaml'
-      STDERR.puts($RC.to_h.to_yaml)
+      STDERR.puts(log_formatter.($RC.to_h))
     end
   end
 end
@@ -326,8 +336,7 @@ end
 
 def input_parser
   if @input_parser.nil?
-    require_spec = parser_and_format_requires[input_format]
-    require require_spec if require_spec
+    require_format_require(input_format)
     @input_parser = input_parsers[input_format]
   end
   @input_parser
@@ -336,11 +345,19 @@ end
 
 def output_formatter
   if @output_formatter.nil?
-    require_spec = parser_and_format_requires[output_format]
-    require require_spec if require_spec
+    require_format_require(output_format)
     @output_formatter = formatters[output_format]
   end
   @output_formatter
+end
+
+
+def log_formatter
+  if @log_formatter.nil?
+    require_format_require(log_format)
+    @log_formatter = formatters[log_format]
+  end
+  @log_formatter
 end
 
 

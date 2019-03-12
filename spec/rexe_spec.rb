@@ -36,12 +36,16 @@ RSpec.describe 'rexe' do
     expect(RUN.(%Q{#{REXE_FILE} -c -mn "puts(64.to_s(8))"})).to start_with('100')
   end
 
-  specify '-v option enables verbose mode' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -mn -v 3 2>&1})).to include('rexe_version')
+  specify '-gy option enables log in YAML format mode' do
+    expect(RUN.(%Q{#{REXE_FILE} -c -mn -gy 3 2>&1})).to include('rexe_version')
   end
 
-  specify '-v n option disables verbose mode' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -v n -mn 3 2>&1})).not_to include('rexe version')
+  specify '-gn option disables log' do
+    expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn 3 2>&1})).not_to include('rexe version')
+  end
+
+  specify 'not specifying a -g option disables log' do
+    expect(RUN.(%Q{#{REXE_FILE} -c -mn 3 2>&1})).not_to include('rexe version')
   end
 
   specify '-mn option outputs last evaluated value' do

@@ -1,6 +1,13 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.12.0
+
+* Change verbose -v boolean option to log output format -g option.
+* Print error message and exit with nonzero exit code if no source code provided.
+* Add $RC.i alias for $RC.count.
+
+
 ### v0.11.0
 
 * Make global $RC (Rexe Context) OpenStruct available to user code; added `count` for record count in `-ml` mode.

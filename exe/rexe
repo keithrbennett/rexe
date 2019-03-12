@@ -90,6 +90,7 @@ class Rexe < Struct.new(
   end
 
 
+  # Requires the 'require' appropriate to the specified format.
   def require_format_require(format)
     @format_requires ||= {
         json:          'json',
@@ -103,7 +104,7 @@ class Rexe < Struct.new(
   end
 
 
-  # Used as an initializer and also when `-!` is specified on the command line.
+  # Used as an initializer and also when `-c` is specified on the command line.
   def clear_options
     self.input_format  = :none
     self.input_mode    = :no_input
@@ -163,6 +164,7 @@ class Rexe < Struct.new(
   end
 
 
+  # Inserts contents of REXE_OPTIONS environment variable at the beginning of ARGV.
   def prepend_environment_options
     env_opt_string = ENV['REXE_OPTIONS']
     if env_opt_string
@@ -172,6 +174,8 @@ class Rexe < Struct.new(
   end
 
 
+  # Using 'optparse', parses the command line.
+  # Settings go into this instance's properties (see Struct declaration).
   def parse_command_line
 
     OptionParser.new do |parser|
@@ -272,6 +276,8 @@ class Rexe < Struct.new(
   end
 
 
+  # Executes the user specified code in the manner appropriate to the input mode.
+  # Performs any optionally specified parsing on input and formatting on output.
   def execute(eval_context_object, code)
     if input_format != :none && input_mode != :no_input
       eval_context_object = input_parser.(eval_context_object)
@@ -286,45 +292,59 @@ class Rexe < Struct.new(
   end
 
 
+  # This class' entry point.
   def call
+
+    init_rexe_context = ->(start_time, user_source_code) do
+      # This global $RC (Rexe Context) OpenStruct is available in your user code.
+      # In order to make it possible to access this hash in your loaded files, we are not initializing
+      # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
+      # in your loaded code.
+      $RC ||= OpenStruct.new
+      $RC.count         = 0
+      $RC.rexe_version  = VERSION
+      $RC.start_time    = start_time.iso8601
+      $RC.source_code   = user_source_code
+      $RC.options       = self.to_h
+
+      def $RC.i; count end  # `i` aliases `count` so you can more concisely get the count in your user code
+    end
+
+
+    create_callable = ->(user_source_code) do
+      if user_source_code.empty?
+        STDERR.puts "No source code provided.  Use -h to display help."
+        exit(-1)
+      end
+
+      eval("Proc.new { #{user_source_code} }")
+    end
+
+
+    lookup_action = ->(mode, callable) do
+      {
+          line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
+          enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
+          one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $RC.count += 1 },
+          no_input:       -> { execute(Object.new, callable) }
+      }[mode]
+    end
+
+
     start_time = DateTime.now
 
     prepend_environment_options
     parse_command_line
 
-    user_source_code = ARGV.join(' ')
-    if user_source_code.empty?
-      STDERR.puts "No source code provided.  Use -h to display help."
-      exit(-1)
-    end
-
     requires.each { |r| require(r) }
     load_global_config_if_exists
     loads.each { |file| load(file) }
 
-    callable = eval("Proc.new { #{user_source_code} }")
+    user_source_code = ARGV.join(' ')
+    init_rexe_context.(DateTime.now, user_source_code)
+    callable = create_callable.(user_source_code)
 
-    actions = {
-        line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
-        enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
-        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $RC.count += 1 },
-        no_input:       -> { execute(Object.new, callable) }
-    }
-
-    # This global $RC (Rexe Context) OpenStruct is available in your user code.
-    # In order to make it possible to access this hash in your loaded files, we are not initializing
-    # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
-    # in your loaded code.
-    $RC ||= OpenStruct.new
-    $RC.count         = 0
-    $RC.rexe_version  = VERSION
-    $RC.start_time    = start_time.iso8601
-    $RC.source_code   = user_source_code
-    $RC.options       = self.to_h
-
-    def $RC.i; count end  # `i` aliases `count` so you can more concisely get the count in your user code
-
-    actions[input_mode].() unless self.noop
+    lookup_action.(input_mode, callable).() unless self.noop
 
     if log_format != :none
       $RC.duration_secs = Time.now - start_time.to_time

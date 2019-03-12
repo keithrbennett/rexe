@@ -304,56 +304,52 @@ class Rexe < Struct.new(
   end
 
 
+  def init_rexe_context(start_time, user_source_code)
+    # This global $RC (Rexe Context) OpenStruct is available in your user code.
+    # In order to make it possible to access this hash in your loaded files, we are not initializing
+    # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
+    # in your loaded code.
+    $RC ||= OpenStruct.new
+    $RC.count         = 0
+    $RC.rexe_version  = VERSION
+    $RC.start_time    = start_time.iso8601
+    $RC.source_code   = user_source_code
+    $RC.options       = self.to_h
+
+    def $RC.i; count end  # `i` aliases `count` so you can more concisely get the count in your user code
+  end
+
+
+  def create_callable(user_source_code)
+    if user_source_code.empty?
+      STDERR.puts "No source code provided.  Use -h to display help."
+      exit(-1)
+    end
+
+    eval("Proc.new { #{user_source_code} }")
+  end
+
+
+  def lookup_action(mode, callable)
+    {
+        line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
+        enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
+        one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $RC.count += 1 },
+        no_input:       -> { execute(Object.new, callable) }
+    }[mode]
+  end
+
+
+  def output_log_entry(start_time)
+    if log_format != :none
+      $RC.duration_secs = Time.now - start_time.to_time
+      STDERR.puts(log_formatter.($RC.to_h))
+    end
+  end
+
+
   # This class' entry point.
   def call
-
-    init_rexe_context = ->(start_time, user_source_code) do
-      # This global $RC (Rexe Context) OpenStruct is available in your user code.
-      # In order to make it possible to access this hash in your loaded files, we are not initializing
-      # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
-      # in your loaded code.
-      $RC ||= OpenStruct.new
-      $RC.count         = 0
-      $RC.rexe_version  = VERSION
-      $RC.start_time    = start_time.iso8601
-      $RC.source_code   = user_source_code
-      $RC.options       = self.to_h
-
-      def $RC.i; count end  # `i` aliases `count` so you can more concisely get the count in your user code
-    end
-
-
-    create_callable = ->(user_source_code) do
-      if user_source_code.empty?
-        STDERR.puts "No source code provided.  Use -h to display help."
-        exit(-1)
-      end
-
-      eval("Proc.new { #{user_source_code} }")
-    end
-
-
-    lookup_action = ->(mode, callable) do
-      {
-          line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
-          enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
-          one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $RC.count += 1 },
-          no_input:       -> { execute(Object.new, callable) }
-      }[mode]
-    end
-
-
-    output_log_entry = ->(start_time) do
-      if log_format != :none
-        $RC.duration_secs = Time.now - start_time.to_time
-        STDERR.puts(log_formatter.($RC.to_h))
-      end
-    end
-
-    # -----------------------------------------------------------------------------------------
-    # The lambdas above were defined in order to extract low level code so that the code below
-    # is a high(er) level narrative of the workflow.
-    # -----------------------------------------------------------------------------------------
 
     start_time = DateTime.now
 
@@ -365,14 +361,14 @@ class Rexe < Struct.new(
     loads.each { |file| load(file) }
 
     user_source_code = ARGV.join(' ')
-    init_rexe_context.(DateTime.now, user_source_code)
-    callable = create_callable.(user_source_code)
+    init_rexe_context(DateTime.now, user_source_code)
+    callable = create_callable(user_source_code)
     init_parser_and_formatters
 
     # This is where the user's source code will be executed; the action will in turn call `execute`.
-    lookup_action.(input_mode, callable).() unless self.noop
+    lookup_action(input_mode, callable).() unless self.noop
 
-    output_log_entry.(start_time)
+    output_log_entry(start_time)
   end
 end
 

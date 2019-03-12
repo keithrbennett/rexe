@@ -23,7 +23,7 @@ class Rexe < Struct.new(
   VERSION = '0.12.0'
 
 
-  attr_accessor :input_parser, :output_formatter, :log_formatter, :start_time, :user_source_code
+  attr_accessor :callable, :input_parser, :output_formatter, :log_formatter, :start_time, :user_source_code
 
 
   def initialize
@@ -331,7 +331,7 @@ class Rexe < Struct.new(
   end
 
 
-  def lookup_action(mode, callable)
+  def lookup_action(mode)
     {
         line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
         enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
@@ -360,21 +360,17 @@ class Rexe < Struct.new(
     loads.each { |file| load(file) }
 
     @user_source_code = ARGV.join(' ')
+    @callable = create_callable
+
     init_rexe_context
-    callable = create_callable
     init_parser_and_formatters
 
     # This is where the user's source code will be executed; the action will in turn call `execute`.
-    lookup_action(input_mode, callable).() unless self.noop
+    lookup_action(input_mode).call unless self.noop
 
     output_log_entry
   end
 end
 
 
-# This is needed because the gemspec file loads this file to access Rexe::VERSION
-# and must not have it run at that time:
-called_as_script = (File.basename($0) == File.basename(__FILE__))
-if called_as_script
-  Bundler.with_clean_env { Rexe.new.call }
-end
+Bundler.with_clean_env { Rexe.new.call }

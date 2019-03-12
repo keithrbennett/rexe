@@ -8,70 +8,105 @@ require 'os'
 
 RSpec.describe 'rexe' do
 
-  specify 'version returned with --version is a valid version string' do
-    expect(RUN.("#{REXE_FILE} --version")).to match(/\d+\.\d+\.\d+/)
+
+  context '--version option' do
+    specify 'version returned with --version is a valid version string' do
+      expect(RUN.("#{REXE_FILE} --version")).to match(/\d+\.\d+\.\d+/)
+    end
   end
 
-  specify 'help text includes version' do
-    expect(RUN.("#{REXE_FILE} -h")).to include(`#{REXE_FILE} --version`.chomp)
+
+  context 'help text' do
+    specify 'help text includes version' do
+      expect(RUN.("#{REXE_FILE} -h")).to include(`#{REXE_FILE} --version`.chomp)
+    end
+
+    specify 'help text includes Github URL' do
+      expect(RUN.("#{REXE_FILE} -h")).to include('https://github.com/keithrbennett/rexe')
+    end
   end
 
-  specify 'help text includes Github URL' do
-    expect(RUN.("#{REXE_FILE} -h")).to include('https://github.com/keithrbennett/rexe')
+
+  context '-mb big string mode' do
+    specify 'in big string mode (-mb) all input is considered a single string object' do
+      expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -mb reverse})).to eq("\ndc\nba\n")
+    end
   end
 
-  specify 'in big string mode (-mb) all input is considered a single string object' do
-    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -mb reverse})).to eq("\ndc\nba\n")
+
+  context '-ml line mode' do
+    specify 'in each line separate mode (-ml) each line is processed separately' do
+      expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -ml reverse})).to eq("ba\ndc\n")
+    end
   end
 
-  specify 'in each line separate mode (-ms) each line is processed separately' do
-    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -ml reverse})).to eq("ba\ndc\n")
+
+  context '-me enumerator mode' do
+    specify 'in enumerator mode (-me) self is an Enumerator' do
+      expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -me self.class.to_s}).chomp).to eq('Enumerator')
+    end
   end
 
-  specify 'in enumerator mode (-me) self is an Enumerator' do
-    expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -me self.class.to_s}).chomp).to eq('Enumerator')
+
+  context '-mn no input mode' do
+    specify 'in no input mode (-mn), code is executed without input' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn "puts(64.to_s(8))"})).to start_with('100')
+    end
+
+    specify '-mn option outputs last evaluated value' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn 42}).chomp).to eq('42')
+    end
   end
 
-  specify 'in no input mode (-mn), code is executed without input' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -mn "puts(64.to_s(8))"})).to start_with('100')
+
+  context 'logging' do
+     specify '-gy option enables log in YAML format mode' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn -gy 3 2>&1})).to include('rexe_version')
+    end
+
+    specify '-gn option disables log' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn 3 2>&1})).not_to include('rexe version')
+    end
+
+    specify 'not specifying a -g option disables log' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn 3 2>&1})).not_to include('rexe version')
+    end
   end
 
-  specify '-gy option enables log in YAML format mode' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -mn -gy 3 2>&1})).to include('rexe_version')
+
+  context '-on no output mode' do
+    specify '-on output format results in no output' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 42}).chomp).to eq('')
+    end
   end
 
-  specify '-gn option disables log' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn 3 2>&1})).not_to include('rexe version')
+
+  context 'requires' do
+    specify 'requiring using -r works' do
+      RUN.("#{REXE_FILE} -c -mn -r! -r yaml YAML") # just refer to the YAML module and see if it breaks
+      expect($?.exitstatus).to eq(0)
+    end
+
+    specify 'clearing requires using -r ! works' do
+      command = "#{REXE_FILE} -c -mn -r yaml -r! YAML"
+
+      # Suppress distracting error output, but the redirection requires Posix compatibility:
+      command << " 2>/dev/null" if OS.posix?
+
+      RUN.(command) # just refer to the YAML module and see if it breaks
+      expect($?.exitstatus).not_to eq(0)
+    end
   end
 
-  specify 'not specifying a -g option disables log' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -mn 3 2>&1})).not_to include('rexe version')
+
+  context 'rexe context record count' do
+    specify 'the record count is available as $RC.count' do
+      expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC.count.to_s'})).to eq("a0\nb1\nc2\n")
+    end
+
+    specify 'the record count is available as $RC.i' do
+      expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC.i.to_s'})).to eq("a0\nb1\nc2\n")
+    end
   end
 
-  specify '-mn option outputs last evaluated value' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -mn 42}).chomp).to eq('42')
-  end
-
-  specify '-on output foramt results in no output' do
-    expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 42}).chomp).to eq('')
-  end
-
-  specify 'requiring using -r works' do
-    RUN.("#{REXE_FILE} -c -mn -r! -r yaml YAML") # just refer to the YAML module and see if it breaks
-    expect($?.exitstatus).to eq(0)
-  end
-
-  specify 'clearing requires using -r ! works' do
-    command = "#{REXE_FILE} -c -mn -r yaml -r! YAML"
-
-    # Suppress distracting error output, but the redirection requires Posix compatibility:
-    command << " 2>/dev/null" if OS.posix?
-
-    RUN.(command) # just refer to the YAML module and see if it breaks
-    expect($?.exitstatus).not_to eq(0)
-  end
-
-  specify 'the record count is available as $RC[:count]' do
-    expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC.count.to_s'})).to eq("a0\nb1\nc2\n")
-  end
 end

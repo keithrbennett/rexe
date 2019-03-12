@@ -1,10 +1,14 @@
 require_relative 'spec_helper'
+require 'json'
 require 'os'
+require 'yaml'
+
 
 # It would be nice to test the behavior of requires, loads, and the global config file,
 # but those are difficult because they involve modifying directories of the development
 # machine that they should not modify. I'm thinking about making the rules configurable,
 # but that makes the executable more complex, probably without necessity.
+
 
 RSpec.describe 'rexe' do
 
@@ -31,19 +35,31 @@ RSpec.describe 'rexe' do
     specify 'in big string mode (-mb) all input is considered a single string object' do
       expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -mb reverse})).to eq("\ndc\nba\n")
     end
+
+    specify 'record count does not exceed 0' do
+      expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -mb '$RC.i'})).to eq("0\n")
+    end
   end
 
 
   context '-ml line mode' do
-    specify 'in each line separate mode (-ml) each line is processed separately' do
+    specify 'each line is processed separately' do
       expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -ml reverse})).to eq("ba\ndc\n")
+    end
+
+    specify 'object count works in numbers > 1' do
+      expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -ml '$RC.i'})).to eq("0\n1\n2\n")
     end
   end
 
 
   context '-me enumerator mode' do
-    specify 'in enumerator mode (-me) self is an Enumerator' do
+    specify 'self is an Enumerator' do
       expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -me self.class.to_s}).chomp).to eq('Enumerator')
+    end
+
+    specify 'record count does not exceed 0' do
+      expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -me '$RC.i'})).to eq("0\n")
     end
   end
 
@@ -56,15 +72,41 @@ RSpec.describe 'rexe' do
     specify '-mn option outputs last evaluated value' do
       expect(RUN.(%Q{#{REXE_FILE} -c -mn 42}).chomp).to eq('42')
     end
+
+    specify 'record count does not exceed 0' do
+      expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -mn '$RC.i'})).to eq("0\n")
+    end
   end
 
 
-  context 'logging' do
+
+    context 'logging' do
+
      specify '-gy option enables log in YAML format mode' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -mn -gy 3 2>&1})).to include('rexe_version')
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -gy nil 2>&1})
+       reconstructed_hash = YAML.load(text)
+       expect(reconstructed_hash).to be_a(Hash)
+       expect(reconstructed_hash[:count]).to eq(0)
+       expect(reconstructed_hash.keys).to include(:duration_secs)
+       expect(reconstructed_hash.keys).to include(:options)
+       expect(reconstructed_hash.keys).to include(:rexe_version)
+       expect(reconstructed_hash[:source_code]).to eq('nil')
+       expect(reconstructed_hash.keys).to include(:start_time)
     end
 
-    specify '-gn option disables log' do
+     specify '-gj option enables log in JSON format mode' do
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -gJ nil 2>&1})
+       reconstructed_hash = JSON.parse(text)
+       expect(reconstructed_hash).to be_a(Hash)
+       expect(reconstructed_hash['count']).to eq(0)
+       expect(reconstructed_hash.keys).to include('duration_secs')
+       expect(reconstructed_hash.keys).to include('options')
+       expect(reconstructed_hash.keys).to include('rexe_version')
+       # expect(reconstructed_hash[:source_code]).to eq('nil')
+       expect(reconstructed_hash.keys).to include('start_time')
+     end
+
+     specify '-gn option disables log' do
       expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn 3 2>&1})).not_to include('rexe version')
     end
 

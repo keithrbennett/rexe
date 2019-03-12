@@ -23,10 +23,11 @@ class Rexe < Struct.new(
   VERSION = '0.12.0'
 
 
-  attr_accessor :input_parser, :output_formatter, :log_formatter
+  attr_accessor :input_parser, :output_formatter, :log_formatter, :start_time, :user_source_code
 
 
   def initialize
+    @start_time = DateTime.now
     clear_options
   end
 
@@ -304,7 +305,7 @@ class Rexe < Struct.new(
   end
 
 
-  def init_rexe_context(start_time, user_source_code)
+  def init_rexe_context
     # This global $RC (Rexe Context) OpenStruct is available in your user code.
     # In order to make it possible to access this hash in your loaded files, we are not initializing
     # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
@@ -320,7 +321,7 @@ class Rexe < Struct.new(
   end
 
 
-  def create_callable(user_source_code)
+  def create_callable
     if user_source_code.empty?
       STDERR.puts "No source code provided.  Use -h to display help."
       exit(-1)
@@ -340,7 +341,7 @@ class Rexe < Struct.new(
   end
 
 
-  def output_log_entry(start_time)
+  def output_log_entry
     if log_format != :none
       $RC.duration_secs = Time.now - start_time.to_time
       STDERR.puts(log_formatter.($RC.to_h))
@@ -351,8 +352,6 @@ class Rexe < Struct.new(
   # This class' entry point.
   def call
 
-    start_time = DateTime.now
-
     prepend_environment_options
     parse_command_line
 
@@ -360,15 +359,15 @@ class Rexe < Struct.new(
     load_global_config_if_exists
     loads.each { |file| load(file) }
 
-    user_source_code = ARGV.join(' ')
-    init_rexe_context(DateTime.now, user_source_code)
-    callable = create_callable(user_source_code)
+    @user_source_code = ARGV.join(' ')
+    init_rexe_context
+    callable = create_callable
     init_parser_and_formatters
 
     # This is where the user's source code will be executed; the action will in turn call `execute`.
     lookup_action(input_mode, callable).() unless self.noop
 
-    output_log_entry(start_time)
+    output_log_entry
   end
 end
 

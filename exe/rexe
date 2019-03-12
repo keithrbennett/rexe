@@ -305,11 +305,12 @@ class Rexe < Struct.new(
   end
 
 
+  # The global $RC (Rexe Context) OpenStruct is available in your user code.
+  # In order to make it possible to access this object in your loaded files, we are not creating
+  # it here; instead we add properties to it. This way, you can initialize an OpenStruct yourself
+  # in your loaded code and it will still work. If you do that, beware, any properties you add will be
+  # included in the log output. If the to_s of your added objects is large, that might be a pain.
   def init_rexe_context
-    # This global $RC (Rexe Context) OpenStruct is available in your user code.
-    # In order to make it possible to access this hash in your loaded files, we are not initializing
-    # the hash here; instead we add key/value pairs to it. This way, you can initialize a hash yourself
-    # in your loaded code.
     $RC ||= OpenStruct.new
     $RC.count         = 0
     $RC.rexe_version  = VERSION

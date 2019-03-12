@@ -280,7 +280,12 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
 
     prepend_environment_options
     parse_command_line
+
     user_source_code = ARGV.join(' ')
+    if user_source_code.empty?
+      STDERR.puts "No source code provided.  Use -h to display help."
+      exit(-1)
+    end
 
     requires.each { |r| require(r) }
     load_global_config_if_exists
@@ -306,7 +311,7 @@ class Rexe < Struct.new(:input_format, :input_mode, :loads, :output_format, :req
     $RC.source_code   = user_source_code
     $RC.options       = self.to_h
 
-    def $RC.i; count end  # So you can easily get the count in your user code
+    def $RC.i; count end  # `i` aliases `count` so you can more concisely get the count in your user code
 
     actions[input_mode].() unless self.noop
 

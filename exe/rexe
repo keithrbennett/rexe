@@ -23,6 +23,9 @@ class Rexe < Struct.new(
   VERSION = '0.12.0'
 
 
+  attr_accessor :input_parser, :output_formatter, :log_formatter
+
+
   def initialize
     clear_options
   end
@@ -276,6 +279,15 @@ class Rexe < Struct.new(
   end
 
 
+  def init_parser_and_formatters
+    [input_format, output_format, log_format].each { |f| require_format_require (f) }
+
+    @input_parser     = input_parsers[input_format]
+    @output_formatter = formatters[output_format]
+    @log_formatter    = formatters[log_format]
+  end
+
+
   # Executes the user specified code in the manner appropriate to the input mode.
   # Performs any optionally specified parsing on input and formatting on output.
   def execute(eval_context_object, code)
@@ -343,7 +355,7 @@ class Rexe < Struct.new(
     user_source_code = ARGV.join(' ')
     init_rexe_context.(DateTime.now, user_source_code)
     callable = create_callable.(user_source_code)
-
+    init_parser_and_formatters
     lookup_action.(input_mode, callable).() unless self.noop
 
     if log_format != :none
@@ -351,33 +363,6 @@ class Rexe < Struct.new(
       STDERR.puts(log_formatter.($RC.to_h))
     end
   end
-end
-
-
-def input_parser
-  if @input_parser.nil?
-    require_format_require(input_format)
-    @input_parser = input_parsers[input_format]
-  end
-  @input_parser
-end
-
-
-def output_formatter
-  if @output_formatter.nil?
-    require_format_require(output_format)
-    @output_formatter = formatters[output_format]
-  end
-  @output_formatter
-end
-
-
-def log_formatter
-  if @log_formatter.nil?
-    require_format_require(log_format)
-    @log_formatter = formatters[log_format]
-  end
-  @log_formatter
 end
 
 

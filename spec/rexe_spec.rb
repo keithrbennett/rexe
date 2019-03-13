@@ -12,7 +12,8 @@ require 'yaml'
 
 RSpec.describe 'rexe' do
 
-  let(:test_data) { [ 'foo', { 'color' => 'blue' }, 200] }
+  let(:test_data)        {    [ { 'color' => 'blue' }, 200 ] }
+  let(:test_data_string) { %Q{[ { 'color' => 'blue' }, 200 ]} }
 
   context '--version option' do
     specify 'version returned with --version is a valid version string' do
@@ -93,23 +94,46 @@ RSpec.describe 'rexe' do
       expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 42}).chomp).to eq('')
     end
 
-    specify '-j JSON output formatting is correct' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -mn -oj '#{test_data}' }).chomp).to \
-          eq('["foo",{"color":"blue"},200]')
+    specify '-oj JSON output formatting is correct' do
+      command = %Q{#{REXE_FILE} -c -mn -oj "[ { 10 => 100 }, 200 ]" }
+      expect(RUN.(command).chomp).to eq(%q{[{"10":100},200]})
     end
 
-    specify '-J Pretty JSON output formatting is correct' do
-      actual_lines_stripped = RUN.(%Q{#{REXE_FILE} -c -mn -oJ '#{test_data}' }).split("\n").map(&:strip)
-      expected_lines_stripped = ['[', '"foo",', '{', '"color": "blue"', '},', '200', ']' ]
+    specify '-oJ Pretty JSON output formatting is correct' do
+      actual_lines_stripped = RUN.(%Q{#{REXE_FILE} -c -mn -oJ '[ { 10 => 100 }, 200 ]' }).split("\n").map(&:strip)
+      expected_lines_stripped = ['[', '{', '"10": 100', '},','200', ']' ]
       expect(actual_lines_stripped).to eq(expected_lines_stripped)
     end
 
-    specify '-y YAML output formatting is correct' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -mn -oy '#{test_data}' }).chomp).to eq( \
+    specify '-oy YAML output formatting is correct' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn -oy '[ { 10 => 100 }, 200 ]' }).chomp).to eq( \
 "---
-- foo
-- color: blue
+- 10: 100
 - 200")
+    end
+
+    specify 'inspect (-oi), and to_s (-os) mode return equal and correct strings' do
+      inspect_output = RUN.(%Q{#{REXE_FILE} -c -mn -oi '[ { 10 => 100 }, 200 ]' 2>&1})
+      to_s_output    = RUN.(%Q{#{REXE_FILE} -c -mn -os '[ { 10 => 100 }, 200 ]' 2>&1})
+
+      expect(to_s_output).to eq(inspect_output)
+      expect(to_s_output).to eq(%Q{[{10=>100}, 200]\n})
+    end
+
+
+    specify 'puts (-op) format works correctly' do
+      puts_output = RUN.(%Q{#{REXE_FILE} -c -mn -op "[ { 10 => 100 }, 200 ]" 2>&1})
+      expect(puts_output).to eq( \
+%q{{10=>100}
+200
+})
+    end
+
+    specify '-om marshall mode works' do
+      data = RUN.(%Q{#{REXE_FILE} -c -mn -om "[ { 10 => 100 }, 200 ]"})
+      reconstructed_array = Marshal.load(data)
+      expect(reconstructed_array).to be_a(Array)
+      expect(reconstructed_array).to eq([ { 10 => 100 }, 200] )
     end
   end
 

@@ -83,27 +83,30 @@ RSpec.describe 'rexe' do
     context 'logging' do
 
      specify '-gy option enables log in YAML format mode' do
-       text = RUN.(%Q{#{REXE_FILE} -c -mn -gy nil 2>&1})
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -gy -on String.new 2>&1})
        reconstructed_hash = YAML.load(text)
        expect(reconstructed_hash).to be_a(Hash)
        expect(reconstructed_hash[:count]).to eq(0)
        expect(reconstructed_hash.keys).to include(:duration_secs)
        expect(reconstructed_hash.keys).to include(:options)
        expect(reconstructed_hash.keys).to include(:rexe_version)
-       expect(reconstructed_hash[:source_code]).to eq('nil')
+       expect(reconstructed_hash[:source_code]).to eq('String.new')
        expect(reconstructed_hash.keys).to include(:start_time)
     end
 
      specify '-gj option enables log in JSON format mode' do
-       text = RUN.(%Q{#{REXE_FILE} -c -mn -gJ nil 2>&1})
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -gJ -on String.new 2>&1})
        reconstructed_hash = JSON.parse(text)
+
        expect(reconstructed_hash).to be_a(Hash)
-       expect(reconstructed_hash['count']).to eq(0)
        expect(reconstructed_hash.keys).to include('duration_secs')
        expect(reconstructed_hash.keys).to include('options')
        expect(reconstructed_hash.keys).to include('rexe_version')
-       # expect(reconstructed_hash[:source_code]).to eq('nil')
        expect(reconstructed_hash.keys).to include('start_time')
+
+       # Note below that the keys below are parsed as a String, not its original type, Symbol:
+       expect(reconstructed_hash['count']).to eq(0)
+       expect(reconstructed_hash['source_code']).to eq('String.new')
      end
 
      specify '-gn option disables log' do

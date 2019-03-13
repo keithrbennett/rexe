@@ -17,6 +17,10 @@ RSpec.describe 'rexe' do
     specify 'version returned with --version is a valid version string' do
       expect(RUN.("#{REXE_FILE} --version")).to match(/\d+\.\d+\.\d+/)
     end
+
+    specify 'version returned with -v is a valid version string' do
+      expect(RUN.("#{REXE_FILE} -v")).to match(/\d+\.\d+\.\d+/)
+    end
   end
 
 
@@ -94,8 +98,9 @@ RSpec.describe 'rexe' do
        expect(reconstructed_hash.keys).to include(:start_time)
     end
 
-     specify '-gj option enables log in JSON format mode' do
+     specify '-gJ option enables log in Pretty JSON format mode' do
        text = RUN.(%Q{#{REXE_FILE} -c -mn -gJ -on String.new 2>&1})
+       expect(text.count("\n") > 3).to eq(true)
        reconstructed_hash = JSON.parse(text)
 
        expect(reconstructed_hash).to be_a(Hash)
@@ -109,13 +114,72 @@ RSpec.describe 'rexe' do
        expect(reconstructed_hash['source_code']).to eq('String.new')
      end
 
+
+     specify '-gj option enables log in standard JSON format mode' do
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -gj -on String.new 2>&1})
+       expect(text.count("\n") == 1).to eq(true)
+       reconstructed_hash = JSON.parse(text)
+
+       expect(reconstructed_hash).to be_a(Hash)
+       expect(reconstructed_hash.keys).to include('duration_secs')
+       expect(reconstructed_hash.keys).to include('options')
+       expect(reconstructed_hash.keys).to include('rexe_version')
+       expect(reconstructed_hash.keys).to include('start_time')
+
+       # Note below that the keys below are parsed as a String, not its original type, Symbol:
+       expect(reconstructed_hash['count']).to eq(0)
+       expect(reconstructed_hash['source_code']).to eq('String.new')
+     end
+
+
+     specify '-ga option enables log in Awesome Print format mode' do
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -ga -on String.new 2>&1})
+       expect(text).to include(':count =>')
+       expect(text).to include(':rexe_version =>')
+     end
+
+     specify '-gi option enables log in inspect format mode' do
+       text = RUN.(%Q{#{REXE_FILE} -c -mn -gi -on String.new 2>&1})
+       expect(text).to match(/^{:/)
+       expect(text).to match(/}$/)
+       expect(text).to match(/:count=>/)
+     end
+
+
      specify '-gn option disables log' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn 3 2>&1})).not_to include('rexe version')
+       expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn -on 3 2>&1}).chomp).to eq('')
     end
 
     specify 'not specifying a -g option disables log' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -mn 3 2>&1})).not_to include('rexe version')
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 3 2>&1}).chomp).to eq('')
     end
+
+    specify '-gm marshall mode works' do
+      data = RUN.(%Q{#{REXE_FILE} -c -mn -on -gm String.new 2>&1})
+      expect(data.count("\x00") > 0).to eq(true)
+      reconstructed_hash = Marshal.load(data)
+      expect(reconstructed_hash).to be_a(Hash)
+      expect(reconstructed_hash[:count]).to eq(0)
+      expect(reconstructed_hash.keys).to include(:duration_secs)
+      expect(reconstructed_hash.keys).to include(:options)
+      expect(reconstructed_hash.keys).to include(:rexe_version)
+      expect(reconstructed_hash[:source_code]).to eq('String.new')
+      expect(reconstructed_hash.keys).to include(:start_time)
+    end
+
+      specify 'Puts, inspect, and to_s mode return the identical string' do
+        puts_output    = RUN.(%Q{#{REXE_FILE} -c -mn -on -gp String.new 2>&1})
+        inspect_output = RUN.(%Q{#{REXE_FILE} -c -mn -on -gi String.new 2>&1})
+        to_s_output    = RUN.(%Q{#{REXE_FILE} -c -mn -on -gs String.new 2>&1})
+
+        outputs = [puts_output, inspect_output, to_s_output]
+
+        outputs.each do |output|
+          expect(output).to include(':count=>0')
+          expect(output).to include(':rexe_version=>')
+          expect(output.count("\n")).to eq(1)
+        end
+      end
   end
 
 

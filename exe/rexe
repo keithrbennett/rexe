@@ -139,7 +139,7 @@ class Rexe
   # Requires the 'require' appropriate to the specified format.
   def require_format_require(format)
     r = lookups.format_requires[format]
-    require(r) if r
+    require!(r) if r
   end
 
 
@@ -376,13 +376,31 @@ class Rexe
   end
 
 
+  # Bypasses Bundler's restriction on loading gems
+  # (see https://stackoverflow.com/questions/55144094/bundler-doesnt-permit-using-gems-in-project-home-directory)
+  def require!(the_require)
+    begin
+      require the_require
+    rescue LoadError
+      gem_path = `gem which #{the_require}`
+      if gem_path.chomp.strip.empty?
+        require the_require  # regenerate the error
+      else
+        load_dir = File.dirname(gem_path)
+        $LOAD_PATH << load_dir
+        require the_require
+      end
+    end
+  end
+
+
   # This class' entry point.
   def call
 
     prepend_environment_options
     parse_command_line
 
-    options.requires.each { |r| require(r) }
+    options.requires.each { |r| require!(r) }
     load_global_config_if_exists
     options.loads.each { |file| load(file) }
 

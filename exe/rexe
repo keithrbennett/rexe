@@ -388,10 +388,10 @@ class Rexe
   def require!(the_require)
     begin
       require the_require
-    rescue LoadError
+    rescue LoadError => error
       gem_path = `gem which #{the_require}`
       if gem_path.chomp.strip.empty?
-        require the_require  # regenerate the error
+        raise error # re-raise the error, can't fix it
       else
         load_dir = File.dirname(gem_path)
         $LOAD_PATH << load_dir

@@ -137,7 +137,7 @@ class Rexe
 
 
   # Requires the 'require' appropriate to the specified format.
-  def require_format_require(format)
+  private def require_format_require(format)
     r = lookups.format_requires[format]
     require!(r) if r
   end
@@ -192,7 +192,7 @@ class Rexe
 
 
   # Inserts contents of REXE_OPTIONS environment variable at the beginning of ARGV.
-  def prepend_environment_options
+  private def prepend_environment_options
     env_opt_string = ENV['REXE_OPTIONS']
     if env_opt_string
       args_to_prepend = Shellwords.shellsplit(env_opt_string)
@@ -201,9 +201,23 @@ class Rexe
   end
 
 
+  def open_resource(resource_identifier)
+    command = case (`uname`.chomp)
+    when 'Darwin'
+      'open'
+    when 'Linux'
+      'xdg-open'
+    else
+      'start'
+    end
+
+    `#{command} #{resource_identifier}`
+  end
+
+
   # Using 'optparse', parses the command line.
   # Settings go into this instance's properties (see Struct declaration).
-  def parse_command_line
+  private def parse_command_line
 
     OptionParser.new do |parser|
 
@@ -291,8 +305,8 @@ class Rexe
       end
 
       # Undocumented feature, works only on Mac OS
-      parser.on('', '--open-project') do |_v|
-        `open #{PROJECT_URL}`
+      parser.on('', '--open-project') do
+        open_resource(PROJECT_URL)
         exit(0)
       end
 
@@ -304,16 +318,16 @@ class Rexe
   end
 
 
-  def load_global_config_if_exists
+  private def load_global_config_if_exists
     filespec = File.join(Dir.home, '.rexerc')
     load(filespec) if File.exists?(filespec)
   end
 
 
-  def init_parser_and_formatters
-    [options.input_format, options.output_format, options.log_format].each do |f|
-      require_format_require (f)
-    end
+  private def init_parser_and_formatters
+    require_format_require(options.input_format)
+    require_format_require(options.output_format)
+    require_format_require(options.log_format)
 
     @input_parser     = lookups.input_parsers[options.input_format]
     @output_formatter = lookups.formatters[options.output_format]
@@ -323,7 +337,7 @@ class Rexe
 
   # Executes the user specified code in the manner appropriate to the input mode.
   # Performs any optionally specified parsing on input and formatting on output.
-  def execute(eval_context_object, code)
+  private def execute(eval_context_object, code)
     if options.input_format != :none && options.input_mode != :no_input
       eval_context_object = input_parser.(eval_context_object)
     end
@@ -343,7 +357,7 @@ class Rexe
   # it here; instead we add properties to it. This way, you can initialize an OpenStruct yourself
   # in your loaded code and it will still work. If you do that, beware, any properties you add will be
   # included in the log output. If the to_s of your added objects is large, that might be a pain.
-  def init_rexe_context
+  private def init_rexe_context
     $RC ||= OpenStruct.new
     $RC.count         = 0
     $RC.rexe_version  = VERSION
@@ -355,7 +369,7 @@ class Rexe
   end
 
 
-  def create_callable
+  private def create_callable
     if user_source_code.empty?
       STDERR.puts "No source code provided.  Use -h to display help."
       exit(-1)
@@ -365,7 +379,7 @@ class Rexe
   end
 
 
-  def lookup_action(mode)
+  private def lookup_action(mode)
     {
         line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
         enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
@@ -375,7 +389,7 @@ class Rexe
   end
 
 
-  def output_log_entry
+  private def output_log_entry
     if options.log_format != :none
       $RC.duration_secs = Time.now - start_time.to_time
       STDERR.puts(log_formatter.($RC.to_h))
@@ -385,7 +399,7 @@ class Rexe
 
   # Bypasses Bundler's restriction on loading gems
   # (see https://stackoverflow.com/questions/55144094/bundler-doesnt-permit-using-gems-in-project-home-directory)
-  def require!(the_require)
+  private def require!(the_require)
     begin
       require the_require
     rescue LoadError => error

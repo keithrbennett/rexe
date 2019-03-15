@@ -125,7 +125,7 @@ class Rexe
   VERSION = '0.12.0'
 
 
-  attr_accessor :callable, :input_parser, :lookups, :options, :output_formatter,
+  attr_reader :callable, :input_parser, :lookups, :options, :output_formatter,
                 :log_formatter, :start_time, :user_source_code
 
 

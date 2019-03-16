@@ -304,7 +304,7 @@ class Rexe
         exit
       end
 
-      # Undocumented feature, works only on Mac OS
+      # Undocumented feature
       parser.on('', '--open-project') do
         open_resource(PROJECT_URL)
         exit(0)

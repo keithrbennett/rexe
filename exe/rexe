@@ -256,12 +256,16 @@ class Rexe
           options.loads.clear
         else
           loadfiles = v.split(',').map(&:strip)
-          existent, nonexistent = loadfiles.partition { |filespec| File.exists?(filespec) }
+          removes, adds = loadfiles.partition { |filespec| filespec[0] == '-' }
+
+          existent, nonexistent = adds.partition { |filespec| File.exists?(filespec) }
           if nonexistent.any?
-            raise("\nDid not find the following files to load: #{nonexistent.to_s}\n\n")
+            raise("\nDid not find the following files to load: #{nonexistent}\n\n")
           else
             existent.each { |filespec| options.loads << filespec }
           end
+
+          removes.each { |filespec| options.loads -= [filespec[1..-1]] }
         end
       end
 
@@ -290,7 +294,13 @@ class Rexe
         if v == '!'
           options.requires.clear
         else
-          v.split(',').map(&:strip).each { |r| options.requires << r }
+          v.split(',').map(&:strip).each do |r|
+            if r[0] == '-'
+              options.requires -= [r[1..-1]]
+            else
+              options.requires << r
+            end
+          end
         end
       end
 

@@ -60,7 +60,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.12.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.13.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
 
@@ -76,12 +76,13 @@ Options:
                              -im  Marshal
                              -in  None
                              -iy  YAML
--l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
+-l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
+                             ! to clear all, or precede a name with '-' to remove
 -m, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
                              -ml  line mode; each line is ingested as a separate string
                              -me  enumerator mode
                              -mb  big string mode; all lines combined into single multiline string
-                             -mn  (default) no input mode; no special handling of input; self is an Object.new
+                             -mn  (default) no input mode; no special handling of input; self is an Object.new 
 -n, --[no-]noop            Do not execute the code (useful with -g); the following are valid:
                              -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -
 -o, --output_format FORMAT Output format (defaults to puts):
@@ -93,9 +94,10 @@ Options:
                              -op  Puts (default)
                              -os  to_s
                              -oy  YAML
--r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated, or ! to clear
+-r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
+                             ! to clear all, or precede a name with '-' to remove
 
-If there is an .rexerc file in your home directory, it will be run as Ruby code
+If there is an .rexerc file in your home directory, it will be run as Ruby code 
 before processing the input.
 
 If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
@@ -564,9 +566,20 @@ puts to_a"
 
 There may be times when you have specified a load or require on the command line
 or in the `REXE_OPTIONS` environment variable,
-but you want to override it for a single invocation. Currently you cannot
-unspecify a single resource, but you can unspecify _all_ the requires or loads
-with the `-r!` and `-l!` command line options, respectively.
+but you want to override it for a single invocation. Here are your options:
+ 
+1) Unspecify _all_ the requires or loads with the `-r!` and `-l!` command line options, respectively.
+
+2) Unspecify individual requires or loads by preceding the name with `-`, e.g. `-r -rails`.
+Array subtraction is used, so:
+
+```
+➜  ~   rexe -n -r rails,rails,rails,-rails -ga
+```
+
+...would show that the final `-rails` cancelled all the previous `rails` specifications.
+
+
 
 
 ### Clearing _All_ Options
@@ -830,6 +843,8 @@ the complexity and difficulty of sharing your `rexe` scripts across systems
 will be proportional to the extent to which you use environment variables
 and loaded files for configuration and shared code.
 Be responsible and disciplined in making this configuration and code as clean and organized as possible.
+
+----
 
 #### Footnotes
 

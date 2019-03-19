@@ -1,6 +1,17 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### v0.13.0
+
+* Much refactoring.
+* Allow omitting source code in no-op mode.
+* Add ability to remove load or require files using minus sign preceding name.
+* Requires needed for parsing and formatting will now be included in log output.
+* Change license from MIT to Apache version 2.
+* Add undocumented '--open-project' command line option to launch Github project page in Mac OS and possibly other OS's.
+* Fix and add tests.
+
+
 ### v0.12.0
 
 * Change verbose -v boolean option to log output format -g option.

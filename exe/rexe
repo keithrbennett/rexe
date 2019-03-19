@@ -12,6 +12,8 @@ require 'shellwords'
 
 class Rexe
 
+  VERSION = '0.13.0'
+
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
 
@@ -121,10 +123,6 @@ class Rexe
 
 
 
-
-  VERSION = '0.12.0'
-
-
   attr_reader :callable, :input_parser, :lookups, :options, :output_formatter,
                 :log_formatter, :start_time, :user_source_code
 
@@ -162,7 +160,8 @@ class Rexe
                                  -im  Marshal
                                  -in  None
                                  -iy  YAML
-    -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated, or ! to clear
+    -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
+                                 ! to clear all, or precede a name with '-' to remove
     -m, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
                                  -ml  line mode; each line is ingested as a separate string
                                  -me  enumerator mode
@@ -179,7 +178,8 @@ class Rexe
                                  -op  Puts (default)
                                  -os  to_s
                                  -oy  YAML
-    -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated, or ! to clear
+    -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
+                                 ! to clear all, or precede a name with '-' to remove
 
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
     before processing the input.

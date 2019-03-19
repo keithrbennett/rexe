@@ -215,6 +215,13 @@ class Rexe
   end
 
 
+  def add_format_requires_to_requires_list
+    formats = [options.input_format, options.output_format, options.log_format]
+    requires = formats.map { |format| lookups.format_requires[format] }.uniq.compact
+    requires.each { |r| options.requires << r }
+  end
+
+
   # Using 'optparse', parses the command line.
   # Settings go into this instance's properties (see Struct declaration).
   private def parse_command_line
@@ -312,6 +319,10 @@ class Rexe
 
     end.parse!
 
+    # We want to do this after all options have been processed because we don't want any clearing of the
+    # options (by '-c', etc.) to result in exclusion of these needed requires.
+    add_format_requires_to_requires_list
+
     options.requires.uniq!
     options.loads.uniq!
 
@@ -325,10 +336,6 @@ class Rexe
 
 
   private def init_parser_and_formatters
-    require_format_require(options.input_format)
-    require_format_require(options.output_format)
-    require_format_require(options.log_format)
-
     @input_parser     = lookups.input_parsers[options.input_format]
     @output_formatter = lookups.formatters[options.output_format]
     @log_formatter    = lookups.formatters[options.log_format]

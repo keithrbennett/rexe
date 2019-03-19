@@ -181,7 +181,7 @@ Alternatively you could escape the parentheses with backslashes.)
 
 A log entry is optionally output to standard error after completion of the code.
 The entry is a hash containing the version, date/time of execution, source code
-to be evaluated, options (specified by all approaches),
+to be evaluated, options (after parsing both the `REXE_OPTIONS` environment variable and the command line),
 and the execution time of your Ruby code:
  
 ```
@@ -811,7 +811,12 @@ Be responsible and disciplined in making this configuration and code as clean an
 https://github.com/thisredone/rb. I started using `rb` and thought of lots of
 other features I would like to have, so I started working on `rexe`.
 
-[^2]: Here is a start at a method that opens a resource portably across operating systems:
+[^2]: Making this truly OS-portable is a lot more complex than it looks on the surface.
+On Linux, `xdg-open` may not be installed by default. Also, Windows Subsystem for Linux (WSL)
+out of the box is not able to launch graphical applications.
+
+Here is a _start_ at a method that opens a resource portably across operating systems:
+
 ```ruby
   def open_resource(resource_identifier)
     command = case (`uname`.chomp)
@@ -826,3 +831,4 @@ other features I would like to have, so I started working on `rexe`.
     `#{command} #{resource_identifier}`
   end
 ```
+

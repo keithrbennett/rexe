@@ -42,11 +42,10 @@ make the command long and tedious, discouraging this approach.
 
 ### Rexe
 
-Enter the `rexe` script: [^1]
-
+The `rexe` script [^1] can simplify such commands.
 Among other things, `rexe` provides switch-activated input parsing and output formatting so that converting 
 from one format to another is trivial.
-This command does the same thing as the previous `ruby` command:
+The previous `ruby` command can be expressed in `rexe` as:
 
 ```
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
@@ -105,7 +104,7 @@ so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesom
 
 ### Simplifying the Rexe Invocation
 
-There are two main ways we can simplify the `rexe` command line:
+There are two main ways we can make the `rexe` command line even more concise:
 
 * by extracting configuration into the `REXE_OPTIONS` environment variable
 * by extracting low level and/or shared code into files that are loaded using `-l`,
@@ -137,10 +136,12 @@ def valkyries
 end
 ```
 
-Why would you want this? You might want to be able to go to another room until a long job completes, and be notified when it is done. The `valkyries` method will launch a browser window pointed to Richard Wagner's "Ride of the Valkyries" starting at a lively point in the music. (The `open` command is Mac specific and could be replaced with `start` on Windows, a browser command name, etc.) If you like this sort of thing, you could download public domain audio files and use a command like player like `afplay` on Mac OS, or `mpg123` or `ogg123` on Linux. This approach is lighter weight, requires no network access, and will not leave an open browser window for you to close.
+To digress a bit, why would you want this? You might want to be able to go to another room until a long job completes, and be notified when it is done. The `valkyries` method will launch a browser window pointed to Richard Wagner's "Ride of the Valkyries" starting at a lively point in the music. (The `open` command is Mac specific and could be replaced with `start` on Windows, a browser command name, etc.) [^2]
+ 
+ If you like this kind of audio notification, you could download public domain audio files and use a command like player like `afplay` on Mac OS, or `mpg123` or `ogg123` on Linux. This approach is lighter weight, requires no network access, and will not leave an open browser window for you to close.
 
-Here is an example of how you might use this, assuming the above configuration is loaded from your `~/.rexerc` file or 
-an explicitly loaded file:
+Here is an example of how you might use the `valkyries` method, assuming the above configuration 
+is loaded from your `~/.rexerc` file or an explicitly loaded file:
 
 ```
 ➜  ~   tar czf /tmp/my-whole-user-space.tar.gz ~ ; rexe valkyries
@@ -232,17 +233,19 @@ and in different ways. Here is the help text relating to input modes:
 ```
 
 The first three are _filter_ modes; they make standard input available
-to your code as `self`, and automatically output to standard output
-the last value evaluated by your code.
+to your code as `self`.
 
 The last (and default) is the _executor_ mode. It merely assists you in
 executing the code you provide without any special implicit handling of standard input.
+
+All input modes automatically output to standard output the last value evaluated by your code.
+You can suppress automatic output with the `-on` option.
 
 
 #### -ml "Line" Filter Mode
 
 In this mode, your code would be called once per line of input,
-and in each call, `self` would evaluate to the line of text:
+and in each call, `self` would evaluate to each line of text:
 
 ```
 ➜  ~   echo "hello\ngoodbye" | rexe -ms reverse
@@ -284,7 +287,7 @@ Since `self` is an enumerable, we can call `first` and then `each_with_index`.
 
 #### -mb "Big String" Filter Mode
 
-In this mode, all standard input is combined into a single, (possibly
+In this mode, all standard input is combined into a single (possibly
 large) string, with newline characters joining the lines in the string.
 
 A good example of when you would use this is when you parse JSON or YAML text; 
@@ -306,8 +309,8 @@ if you defined methods, constants, instance variables, etc., in your code.
 If you may have more input than would fit in memory, you can do the following:
 
 * use `-ml` (line) mode so you are fed only 1 line at a time
-* use an Enumerator, either by specifying the `-me` (enumerator) mode option,
- or using `-mn` (no input) mode in conjunction with something like `STDIN.each_line`. Then: 
+* use an Enumerator, either by a) specifying the `-me` (enumerator) mode option,
+ or b) using `-mn` (no input) mode in conjunction with something like `STDIN.each_line`. Then: 
   * Make sure not to call any methods (e.g. `map`, `select`)
  that will produce an array of all the input because that will pull all the records into memory, or:
   * use [lazy enumerators](https://www.honeybadger.io/blog/using-lazy-enumerators-to-work-with-large-files-in-ruby/)
@@ -349,7 +352,7 @@ You may wonder why these formats are provided, given that their functionality
 could be included in the custom code instead. Here's why:
 
 * The savings in command line length goes a long way to making these commands more readable and feasible.
-* It's much simpler to use multiple formats, as there is no need to change the code itself. This also enables
+* It's much simpler to switch formats, as there is no need to change the code itself. This also enables
 parameterization of the output format.
 
 
@@ -359,7 +362,7 @@ For your convenience, the information displayed in verbose mode is available to 
 by accessing the `$RC` global variable, which contains an OpenStruct. Probably most useful in that object
 is the record count, accessible with both `$RC.count` and `$RC.i`.
 This is only really useful in line mode, because in the others
-it will always be 0 or 1. Here is an example of how you might use it:
+it will always be 0 or 1. Here is an example of how you might use it as a kind of progress indicator:
 
 ```
 ➜  ~   ➜  ~   find / | rexe -ml -on \
@@ -370,6 +373,10 @@ File entry #107000 is /usr/local/Cellar/go/1.11.5/libexec/src/go/types/testdata/
 File entry #108000 is /usr/local/Cellar/go/1.11.5/libexec/src/runtime/os_linux_novdso.go
 ...
 ```
+
+Note that a single quote was used here; if a double quote were used, the `$RC` would have been interpreted
+and removed by the shell.
+  
 
 ### Implementing Domain Specific Languages (DSL's)
 
@@ -432,8 +439,7 @@ you want to see the configuration options before running it for real.
 You may want to support arguments in your code. One of the previous examples downloaded currency conversion rates. Let's find out the available currency codes:
 
 ```
-➜  /   echo $EUR_RATES_JSON | rexe -rjson -mb \
-        "JSON.parse(self)['rates'].keys.sort.join(' ')"
+➜  /   echo $EUR_RATES_JSON | rexe -ij -mb "self['rates'].keys.sort.join(' ')"
 AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR NOK NZD PHP PLN RON RUB SEK SGD THB TRY USD ZAR
 ```
  
@@ -575,10 +581,30 @@ Requiring gems and modules for _all_ invocations of `rexe` will make your comman
 ```
 
 
+### Operating System Support
+
+`rexe` has been tested successfully on Mac OS, Linux, and Windows Subsystem for Linux (WSL).
+It is intended as a tool for the Unix shell, and, as such, no attempt is made to support
+Windows non-Unix shells.
+
 
 ### More Examples
 
 Here are some more examples to illustrate the use of `rexe`.
+
+----
+Output the contents of `ENV` using AwesomePrint:
+
+```
+➜  ~   rexe -oa ENV
+{
+...
+                          "LANG" => "en_US.UTF-8",
+                           "PWD" => "/Users/kbennett/work/rexe",
+                         "SHELL" => "/bin/zsh",
+...
+}
+```
 
 ----
 
@@ -785,4 +811,18 @@ Be responsible and disciplined in making this configuration and code as clean an
 https://github.com/thisredone/rb. I started using `rb` and thought of lots of
 other features I would like to have, so I started working on `rexe`.
 
-[^2]: You might wonder why we don't just refrain from sending output to stdout on null or false. That is certainly easy to implement, but there are other ways to accomplish this (using _enumerable_ or _no input_ modes), and the lack of output might be surprising and disconcerting to the user. What do _you_ think, which approach makes more sense to you?
+[^2]: Here is a start at a method that opens a resource portably across operating systems:
+```ruby
+  def open_resource(resource_identifier)
+    command = case (`uname`.chomp)
+    when 'Darwin'
+      'open'
+    when 'Linux'
+      'xdg-open'
+    else
+      'start'
+    end
+
+    `#{command} #{resource_identifier}`
+  end
+```

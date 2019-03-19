@@ -387,7 +387,7 @@ class Rexe
 
 
   private def create_callable
-    if user_source_code.empty?
+    if user_source_code.empty? && (! options.noop)
       STDERR.puts "No source code provided.  Use -h to display help."
       exit(-1)
     end

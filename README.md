@@ -189,8 +189,8 @@ and the execution time of your Ruby code:
 ...
 ---
 :count: 0
-:rexe_version: 0.11.0
-:start_time: '2019-03-11T20:16:02+07:00'
+:rexe_version: 0.12.0
+:start_time: '2019-03-19T19:39:18+08:00'
 :source_code: ap JSON.parse(STDIN.read)
 :options:
   :input_format: :none
@@ -200,10 +200,14 @@ and the execution time of your Ruby code:
   :requires:
   - json
   - awesome_print
-  :verbose: true
+  - yaml
+  :log_format: :yaml
   :noop: false
-:duration_secs: 0.032174
+:duration_secs: 0.116171
 ``` 
+
+The `yaml` require was not explicitly specified but is automatically added because
+`rexe` will add any requires needed for automatic parsing and formatting.
  
 This extra output is sent to standard error (_stderr_) instead of standard output
 (_stdout_) so that it will not pollute the "real" data when stdout is piped to
@@ -254,13 +258,13 @@ eybdoog
 ```
 
 `reverse` is implicitly called on each line of standard input.  `self`
- is the input line in each call (we could also have used `self.reverse` but the `self` would have been redundant.).
+ is the input line in each call (we could also have used `self.reverse` but the `self.` would have been redundant.).
   
-Be aware that although you can control the _content_ of output records, 
+Be aware that, in this mode, although you can control the _content_ of output records, 
 there is no way to selectively _exclude_ records from being output. Even if the result of the code
 is nil or the empty string, a newline will be output. If this is an issue, you could do one of the following:
  
- * use Enumerator mode and call `select`, `filter`, `reject`, etc.
+ * use `-me` Enumerator mode and call `select`, `filter`, `reject`, etc.
  * use the `-on` _no output_ mode and call `puts` explicitly for the output you _do_ want
 
 
@@ -335,7 +339,7 @@ since there is no preprocessing of standard input in that mode.
 
 ### Output Formats
 
-Several output formats are provided for your convenience. Here they are:
+Several output formats are provided for your convenience:
 
 * `-oa` - Awesome Print - calls `.ai` on the object to get the string that `ap` would print
 * `-oi` - Inspect - calls `inspect` on the object
@@ -374,7 +378,8 @@ File entry #108000 is /usr/local/Cellar/go/1.11.5/libexec/src/runtime/os_linux_n
 ...
 ```
 
-Note that a single quote was used here; if a double quote were used, the `$RC` would have been interpreted
+Note that a single quote was used for the Ruby code here; 
+if a double quote were used, the `$RC` would have been interpreted
 and removed by the shell.
   
 
@@ -400,7 +405,7 @@ trivially easily. Just to illustrate, here's how you would open a REPL on the Fi
 `self` would evaluate to the `File` class, so you could call class methods implicitly using only their names:
 
 ```
-➜  rock_books git:(master) ✗   rexe  -r pry File.pry
+➜  ~   rexe  -r pry File.pry
 
 [6] pry(File)> size '/etc/passwd'
 6804
@@ -410,7 +415,11 @@ true
 true
 ```
 
-This could be really handy if you call `pry` on a custom object that has methods especially suited to your task.
+This could be really handy if you call `pry` on a custom object that has methods especially suited to your task:
+
+```
+➜  ~   rexe  -r  wifi-wand,pry  WifiWand::MacOsModel.new.pry
+```
 
 Ruby is supremely well suited for DSL's since it does not require parentheses for method calls, 
 so calls to your custom methods _look_ like built in language commands and keywords. 
@@ -424,7 +433,11 @@ necessary to quote the Ruby code. You can use single or double quotes to have th
 as a single argument. 
 An excellent reference for how they differ is [here](https://stackoverflow.com/questions/6697753/difference-between-single-and-double-quotes-in-bash).
 
-Feel free to fall back on Ruby's super useful `%q{}` and `%Q{}`, equivalent to single and double quotes, respectively.
+Personally, I find single quotes more useful since special characters like `$` in my Ruby code will
+not be disturbed.
+
+When specifying the Ruby code, feel free to fall back on Ruby's super useful `%q{}` and `%Q{}`,
+equivalent to single and double quotes, respectively.
 
 
 ### No Op Mode
@@ -436,14 +449,19 @@ you want to see the configuration options before running it for real.
 
 ### Mimicking Method Arguments
 
-You may want to support arguments in your code. One of the previous examples downloaded currency conversion rates. Let's find out the available currency codes:
+You may want to support arguments in your `rexe` commands. 
+You could do this by piping in the arguments as `rexe`'s stdin.
+
+One of the previous examples downloaded currency conversion rates. 
+To prepare for an example of how to do this, let's find out the available currency codes:
 
 ```
 ➜  /   echo $EUR_RATES_JSON | rexe -ij -mb "self['rates'].keys.sort.join(' ')"
 AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR NOK NZD PHP PLN RON RUB SEK SGD THB TRY USD ZAR
 ```
- 
- Here would be a way to output a single rate:
+
+The codes output are the legal arguments that could be sent to `rexe`'s stdin as an argument.
+Let's find out the Euro exchange rate for _PHP_, Philippine Pesos:
  
 ```
 ➜  ~   echo PHP | rexe -ml -rjson \
@@ -455,6 +473,12 @@ AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR 
 
 In this code, `self` is the currency code `PHP` (Philippine Peso). We have accessed the JSON text to parse from the environment variable we previously populated.
 
+Because we "used up" stdin for the argument, we could not make use of automatic parsing
+ of the currency exchange data (using the `-ij` option),
+which would have greatly simplified the command. One possible solution to this would be 
+to pipe in the JSON or YAML representation of a hash
+with entries for both the argument and the currency exchange data...but this might
+make the command line too complex to be practical.
 
 ### Using the Clipboard for Text Processing
 
@@ -492,11 +516,9 @@ when you change the content of the clipboard.
 ### Multiline Ruby Commands
 
 Although `rexe` is cleanest with short one liners, you may want to use it to include nontrivial Ruby code
-in your shell script as well. If you do this, you may need to:
+in your shell script as well. If you do this, you may need to add trailing backslashes to the lines of Ruby code.
 
-* add trailing backslashes to lines of Ruby code
-* use %q{} and %Q{} in your Ruby code instead of single and double quotes, 
-  since the quotes have special meaning to the shell
+In addition, don't forget you can use `%q{}` and `%Q{}` in your Ruby code instead of single and double quotes.
 
 
 ### The Use of Semicolons
@@ -573,12 +595,14 @@ Files loaded with the `-l` option are treated the same way.
 Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that nokogiri takes about 0.15 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using the redirection and grep):
 
 ```
-➜  ~   rexe -gy 2>&1 | grep duration
+➜  ~    rexe -gy 2>&1 "''" | grep duration
 :duration_secs: 0.0012
 
-➜  ~   rexe -gy -r nokogiri 2>&1 | grep duration
+➜  ~   rexe -gy -r nokogiri "''" 2>&1 | grep duration
 :duration_secs: 0.148671
 ```
+
+(For the above to work, the `nokogiri` gem needs to be installed.)
 
 
 ### Operating System Support
@@ -612,8 +636,8 @@ Show disk space used/free on a Mac's main hard drive's main partition:
 
 ```
 ➜  ~   df -h | grep disk1s1 | rexe -ml \
-"x = split; puts %Q{#{x[4]} Used: #{x[2]}, Avail #{x[3]}}"
-91% Used: 412Gi, Avail 44Gi
+"x = split; puts %Q{#{x[4]} Used: #{x[2]}, Avail: #{x[3]}}"
+91% Used: 412Gi, Avail: 44Gi
 ```
 
 (Note that `split` is equivalent to `self.split`, and because the `-ml` option is used, `self` is the line of text.
@@ -755,7 +779,7 @@ Then when I issue a command that succeeds, the Hallelujah Chorus is played:
 
 ----
 
-Another formatting example...I wanted to reformat this help text:
+Another formatting example...I wanted to reformat this help text...
 
 ```
                                  'i' => Inspect
@@ -767,6 +791,7 @@ Another formatting example...I wanted to reformat this help text:
                                  'y' => YAML
 ```
 
+...into something more suitable for my help text.
 Admittedly, the time it took to do this with rexe probably exceeded the time to do it manually,
 but it was an interesting exercise and made it easy to try different formats. Here it is:
 
@@ -785,14 +810,15 @@ but it was an interesting exercise and made it easy to try different formats. He
 
 ### Conclusion
 
-`rexe` is not revolutionary technology, it's just plumbing that removes low level
+`rexe` is not revolutionary technology, it's just plumbing that removes parsing,
+formatting, and low level
 configuration from your command line so that you can focus on the high level
 task at hand.
 
-When we think of a new piece of software, we usually think "what would this be
+When we consider a new piece of software, we usually think "what would this be
 helpful with now?". However, for me, the power of `rexe` is not so much what I can do
 with it in a single use case now, but rather what will I be able to do with it over time
-as I get used to the concept and my supporting code and its uses evolve.
+as I accumulate more experience and expertise.
 
 I suggest starting to use `rexe` even for modest improvements in workflow, even
 if it doesn't seem compelling. There's a good chance that as you use it over

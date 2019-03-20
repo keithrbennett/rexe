@@ -326,7 +326,7 @@ class Rexe
 
     attr_reader :callable, :input_parser, :lookups,
                 :options, :output_formatter,
-                  :log_formatter, :start_time, :user_source_code
+                :log_formatter, :start_time, :user_source_code
 
 
     def initialize

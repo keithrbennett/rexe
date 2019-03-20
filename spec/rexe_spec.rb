@@ -10,10 +10,11 @@ require 'yaml'
 # but that makes the executable more complex, probably without necessity.
 
 
-RSpec.describe 'rexe' do
+RSpec.describe 'rexe integration tests' do
 
   let(:test_data)        {    [ { 'color' => 'blue' }, 200 ] }
   let(:test_data_string) { %Q{[ { 'color' => 'blue' }, 200 ]} }
+  let(:load_filespec)    { File.join(File.dirname(__FILE__), 'dummy.rb') }
 
   context '--version option' do
     specify 'version returned with --version is a valid version string' do
@@ -233,12 +234,51 @@ RSpec.describe 'rexe' do
 
   context 'requires' do
     specify 'requiring using -r works' do
-      RUN.("#{REXE_FILE} -c -mn -r! -r yaml YAML") # just refer to the YAML module and see if it breaks
+      RUN.("#{REXE_FILE} -c -mn -r yaml YAML") # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).to eq(0)
     end
 
     specify 'clearing requires using -r ! works' do
       command = "#{REXE_FILE} -c -mn -r yaml -r! YAML"
+
+      # Suppress distracting error output, but the redirection requires Posix compatibility:
+      command << " 2>/dev/null" if OS.posix?
+
+      RUN.(command) # just refer to the YAML module and see if it breaks
+      expect($?.exitstatus).not_to eq(0)
+    end
+
+    specify 'clearing a single require using -r -gem works' do
+      command = "#{REXE_FILE} -c -mn -r yaml -r -yaml YAML"
+
+      # Suppress distracting error output, but the redirection requires Posix compatibility:
+      command << " 2>/dev/null" if OS.posix?
+
+      RUN.(command) # just refer to the YAML module and see if it breaks
+      expect($?.exitstatus).not_to eq(0)
+    end
+  end
+
+
+  context 'loads' do
+
+    specify 'loading using -l works' do
+      RUN.("#{REXE_FILE} -c -mn  -l #{load_filespec} Dummy") # just refer to the YAML module and see if it breaks
+      expect($?.exitstatus).to eq(0)
+    end
+
+    specify 'clearing loads using -l ! works' do
+      command = "#{REXE_FILE} -c -mn -l #{load_filespec} -l! Dummy"
+
+      # Suppress distracting error output, but the redirection requires Posix compatibility:
+      command << " 2>/dev/null" if OS.posix?
+
+      RUN.(command) # just refer to the YAML module and see if it breaks
+      expect($?.exitstatus).not_to eq(0)
+    end
+
+    specify 'clearing a single load using -r -file works' do
+      command = "#{REXE_FILE} -c -mn -l #{load_filespec} -l -#{load_filespec} Dummy"
 
       # Suppress distracting error output, but the redirection requires Posix compatibility:
       command << " 2>/dev/null" if OS.posix?

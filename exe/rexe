@@ -235,7 +235,7 @@ class Rexe
           if v == '!'
             options.loads.clear
           else
-            loadfiles = v.split(',').map(&:strip)
+            loadfiles = v.split(',').map(&:strip).map { |s| File.expand_path(s) }
             removes, adds = loadfiles.partition { |filespec| filespec[0] == '-' }
 
             existent, nonexistent = adds.partition { |filespec| File.exists?(filespec) }

@@ -286,6 +286,19 @@ RSpec.describe 'rexe integration tests' do
       RUN.(command) # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).not_to eq(0)
     end
+
+    let (:fs1) { 'spec/dummy.rb'}
+    let (:fs2) { 'spec/../spec/dummy.rb'}
+
+    specify 'two different load filespecs that point to the same absolute location are treated as one' do
+      command = "#{REXE_FILE} -c -n -gy -l #{fs1} -l #{fs2} 2>&1"
+      yaml = RUN.(command) # just refer to the YAML module and see if it breaks
+      config = YAML.load(yaml)
+      $stderr.puts "options: #{config[:options].class}:\n #{config[:options].to_yaml}"
+      # $stderr.puts yaml; sleep 7; $stderr.puts; $stderr.puts options; $stderr.puts; sleep 7; $stderr.puts options.loads; sleep 15
+      expect(config[:options][:loads].size).to eq(1)
+    end
+
   end
 
 
@@ -296,6 +309,14 @@ RSpec.describe 'rexe integration tests' do
 
     specify 'the record count is available as $RC.i' do
       expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC.i.to_s'})).to eq("a0\nb1\nc2\n")
+    end
+  end
+
+
+  context 'no op' do
+    specify '-n suppresses evaluation' do
+      expect(RUN.(%Q{rexe    '"hello"'})).to eq("hello\n")
+      expect(RUN.(%Q{rexe -n '"hello"'})).to eq('')
     end
   end
 end

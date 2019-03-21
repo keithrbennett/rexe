@@ -155,7 +155,8 @@ class Rexe
 
     rexe -- Ruby Command Line Executor/Filter -- v#{VERSION} -- #{PROJECT_URL}
 
-    Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
+    Executes Ruby code on the command line, optionally automating management of standard input
+    and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
 
     rexe [options] 'Ruby source code'
 
@@ -313,7 +314,7 @@ class Rexe
       # options (by '-c', etc.) to result in exclusion of these needed requires.
       add_format_requires_to_requires_list
 
-      options.requires.uniq!
+      options.requires = options.requires.sort.uniq
       options.loads.uniq!
 
       options

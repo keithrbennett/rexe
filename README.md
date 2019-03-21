@@ -50,6 +50,8 @@ The previous `ruby` command can be expressed in `rexe` as:
 ```
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
 ```
+
+The command options may seem cryptic, but they're logical so it shouldn't take long to learn them.
  
 `rexe` is at https://github.com/keithrbennett/rexe and can be installed with
 `gem install rexe`. `rexe` provides several ways to simplify Ruby on the command
@@ -118,10 +120,21 @@ There are two main ways we can make the `rexe` command line even more concise:
 The `REXE_OPTIONS` environment variable can contain command line options that would otherwise
 be specified on the `rexe` command line:
 
+Instead of this:
+
 ```
-➜  ~   export REXE_OPTIONS="-r json,awesome_print"
-➜  ~   echo $EUR_RATES_JSON | rexe 'ap JSON.parse(STDIN.read)'
+➜  ~   rexe -r wifi-wand -oa  WifiWand::MacOsModel.new.wifi_info
 ```
+
+this:
+
+```
+➜  ~   export REXE_OPTIONS="-r wifi-wand -oa"
+➜  ~   rexe WifiWand::MacOsModel.new.wifi_info
+```
+
+This is useful when you use options in most or all of your commands. Any options specified on the `rexe`
+command line will override the environment variable options.
 
 Like any environment variable, `REXE_OPTIONS` could also be set in your startup script, input on a command line using `export`, or in another script loaded with `source` or `.`.
 
@@ -162,7 +175,7 @@ def play(piece_code)
   pieces = {
     hallelujah: "https://www.youtube.com/watch?v=IUZEtVbJT5c&t=0m20s",
     valkyries:  "http://www.youtube.com/watch?v=P73Z6291Pt8&t=0m28s",
-    wm_tell:    "https://www.youtube.com/watch?v=j3T8-aeOrbg"
+    wm_tell:    "https://www.youtube.com/watch?v=j3T8-aeOrbg&t=0m1s",
     # ... and many, many more
   }
   `open #{Shellwords.escape(pieces.fetch(piece_code))}`
@@ -187,12 +200,12 @@ to be evaluated, options (after parsing both the `REXE_OPTIONS` environment vari
 and the execution time of your Ruby code:
  
 ```
-➜  ~   echo $EUR_RATES_JSON | rexe -gy -rjson,awesome_print "ap JSON.parse(STDIN.read)"
+➜  ~   echo $EUR_RATES_JSON | rexe -gy -ij -oa self
 ...
 ---
 :count: 0
-:rexe_version: 0.12.0
-:start_time: '2019-03-19T19:39:18+08:00'
+:rexe_version: 0.13.0
+:start_time: '2019-03-21T20:58:51+08:00'
 :source_code: ap JSON.parse(STDIN.read)
 :options:
   :input_format: :none
@@ -200,23 +213,24 @@ and the execution time of your Ruby code:
   :loads: []
   :output_format: :puts
   :requires:
-  - json
   - awesome_print
+  - json
   - yaml
   :log_format: :yaml
   :noop: false
-:duration_secs: 0.116171
+:duration_secs: 0.070381
 ``` 
 
-The `yaml` require was not explicitly specified but is automatically added because
-`rexe` will add any requires needed for automatic parsing and formatting.
+We specified `-gy` for YAML format; there are other formats as well (see the help output or this document)
+and the default is `-gn`, which means don't output the log entry at all.
+
+The requires you see were not explicitly specified but were automatically added because
+`rexe` will add any requires needed for automatic parsing and formatting, and
+we specified those formats in the command line options `-gy -ij -oa`.
  
 This extra output is sent to standard error (_stderr_) instead of standard output
 (_stdout_) so that it will not pollute the "real" data when stdout is piped to
 another command.
-
-As you can see, the data is the YAML representation of a hash, so you could easily ingest it and
-use it programatically.
 
 If you would like to append this informational output to a file, you could do something like this:
 
@@ -407,7 +421,7 @@ trivially easily. Just to illustrate, here's how you would open a REPL on the Fi
 `self` would evaluate to the `File` class, so you could call class methods implicitly using only their names:
 
 ```
-➜  ~   rexe  -r pry File.pry
+➜  ~   rexe -r pry File.pry
 
 [6] pry(File)> size '/etc/passwd'
 6804
@@ -420,7 +434,7 @@ true
 This could be really handy if you call `pry` on a custom object that has methods especially suited to your task:
 
 ```
-➜  ~   rexe  -r  wifi-wand,pry  WifiWand::MacOsModel.new.pry
+➜  ~   rexe -r  wifi-wand,pry  WifiWand::MacOsModel.new.pry
 ```
 
 Ruby is supremely well suited for DSL's since it does not require parentheses for method calls, 

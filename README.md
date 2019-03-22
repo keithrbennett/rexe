@@ -51,7 +51,11 @@ The previous `ruby` command can be expressed in `rexe` as:
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
 ```
 
-The command options may seem cryptic, but they're logical so it shouldn't take long to learn them.
+The command options may seem cryptic, but they're logical so it shouldn't take long to learn them:
+
+* `-mb` - __mode__ to consume all standard input as a single __big__ string
+* `-ij` - parse that __input__ with __JSON__; `self` will be the parsed object
+* `-oy` - __output__ the final value as __YAML__
  
 `rexe` is at https://github.com/keithrbennett/rexe and can be installed with
 `gem install rexe`. `rexe` provides several ways to simplify Ruby on the command
@@ -126,14 +130,14 @@ Instead of this:
 ➜  ~   rexe -r wifi-wand -oa  WifiWand::MacOsModel.new.wifi_info
 ```
 
-this:
+you can do this:
 
 ```
 ➜  ~   export REXE_OPTIONS="-r wifi-wand -oa"
 ➜  ~   rexe WifiWand::MacOsModel.new.wifi_info
 ```
 
-This is useful when you use options in most or all of your commands. Any options specified on the `rexe`
+This effectively creates custom defaults, and is useful when you use options in most or all of your commands. Any options specified on the `rexe`
 command line will override the environment variable options.
 
 Like any environment variable, `REXE_OPTIONS` could also be set in your startup script, input on a command line using `export`, or in another script loaded with `source` or `.`.
@@ -168,7 +172,7 @@ You might be thinking that creating an alias or a minimal shell script for this 
 approach, and I would agree with you. However, over time the number of these could become unmanageable, whereas using Ruby
 you could build a pretty extensive and well organized library of functionality. Moreover, that functionality could be made available to _all_ your Ruby code (for example, by putting it in a gem), and not just command line one liners.
 
-For example, you could have something like this in a configuration file:
+For example, you could have something like this in a gem or loaded file:
 
 ```
 def play(piece_code)
@@ -232,7 +236,7 @@ This extra output is sent to standard error (_stderr_) instead of standard outpu
 (_stdout_) so that it will not pollute the "real" data when stdout is piped to
 another command.
 
-If you would like to append this informational output to a file, you could do something like this:
+If you would like to append this informational output to a file(e.g. `rexe.log`), you could do something like this:
 
 ```
 ➜  ~   rexe ... -gy 2>>rexe.log
@@ -310,7 +314,7 @@ Since `self` is an enumerable, we can call `first` and then `each_with_index`.
 In this mode, all standard input is combined into a single (possibly
 large) string, with newline characters joining the lines in the string.
 
-A good example of when you would use this is when you parse JSON or YAML text; 
+A good example of when you would use this is when you need to parse a multiline JSON or YAML representation of an object; 
 you need to pass the entire (probably) multiline string to the parse method. 
 This is the mode that was used in the first `rexe` example in this article.
 
@@ -385,7 +389,7 @@ This is only really useful in line mode, because in the others
 it will always be 0 or 1. Here is an example of how you might use it as a kind of progress indicator:
 
 ```
-➜  ~   ➜  ~   find / | rexe -ml -on \
+➜  ~   find / | rexe -ml -on \
 'if $RC.i % 1000 == 0; puts %Q{File entry ##{$RC.i} is #{self}}; end'
 ...
 File entry #106000 is /usr/local/Cellar/go/1.11.5/libexec/src/cmd/vendor/github.com/google/pprof/internal/driver/driver_test.go
@@ -418,7 +422,7 @@ trivially easily. Just to illustrate, here's how you would open a REPL on the Fi
 ➜  ~   rexe -r pry File.pry
 ```
 
-`self` would evaluate to the `File` class, so you could call class methods implicitly using only their names:
+`self` would evaluate to the `File` class, so you could call class methods using only their names:
 
 ```
 ➜  ~   rexe -r pry File.pry
@@ -449,8 +453,7 @@ necessary to quote the Ruby code. You can use single or double quotes to have th
 as a single argument. 
 An excellent reference for how they differ is [here](https://stackoverflow.com/questions/6697753/difference-between-single-and-double-quotes-in-bash).
 
-Personally, I find single quotes more useful since special characters like `$` in my Ruby code will
-not be disturbed.
+Personally, I find single quotes more useful since I usually don't want special characters in my Ruby code  like `$` to be processed by the shell.
 
 When specifying the Ruby code, feel free to fall back on Ruby's super useful `%q{}` and `%Q{}`,
 equivalent to single and double quotes, respectively.
@@ -534,20 +537,7 @@ when you change the content of the clipboard.
 Although `rexe` is cleanest with short one liners, you may want to use it to include nontrivial Ruby code
 in your shell script as well. If you do this, you may need to add trailing backslashes to the lines of Ruby code.
 
-In addition, don't forget you can use `%q{}` and `%Q{}` in your Ruby code instead of single and double quotes.
-
-
-### The Use of Semicolons
-
-You will probably find yourself using semicolons much more often than usual when you use `rexe`.
-Obviously you would need them to separate statements on the same line:
-
-```
-➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; puts to_a"
-```
-
-What might not be so obvious is that you _also_ need them if each statement is on its own line.
-For example, here is an example without a semicolon:
+What might not be so obvious is that you will often need to use semicolons. For example, here is an example without a semicolon:
 
 ```
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m} \
@@ -619,17 +609,15 @@ Files loaded with the `-l` option are treated the same way.
 
 ### Beware of Configured Requires
 
-Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that nokogiri takes about 0.15 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using the redirection and grep):
+Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using the redirection and grep):
 
 ```
-➜  ~    rexe -gy 2>&1 "''" | grep duration
-:duration_secs: 0.0012
-
-➜  ~   rexe -gy -r nokogiri "''" 2>&1 | grep duration
-:duration_secs: 0.148671
+➜  ~   rexe -gy -r rails 123 2>&1 | grep duration
+:duration_secs: 0.660138
+➜  ~   rexe -gy          123 2>&1 | grep duration
+:duration_secs: 0.027781
 ```
-
-(For the above to work, the `nokogiri` gem needs to be installed.)
+(For the above to work, the `rails` gem and its dependencies need to be installed.)
 
 
 ### Operating System Support
@@ -644,7 +632,10 @@ Windows non-Unix shells.
 Here are some more examples to illustrate the use of `rexe`.
 
 ----
-Output the contents of `ENV` using AwesomePrint:
+
+#### Outputting ENV
+
+Output the contents of `ENV` using AwesomePrint [^3]:
 
 ```
 ➜  ~   rexe -oa ENV
@@ -659,6 +650,8 @@ Output the contents of `ENV` using AwesomePrint:
 
 ----
 
+#### Reformatting a Command's Output
+
 Show disk space used/free on a Mac's main hard drive's main partition:
 
 ```
@@ -671,7 +664,7 @@ Show disk space used/free on a Mac's main hard drive's main partition:
 
 ----
 
-Print yellow (trust me!):
+#### Print yellow (trust me!):
 
 ```
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; puts to_a"
@@ -692,6 +685,7 @@ Print yellow (trust me!):
 
 ----
 
+#### Formatting for Numeric Sort
     
 Show the 3 longest file names of the current directory, with their lengths, in descending order:
 
@@ -702,10 +696,12 @@ Show the 3 longest file names of the current directory, with their lengths, in d
 [  28] 2018-abc-2019-01-16-2340.zip
 ```
 
-Notice that when you right align numbers using printf formatting, sorting the lines
+When you right align numbers using printf formatting, sorting the lines
 alphabetically will result in sorting them numerically as well.
 
 ----
+
+#### Reformatting Grep Output
 
 I was recently asked to provide a schema for the data in my `rock_books` accounting gem. `rock_books` data is intended to be very small in size, and no data base is used. Instead, the input data is parsed on every run, and reports generated on demand. However, there are data structures (actually class instances) in memory at runtime, and their classes inherit from `Struct`.
  The definition lines look like this one:
@@ -762,6 +758,8 @@ straightforward to follow. Here's what it does:
  
 ----
 
+#### More YouTube: Differentiating Success and Failure 
+
 Let's go a little crazy with the YouTube example.
 Let's have the video that loads be different for the success or failure
 of the command.
@@ -806,7 +804,9 @@ Then when I issue a command that succeeds, the Hallelujah Chorus is played:
 
 ----
 
-Another formatting example...I wanted to reformat this help text...
+#### Reformatting Source Code for Help Text
+
+Another formatting example...I wanted to reformat this source code...
 
 ```
                                  'i' => Inspect
@@ -887,3 +887,4 @@ Here is a _start_ at a method that opens a resource portably across operating sy
   end
 ```
 
+[^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, most of the other output formats will return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.

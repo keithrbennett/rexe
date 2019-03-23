@@ -386,7 +386,30 @@ parameterization of the output format.
 ### The $RC Global OpenStruct
 
 For your convenience, the information displayed in verbose mode is available to your code at runtime
-by accessing the `$RC` global variable, which contains an OpenStruct. Probably most useful in that object
+by accessing the `$RC` global variable, which contains an OpenStruct. Let's print out its contents using AwesomePrint:
+ 
+```
+➜  ~   rexe -oa '$RC'
+OpenStruct {
+           :count => 0,
+    :rexe_version => "0.13.0",
+      :start_time => "2019-03-23T20:17:59+08:00",
+     :source_code => "$RC",
+         :options => {
+         :input_format => :none,
+           :input_mode => :no_input,
+                :loads => [],
+        :output_format => :awesome_print,
+             :requires => [
+            [0] "awesome_print"
+        ],
+           :log_format => :none,
+                 :noop => false
+    }
+}
+``` 
+ 
+Probably most useful in that object
 is the record count, accessible with both `$RC.count` and `$RC.i`.
 This is only really useful in line mode, because in the others
 it will always be 0 or 1. Here is an example of how you might use it as a kind of progress indicator:
@@ -636,6 +659,29 @@ Here are some more examples to illustrate the use of `rexe`.
 
 ----
 
+### Format Conversions -- JSON, YAML, AwesomePrint
+
+You may work with YAML or JSON a lot and need to inspect files from time to time.
+`rexe` makes it easy to convert from one format to another. For example, here's a
+command to convert from `countries.yaml` to AwesomePrint:
+
+```
+cat countries.yaml | rexe -iy -oa -mb self
+```
+
+You can easily create a script that automates this. Using your favorite editor,
+put this in a file:
+
+```
+cat $1 | rexe -iy -oa -mb self
+```
+
+I put mine in a file called `y2a` in my `~/bin` directory where I keep custom scripts like this.
+
+Now you can call `y2a` to output any YAML file using AwesomePrint.
+
+----
+
 #### Outputting ENV
 
 Output the contents of `ENV` using AwesomePrint [^3]:
@@ -667,6 +713,22 @@ Show disk space used/free on a Mac's main hard drive's main partition:
 
 ----
 
+#### Formatting for Numeric Sort
+    
+Show the 3 longest file names of the current directory, with their lengths, in descending order:
+
+```
+➜  ~   ls  | rexe -ml "%Q{[%4d] %s} % [length, self]" | sort -r | head -3
+[  50] Agoda_Booking_ID_9999999 49_–_RECEIPT_enclosed.pdf
+[  40] 679a5c034994544aab4635ecbd50ab73-big.jpg
+[  28] 2018-abc-2019-01-16-2340.zip
+```
+
+When you right align numbers using printf formatting, sorting the lines
+alphabetically will result in sorting them numerically as well.
+
+----
+
 #### Print yellow (trust me!):
 
 ```
@@ -688,77 +750,6 @@ Show disk space used/free on a Mac's main hard drive's main partition:
 
 ----
 
-#### Formatting for Numeric Sort
-    
-Show the 3 longest file names of the current directory, with their lengths, in descending order:
-
-```
-➜  ~   ls  | rexe -ml "%Q{[%4d] %s} % [length, self]" | sort -r | head -3
-[  50] Agoda_Booking_ID_9999999 49_–_RECEIPT_enclosed.pdf
-[  40] 679a5c034994544aab4635ecbd50ab73-big.jpg
-[  28] 2018-abc-2019-01-16-2340.zip
-```
-
-When you right align numbers using printf formatting, sorting the lines
-alphabetically will result in sorting them numerically as well.
-
-----
-
-#### Reformatting Grep Output
-
-I was recently asked to provide a schema for the data in my `rock_books` accounting gem. `rock_books` data is intended to be very small in size, and no data base is used. Instead, the input data is parsed on every run, and reports generated on demand. However, there are data structures (actually class instances) in memory at runtime, and their classes inherit from `Struct`.
- The definition lines look like this one:
- 
-```
-class JournalEntry < Struct.new(:date, :acct_amounts, :doc_short_name, :description, :receipts)
-```
-
-The `grep` command line utility prepends each of these matches with a string like this:
-
-```
-lib/rock_books/documents/journal_entry.rb:
-```
-
-So this is what worked well for me:
-
-```
-➜  ~   grep Struct **/*.rb | grep -v OpenStruct | rexe -ml \
-"a = \
- gsub('lib/rock_books/', '')\
-.gsub('< Struct.new',    '')\
-.gsub('; end',           '')\
-.split('.rb:')\
-.map(&:strip);\
-\
-%q{%-40s %-s} % [a[0] + %q{.rb}, a[1]]"
-```
-
-...which produced this output:
-
-``` 
-cmd_line/command_line_interface.rb       class Command (:min_string, :max_string, :action)
-documents/book_set.rb                    class BookSet (:run_options, :chart_of_accounts, :journals)
-documents/journal.rb                     class Entry (:date, :amount, :acct_amounts, :description)
-documents/journal_entry.rb               class JournalEntry (:date, :acct_amounts, :doc_short_name, :description, :receipts)
-documents/journal_entry_builder.rb       class JournalEntryBuilder (:journal_entry_context)
-reports/report_context.rb                class ReportContext (:chart_of_accounts, :journals, :page_width)
-types/account.rb                         class Account (:code, :type, :name)
-types/account_type.rb                    class AccountType (:symbol, :singular_name, :plural_name)
-types/acct_amount.rb                     class AcctAmount (:date, :code, :amount, :journal_entry_context)
-types/journal_entry_context.rb           class JournalEntryContext (:journal, :linenum, :line)
-``` 
-
-Although there's a lot going on here, the vertical and horizontal alignments and spacing make the code
-straightforward to follow. Here's what it does:
-
-* grep the code base for `"Struct"`
-* exclude references to `"OpenStruct"` with `grep -v`
-* remove unwanted text with `gsub`
-* split the line into 1) a filespec relative to `lib/rockbooks`, and 2) the class definition
-* strip unwanted space because that will mess up the horizontal alignment of the output.
-* use C-style printf formatting to align the text into two columns
-
- 
 ----
 
 #### More YouTube: Differentiating Success and Failure 
@@ -837,7 +828,61 @@ but it was an interesting exercise and made it easy to try different formats. He
 ```                                 
                                  
 
+#### Reformatting Grep Output
 
+I was recently asked to provide a schema for the data in my `rock_books` accounting gem. `rock_books` data is intended to be very small in size, and no data base is used. Instead, the input data is parsed on every run, and reports generated on demand. However, there are data structures (actually class instances) in memory at runtime, and their classes inherit from `Struct`.
+ The definition lines look like this one:
+ 
+```
+class JournalEntry < Struct.new(:date, :acct_amounts, :doc_short_name, :description, :receipts)
+```
+
+The `grep` command line utility prepends each of these matches with a string like this:
+
+```
+lib/rock_books/documents/journal_entry.rb:
+```
+
+So this is what worked well for me:
+
+```
+➜  ~   grep Struct **/*.rb | grep -v OpenStruct | rexe -ml \
+"a = \
+ gsub('lib/rock_books/', '')\
+.gsub('< Struct.new',    '')\
+.gsub('; end',           '')\
+.split('.rb:')\
+.map(&:strip);\
+\
+%q{%-40s %-s} % [a[0] + %q{.rb}, a[1]]"
+```
+
+...which produced this output:
+
+``` 
+cmd_line/command_line_interface.rb       class Command (:min_string, :max_string, :action)
+documents/book_set.rb                    class BookSet (:run_options, :chart_of_accounts, :journals)
+documents/journal.rb                     class Entry (:date, :amount, :acct_amounts, :description)
+documents/journal_entry.rb               class JournalEntry (:date, :acct_amounts, :doc_short_name, :description, :receipts)
+documents/journal_entry_builder.rb       class JournalEntryBuilder (:journal_entry_context)
+reports/report_context.rb                class ReportContext (:chart_of_accounts, :journals, :page_width)
+types/account.rb                         class Account (:code, :type, :name)
+types/account_type.rb                    class AccountType (:symbol, :singular_name, :plural_name)
+types/acct_amount.rb                     class AcctAmount (:date, :code, :amount, :journal_entry_context)
+types/journal_entry_context.rb           class JournalEntryContext (:journal, :linenum, :line)
+``` 
+
+Although there's a lot going on here, the vertical and horizontal alignments and spacing make the code
+straightforward to follow. Here's what it does:
+
+* grep the code base for `"Struct"`
+* exclude references to `"OpenStruct"` with `grep -v`
+* remove unwanted text with `gsub`
+* split the line into 1) a filespec relative to `lib/rockbooks`, and 2) the class definition
+* strip unwanted space because that will mess up the horizontal alignment of the output.
+* use C-style printf formatting to align the text into two columns
+
+ 
 ### Conclusion
 
 `rexe` is not revolutionary technology, it's just plumbing that removes parsing,

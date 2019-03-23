@@ -35,7 +35,7 @@ class Rexe
 
 
     def clear
-      self.input_filespec = :none
+      self.input_filespec = nil
       self.input_format   = :none
       self.input_mode     = :no_input
       self.output_format  = :puts
@@ -226,7 +226,7 @@ class Rexe
       OptionParser.new do |parser|
 
 
-        parser.on('-f', '--input_file FORMAT',
+        parser.on('-f', '--input_file FILESPEC',
             'Use this file instead of stdin; autodetects YAML and JSON file extensions') do |v|
           unless File.exist?(v)
             raise "File #{v} does not exist."

@@ -18,6 +18,7 @@ class Rexe
 
 
   class Options < Struct.new(
+      :input_filespec,
       :input_format,
       :input_mode,
       :loads,
@@ -34,13 +35,14 @@ class Rexe
 
 
     def clear
-      self.input_format  = :none
-      self.input_mode    = :no_input
-      self.output_format = :puts
-      self.loads         = []
-      self.requires      = []
-      self.log_format    = :none
-      self.noop          = false
+      self.input_filespec = :none
+      self.input_format   = :none
+      self.input_mode     = :no_input
+      self.output_format  = :puts
+      self.loads          = []
+      self.requires       = []
+      self.log_format     = :none
+      self.noop           = false
     end
   end
 
@@ -163,6 +165,7 @@ class Rexe
     Options:
 
     -c  --clear_options        Clear all previous command line options specified up to now
+    -f  --input_file           Use this file instead of stdin; autodetects YAML and JSON file extensions
     -g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
     -h, --help                 Print help and exit
     -i, --input_format FORMAT  Input format (defaults to none)
@@ -201,6 +204,19 @@ class Rexe
     end
 
 
+    # File file input mode; detects the input mode (JSON, YAML, or None) from the extension.
+    def autodetect_file_format(filespec)
+      extension = File.extname(filespec).downcase
+      if extension == '.json'
+        :json
+      elsif extension == '.yml' || extension == '.yaml'
+        :yaml
+      else
+        :none
+      end
+    end
+
+
     # Using 'optparse', parses the command line.
     # Settings go into this instance's properties (see Struct declaration).
     def parse
@@ -208,6 +224,17 @@ class Rexe
       prepend_environment_options
 
       OptionParser.new do |parser|
+
+
+        parser.on('-f', '--input_file FORMAT',
+            'Use this file instead of stdin; autodetects YAML and JSON file extensions') do |v|
+          unless File.exist?(v)
+            raise "File #{v} does not exist."
+          end
+          options.input_filespec = v
+          options.input_format = autodetect_file_format(v)
+          # $stderr.puts v, options.input_format; sleep 5
+        end
 
         parser.on('-g', '--log_format FORMAT', 'Log format, logs to stderr, defaults to none (see -o for format options)') do |v|
           options.log_format = lookups.output_formats[v]
@@ -408,10 +435,12 @@ class Rexe
 
 
     private def lookup_action(mode)
+      input = options.input_filespec ? File.open(options.input_filespec) : STDIN
+      $stderr.puts input.class; sleep 4
       {
-          line:           -> { STDIN.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
-          enumerator:     -> { execute(STDIN.each_line, callable);                     $RC.count += 1 },
-          one_big_string: -> { big_string = STDIN.read; execute(big_string, callable); $RC.count += 1 },
+          line:           -> { input.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
+          enumerator:     -> { execute(input.each_line, callable);                     $RC.count += 1 },
+          one_big_string: -> { big_string = input.read; execute(big_string, callable); $RC.count += 1 },
           no_input:       -> { execute(Object.new, callable) }
       }[mode]
     end

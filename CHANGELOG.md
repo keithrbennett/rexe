@@ -1,6 +1,13 @@
 ## rexe -- Ruby Command Line Executor
 
 
+### 0.14.0
+
+* The default output format has been changed from -op (:puts) to -on (:none).
+* Support automatic input from file with -f option.
+* Normalize load filespecs to eliminate duplication and to facilitate correct deletion.
+
+
 ### v0.13.0
 
 * Much refactoring.

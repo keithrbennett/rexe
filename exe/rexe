@@ -169,10 +169,10 @@ class Rexe
                                If YAML or JSON: parses file in that mode, sets input mode to -mb
     -g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
     -h, --help                 Print help and exit
-    -i, --input_format FORMAT  Input format (defaults to none)
+    -i, --input_format FORMAT  Input format
                                  -ij  JSON
                                  -im  Marshal
-                                 -in  None
+                                 -in  None (default)
                                  -iy  YAML
     -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
                                  ! to clear all, or precede a name with '-' to remove

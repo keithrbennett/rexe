@@ -80,10 +80,10 @@ Options:
                            If YAML or JSON: parses file in that mode, sets input mode to -mb
 -g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
 -h, --help                 Print help and exit
--i, --input_format FORMAT  Input format (defaults to none)
+-i, --input_format FORMAT  Input format
                              -ij  JSON
                              -im  Marshal
-                             -in  None
+                             -in  None (default)
                              -iy  YAML
 -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
                              ! to clear all, or precede a name with '-' to remove
@@ -138,6 +138,7 @@ you can do this:
 ```
 ➜  ~   export REXE_OPTIONS="-r wifi-wand -oa"
 ➜  ~   rexe WifiWand::MacOsModel.new.wifi_info
+➜  ~   # [more rexe commands with the same options]
 ```
 
 Putting configuration options in `REXE_OPTIONS` effectively creates custom defaults,
@@ -305,7 +306,7 @@ Here is an example of using `-me` to add line numbers to the first 3
 files in the directory listing:
 
 ```
-➜  ~   ls / | rexe -me "first(3).each_with_index { |ln,i| puts '%5d  %s' % [i, ln] }; nil"
+➜  ~   ls / | rexe -me -on "first(3).each_with_index { |ln,i| puts '%5d  %s' % [i, ln] }"
 
     0  AndroidStudioProjects
     1  Applications
@@ -313,6 +314,7 @@ files in the directory listing:
 ```
 
 Since `self` is an enumerable, we can call `first` and then `each_with_index`.
+The `-on` says don't do any automatic output, just the output explicitly specified by `puts` in the source code.
 
 
 #### -mb "Big String" Filter Mode
@@ -385,6 +387,42 @@ could be included in the custom code instead. Here's why:
 * It's much simpler to switch formats, as there is no need to change the code itself. This also enables
 parameterization of the output format.
 
+
+### Reading Input from a File
+
+`rexe` also simplifies getting input from a file rather than standard input. The `-f` option takes a filespec
+and does with exactly what it would have done with standard input. This shortens:
+
+```
+➜  ~   cat filename.ext | rexe ...
+```
+...to...
+
+```
+➜  ~   rexe -f filename.ext ...
+```
+
+This becomes even more useful if you are using files whose extensions are `.yml`, `.yaml`, or `.json` (case insensitively).
+In this case the input format and mode will be set automatically for you to:
+
+* `-iy` (YAML) or `-ij` (JSON) depending on the file extension
+* `-mb` (one big string mode), which assumes that the most common use case will be to parse the entire file at once
+
+So the example we gave above:
+
+```
+➜  ~   export EUR_RATES_JSON=`curl https://api.exchangeratesapi.io/latest`
+➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
+```
+...could be changed to:
+
+```
+➜  ~   curl https://api.exchangeratesapi.io/latest > eur_rates.json
+➜  ~   rexe -f eur_rates.json -oy self
+``` 
+
+Another possible win for using `-f` is that since it is a command line option, it could be specified in `REXE_OPTIONS`.
+This could be useful if you are doing many operations on the same file.
 
 ### The $RC Global OpenStruct
 

@@ -166,6 +166,7 @@ class Rexe
 
     -c  --clear_options        Clear all previous command line options specified up to now
     -f  --input_file           Use this file instead of stdin; autodetects YAML and JSON file extensions
+                               If YAML or JSON: parses file in that mode, sets input mode to -mb
     -g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
     -h, --help                 Print help and exit
     -i, --input_format FORMAT  Input format (defaults to none)
@@ -233,7 +234,9 @@ class Rexe
           end
           options.input_filespec = v
           options.input_format = autodetect_file_format(v)
-          # $stderr.puts v, options.input_format; sleep 5
+          if [:json, :yaml].include?(options.input_format)
+            options.input_mode = :one_big_string
+          end
         end
 
         parser.on('-g', '--log_format FORMAT', 'Log format, logs to stderr, defaults to none (see -o for format options)') do |v|
@@ -426,8 +429,7 @@ class Rexe
 
     private def create_callable
       if user_source_code.empty? && (! options.noop)
-        STDERR.puts "No source code provided.  Use -h to display help."
-        exit(-1)
+        raise "No source code provided.  Use -h to display help."
       end
 
       eval("Proc.new { #{user_source_code} }")
@@ -436,7 +438,6 @@ class Rexe
 
     private def lookup_action(mode)
       input = options.input_filespec ? File.open(options.input_filespec) : STDIN
-      $stderr.puts input.class; sleep 4
       {
           line:           -> { input.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
           enumerator:     -> { execute(input.each_line, callable);                     $RC.count += 1 },

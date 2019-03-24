@@ -16,6 +16,7 @@ RSpec.describe 'rexe integration tests' do
   let(:test_data_string) { %Q{[ { 'color' => 'blue' }, 200 ]} }
   let(:load_filespec)    { File.join(File.dirname(__FILE__), 'dummy.rb') }
 
+
   context '--version option' do
     specify 'version returned with --version is a valid version string' do
       expect(RUN.("#{REXE_FILE} --version")).to match(/\d+\.\d+\.\d+/)
@@ -294,11 +295,8 @@ RSpec.describe 'rexe integration tests' do
       command = "#{REXE_FILE} -c -n -gy -l #{fs1} -l #{fs2} 2>&1"
       yaml = RUN.(command) # just refer to the YAML module and see if it breaks
       config = YAML.load(yaml)
-      $stderr.puts "options: #{config[:options].class}:\n #{config[:options].to_yaml}"
-      # $stderr.puts yaml; sleep 7; $stderr.puts; $stderr.puts options; $stderr.puts; sleep 7; $stderr.puts options.loads; sleep 15
       expect(config[:options][:loads].size).to eq(1)
     end
-
   end
 
 
@@ -312,6 +310,52 @@ RSpec.describe 'rexe integration tests' do
     end
   end
 
+
+  context '-f file input' do
+    specify '-f: text file is read correctly' do
+      text = "1\n2\n3\n"
+      file_containing(text) do |filespec|
+        expect(RUN.(%Q{rexe -f #{filespec} -mb self})).to eq(text)
+      end
+    end
+
+    specify '-f: text file options are set correctly (not overrided)' do
+      file_containing('', '.txt') do |filespec|
+        log_yaml = RUN.(%Q{rexe -f #{filespec} -n -gy 2>&1})
+        log = YAML.load(log_yaml)
+        expect(log[:options][:input_mode]).to   eq(:no_input)
+        expect(log[:options][:input_format]).to eq(:none)
+      end
+    end
+
+    specify '-f: YAML file is parsed as YAML without specifying -mb or -iy' do
+      array = [1,4,7]
+      text = array.to_yaml
+      %w(.yml  .yaml  .yaML).each do |extension|
+        file_containing(text, extension) do |filespec|
+          expect(RUN.(%Q{rexe -f #{filespec} 'self == [1,4,7]' }).chomp).to eq('true')
+          log_yaml = RUN.(%Q{rexe -f #{filespec} -n -on -gy nil 2>&1 })
+          log = YAML.load(log_yaml)
+          expect(log[:options][:input_mode]).to   eq(:one_big_string)
+          expect(log[:options][:input_format]).to eq(:yaml)
+        end
+      end
+    end
+
+    specify '-f: JSON file is parsed as JSON without specifying -mb or -ij' do
+      array = [1,4,7]
+      text = array.to_json
+      %w(.json .JsOn).each do |extension|
+        file_containing(text, extension) do |filespec|
+          expect(RUN.(%Q{rexe -f #{filespec} 'self == [1,4,7]' }).chomp).to eq('true')
+          log_yaml = RUN.(%Q{rexe -f #{filespec} -n -on -gy nil 2>&1 })
+          log = YAML.load(log_yaml)
+          expect(log[:options][:input_mode]).to   eq(:one_big_string)
+          expect(log[:options][:input_format]).to eq(:json)
+        end
+      end
+    end
+  end
 
   context 'no op' do
     specify '-n suppresses evaluation' do

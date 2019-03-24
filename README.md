@@ -68,13 +68,16 @@ Here is `rexe`'s help text as of the time of this writing:
 ```
 rexe -- Ruby Command Line Executor/Filter -- v0.13.0 -- https://github.com/keithrbennett/rexe
 
-Executes Ruby code on the command line, optionally taking standard input and writing to standard output.
+Executes Ruby code on the command line, optionally automating management of standard input
+and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
 
 rexe [options] 'Ruby source code'
 
 Options:
 
 -c  --clear_options        Clear all previous command line options specified up to now
+-f  --input_file           Use this file instead of stdin; autodetects YAML and JSON file extensions
+                           If YAML or JSON: parses file in that mode, sets input mode to -mb
 -g  --log_format FORMAT    Log format, logs to stderr, defaults to none (see -o for format options)
 -h, --help                 Print help and exit
 -i, --input_format FORMAT  Input format (defaults to none)

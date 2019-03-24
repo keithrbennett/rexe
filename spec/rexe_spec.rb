@@ -17,7 +17,7 @@ RSpec.describe 'rexe integration tests' do
   let(:load_filespec)    { File.join(File.dirname(__FILE__), 'dummy.rb') }
 
 
-  context '--version option' do
+  context '-v --version option' do
     specify 'version returned with --version is a valid version string' do
       expect(RUN.("#{REXE_FILE} --version")).to match(/\d+\.\d+\.\d+/)
     end
@@ -28,7 +28,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'help text' do
+  context '-h help text' do
     specify 'includes version' do
       expect(RUN.("#{REXE_FILE} -h")).to include(`#{REXE_FILE} --version`.chomp)
     end
@@ -39,7 +39,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'input modes' do # (not formats)
+  context '-m input modes' do # (not formats)
 
     context '-mb big string mode' do
       specify 'all input is considered a single string object' do
@@ -90,7 +90,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'output formats' do
+  context '-o output formats' do
 
     specify '-on no output format results in no output' do
       expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 42}).chomp).to eq('')
@@ -127,7 +127,7 @@ RSpec.describe 'rexe integration tests' do
     end
 
 
-    specify 'puts (-op) format works correctly' do
+    specify '-op (puts) format works correctly' do
       puts_output = RUN.(%Q{#{REXE_FILE} -c -mn -op "[ { 10 => 100 }, 200 ]" 2>&1})
       expect(puts_output).to eq( \
 %q{{10=>100}
@@ -144,7 +144,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'logging' do
+  context '-g logging' do
 
     specify '-gy option enables log in YAML format mode' do
       text = RUN.(%Q{#{REXE_FILE} -c -mn -gy -on String.new 2>&1})
@@ -237,7 +237,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'requires' do
+  context '-r requires' do
     specify 'requiring using -r works' do
       RUN.("#{REXE_FILE} -c -mn -op -r yaml YAML") # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).to eq(0)
@@ -265,7 +265,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'loads' do
+  context '-l loads' do
 
     specify 'loading using -l works' do
       RUN.("#{REXE_FILE} -c -mn -op -l #{load_filespec} Dummy") # just refer to the YAML module and see if it breaks
@@ -304,7 +304,7 @@ RSpec.describe 'rexe integration tests' do
   end
 
 
-  context 'rexe context record count' do
+  context '$RC.i rexe context record count' do
     specify 'the record count is available as $RC.count' do
       expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml -op 'self + $RC.count.to_s'})).to eq("a0\nb1\nc2\n")
     end
@@ -323,7 +323,7 @@ RSpec.describe 'rexe integration tests' do
       end
     end
 
-    specify '-f: text file options are set correctly (not overrided)' do
+    specify 'text file options are set correctly (not overrided)' do
       file_containing('', '.txt') do |filespec|
         log_yaml = RUN.(%Q{rexe -f #{filespec} -n -gy 2>&1})
         log = YAML.load(log_yaml)
@@ -332,7 +332,7 @@ RSpec.describe 'rexe integration tests' do
       end
     end
 
-    specify '-f: YAML file is parsed as YAML without specifying -mb or -iy' do
+    specify 'YAML file is parsed as YAML without specifying -mb or -iy' do
       array = [1,4,7]
       text = array.to_yaml
       %w(.yml  .yaml  .yaML).each do |extension|
@@ -346,7 +346,7 @@ RSpec.describe 'rexe integration tests' do
       end
     end
 
-    specify '-f: JSON file is parsed as JSON without specifying -mb or -ij' do
+    specify 'JSON file is parsed as JSON without specifying -mb or -ij' do
       array = [1,4,7]
       text = array.to_json
       %w(.json .JsOn).each do |extension|
@@ -361,7 +361,7 @@ RSpec.describe 'rexe integration tests' do
     end
   end
 
-  context 'no op' do
+  context '-n no op' do
     specify '-n suppresses evaluation' do
       expect(RUN.(%Q{rexe -op    '"hello"'})).to eq("hello\n")
       expect(RUN.(%Q{rexe -op -n '"hello"'})).to eq('')

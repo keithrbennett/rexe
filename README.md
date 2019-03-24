@@ -99,8 +99,8 @@ Options:
                              -oj  JSON
                              -oJ  Pretty JSON
                              -om  Marshal
-                             -on  No Output
-                             -op  Puts (default)
+                             -on  No Output (default)
+                             -op  Puts
                              -os  to_s
                              -oy  YAML
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;

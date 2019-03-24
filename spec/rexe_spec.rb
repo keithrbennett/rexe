@@ -43,48 +43,48 @@ RSpec.describe 'rexe integration tests' do
 
     context '-mb big string mode' do
       specify 'all input is considered a single string object' do
-        expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -mb reverse})).to eq("\ndc\nba\n")
+        expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -mb -op reverse})).to eq("\ndc\nba\n")
       end
 
       specify 'record count does not exceed 0' do
-        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -mb '$RC.i'})).to eq("0\n")
+        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -mb -op '$RC.i'})).to eq("0\n")
       end
     end
 
 
     context '-ml line mode' do
       specify 'each line is processed separately' do
-        expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -ml reverse})).to eq("ba\ndc\n")
+        expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -ml -op reverse})).to eq("ba\ndc\n")
       end
 
       specify 'object count works in numbers > 1' do
-        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -ml '$RC.i'})).to eq("0\n1\n2\n")
+        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -ml -op '$RC.i'})).to eq("0\n1\n2\n")
       end
     end
 
 
     context '-me enumerator mode' do
       specify 'self is an Enumerator' do
-        expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -me self.class.to_s}).chomp).to eq('Enumerator')
+        expect(RUN.(%Q{echo "ab\ncd" | #{REXE_FILE} -c -me -op self.class.to_s}).chomp).to eq('Enumerator')
       end
 
       specify 'record count does not exceed 0' do
-        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -me '$RC.i'})).to eq("0\n")
+        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -me -op '$RC.i'})).to eq("0\n")
       end
     end
 
 
     context '-mn no input mode' do
       specify 'in no input mode (-mn), code is executed without input' do
-        expect(RUN.(%Q{#{REXE_FILE} -c -mn '64.to_s(8)'})).to start_with('100')
+        expect(RUN.(%Q{#{REXE_FILE} -c -mn -op '64.to_s(8)'})).to start_with('100')
       end
 
       specify '-mn option outputs last evaluated value' do
-        expect(RUN.(%Q{#{REXE_FILE} -c -mn 42}).chomp).to eq('42')
+        expect(RUN.(%Q{#{REXE_FILE} -c -mn -op 42}).chomp).to eq('42')
       end
 
       specify 'record count does not exceed 0' do
-        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -mn '$RC.i'})).to eq("0\n")
+        expect(RUN.(%Q{echo "a\nb\nc" | #{REXE_FILE} -c -mn -op '$RC.i'})).to eq("0\n")
       end
     end
   end
@@ -94,6 +94,10 @@ RSpec.describe 'rexe integration tests' do
 
     specify '-on no output format results in no output' do
       expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 42}).chomp).to eq('')
+    end
+
+    specify 'output format defaults to -on (no output)' do
+      expect(RUN.(%Q{#{REXE_FILE} -c -mn 42}).chomp).to eq('')
     end
 
     specify '-oj JSON output formatting is correct' do
@@ -235,12 +239,12 @@ RSpec.describe 'rexe integration tests' do
 
   context 'requires' do
     specify 'requiring using -r works' do
-      RUN.("#{REXE_FILE} -c -mn -r yaml YAML") # just refer to the YAML module and see if it breaks
+      RUN.("#{REXE_FILE} -c -mn -op -r yaml YAML") # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).to eq(0)
     end
 
     specify 'clearing requires using -r ! works' do
-      command = "#{REXE_FILE} -c -mn -r yaml -r! YAML"
+      command = "#{REXE_FILE} -c -mn -op -r yaml -r! YAML"
 
       # Suppress distracting error output, but the redirection requires Posix compatibility:
       command << " 2>/dev/null" if OS.posix?
@@ -250,7 +254,7 @@ RSpec.describe 'rexe integration tests' do
     end
 
     specify 'clearing a single require using -r -gem works' do
-      command = "#{REXE_FILE} -c -mn -r yaml -r -yaml YAML"
+      command = "#{REXE_FILE} -c -mn -op -r yaml -r -yaml YAML"
 
       # Suppress distracting error output, but the redirection requires Posix compatibility:
       command << " 2>/dev/null" if OS.posix?
@@ -264,12 +268,12 @@ RSpec.describe 'rexe integration tests' do
   context 'loads' do
 
     specify 'loading using -l works' do
-      RUN.("#{REXE_FILE} -c -mn  -l #{load_filespec} Dummy") # just refer to the YAML module and see if it breaks
+      RUN.("#{REXE_FILE} -c -mn -op -l #{load_filespec} Dummy") # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).to eq(0)
     end
 
     specify 'clearing loads using -l ! works' do
-      command = "#{REXE_FILE} -c -mn -l #{load_filespec} -l! Dummy"
+      command = "#{REXE_FILE} -c -mn -op -l #{load_filespec} -l! Dummy"
 
       # Suppress distracting error output, but the redirection requires Posix compatibility:
       command << " 2>/dev/null" if OS.posix?
@@ -279,7 +283,7 @@ RSpec.describe 'rexe integration tests' do
     end
 
     specify 'clearing a single load using -r -file works' do
-      command = "#{REXE_FILE} -c -mn -l #{load_filespec} -l -#{load_filespec} Dummy"
+      command = "#{REXE_FILE} -c -mn -op -l #{load_filespec} -l -#{load_filespec} Dummy"
 
       # Suppress distracting error output, but the redirection requires Posix compatibility:
       command << " 2>/dev/null" if OS.posix?
@@ -302,11 +306,11 @@ RSpec.describe 'rexe integration tests' do
 
   context 'rexe context record count' do
     specify 'the record count is available as $RC.count' do
-      expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC.count.to_s'})).to eq("a0\nb1\nc2\n")
+      expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml -op 'self + $RC.count.to_s'})).to eq("a0\nb1\nc2\n")
     end
 
     specify 'the record count is available as $RC.i' do
-      expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml 'self + $RC.i.to_s'})).to eq("a0\nb1\nc2\n")
+      expect(RUN.(%Q{echo "a\nb\nc" | rexe -ml -op 'self + $RC.i.to_s'})).to eq("a0\nb1\nc2\n")
     end
   end
 
@@ -315,7 +319,7 @@ RSpec.describe 'rexe integration tests' do
     specify '-f: text file is read correctly' do
       text = "1\n2\n3\n"
       file_containing(text) do |filespec|
-        expect(RUN.(%Q{rexe -f #{filespec} -mb self})).to eq(text)
+        expect(RUN.(%Q{rexe -f #{filespec} -mb -op self})).to eq(text)
       end
     end
 
@@ -323,7 +327,7 @@ RSpec.describe 'rexe integration tests' do
       file_containing('', '.txt') do |filespec|
         log_yaml = RUN.(%Q{rexe -f #{filespec} -n -gy 2>&1})
         log = YAML.load(log_yaml)
-        expect(log[:options][:input_mode]).to   eq(:no_input)
+        expect(log[:options][:input_mode]).to   eq(:none)
         expect(log[:options][:input_format]).to eq(:none)
       end
     end
@@ -333,7 +337,7 @@ RSpec.describe 'rexe integration tests' do
       text = array.to_yaml
       %w(.yml  .yaml  .yaML).each do |extension|
         file_containing(text, extension) do |filespec|
-          expect(RUN.(%Q{rexe -f #{filespec} 'self == [1,4,7]' }).chomp).to eq('true')
+          expect(RUN.(%Q{rexe -f #{filespec} -op 'self == [1,4,7]' }).chomp).to eq('true')
           log_yaml = RUN.(%Q{rexe -f #{filespec} -n -on -gy nil 2>&1 })
           log = YAML.load(log_yaml)
           expect(log[:options][:input_mode]).to   eq(:one_big_string)
@@ -347,7 +351,7 @@ RSpec.describe 'rexe integration tests' do
       text = array.to_json
       %w(.json .JsOn).each do |extension|
         file_containing(text, extension) do |filespec|
-          expect(RUN.(%Q{rexe -f #{filespec} 'self == [1,4,7]' }).chomp).to eq('true')
+          expect(RUN.(%Q{rexe -f #{filespec} -op 'self == [1,4,7]' }).chomp).to eq('true')
           log_yaml = RUN.(%Q{rexe -f #{filespec} -n -on -gy nil 2>&1 })
           log = YAML.load(log_yaml)
           expect(log[:options][:input_mode]).to   eq(:one_big_string)
@@ -359,8 +363,8 @@ RSpec.describe 'rexe integration tests' do
 
   context 'no op' do
     specify '-n suppresses evaluation' do
-      expect(RUN.(%Q{rexe    '"hello"'})).to eq("hello\n")
-      expect(RUN.(%Q{rexe -n '"hello"'})).to eq('')
+      expect(RUN.(%Q{rexe -op    '"hello"'})).to eq("hello\n")
+      expect(RUN.(%Q{rexe -op -n '"hello"'})).to eq('')
     end
   end
 end

@@ -37,8 +37,8 @@ class Rexe
     def clear
       self.input_filespec = nil
       self.input_format   = :none
-      self.input_mode     = :no_input
-      self.output_format  = :puts
+      self.input_mode     = :none
+      self.output_format  = :none
       self.loads          = []
       self.requires       = []
       self.log_format     = :none
@@ -56,7 +56,7 @@ class Rexe
           'l' => :line,
           'e' => :enumerator,
           'b' => :one_big_string,
-          'n' => :no_input
+          'n' => :none
       }
     end
 
@@ -88,7 +88,7 @@ class Rexe
           'j' => :json,
           'J' => :pretty_json,
           'm' => :marshal,
-          'n' => :no_output,
+          'n' => :none,
           'p' => :puts,         # default
           'P' => :pretty_print,
           's' => :to_s,
@@ -103,7 +103,7 @@ class Rexe
           inspect:       ->(obj)  { obj.inspect + "\n" },
           json:          ->(obj)  { obj.to_json },
           marshal:       ->(obj)  { Marshal.dump(obj) },
-          no_output:     ->(_obj) { nil },
+          none:          ->(_obj) { nil },
           pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
           pretty_print:  ->(obj)  { obj.pretty_inspect },
           puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
@@ -396,13 +396,13 @@ class Rexe
     # Executes the user specified code in the manner appropriate to the input mode.
     # Performs any optionally specified parsing on input and formatting on output.
     private def execute(eval_context_object, code)
-      if options.input_format != :none && options.input_mode != :no_input
+      if options.input_format != :none && options.input_mode != :none
         eval_context_object = input_parser.(eval_context_object)
       end
 
       value = eval_context_object.instance_eval(&code)
 
-      unless options.output_format == :no_output
+      unless options.output_format == :none
         print output_formatter.(value)
       end
     rescue Errno::EPIPE
@@ -442,8 +442,8 @@ class Rexe
           line:           -> { input.each { |l| execute(l.chomp, callable);            $RC.count += 1 } },
           enumerator:     -> { execute(input.each_line, callable);                     $RC.count += 1 },
           one_big_string: -> { big_string = input.read; execute(big_string, callable); $RC.count += 1 },
-          no_input:       -> { execute(Object.new, callable) }
-      }[mode]
+          none:           -> { execute(Object.new, callable) }
+      }.fetch(mode)
     end
 
 

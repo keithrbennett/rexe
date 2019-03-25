@@ -3,8 +3,10 @@ title: The `rexe` Command Line Executor and Filter
 date: 2019-02-15
 ---
 
-_[Caution: This is a long article! If you lose patience reading it, I suggest skimming the headings
-and the source code, and at minimum, reading the Conclusion.]_
+[Caution: This is a long article! 
+You might want to skim the section headings first.
+Feel free to pass over any sections that don't interest you.
+I _do_ recommend reading the source code and the Conclusion.]
 
 ----
 
@@ -42,7 +44,7 @@ make the command long and tedious, discouraging this approach.
 
 ### Rexe
 
-The `rexe` script [^1] can simplify such commands.
+The `rexe` script [see footnote ^1] can simplify such commands.
 Among other things, `rexe` provides switch-activated input parsing and output formatting so that converting 
 from one format to another is trivial.
 The previous `ruby` command can be expressed in `rexe` as:
@@ -66,7 +68,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.14.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.13.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally automating management of standard input
 and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
@@ -99,8 +101,8 @@ Options:
                              -oj  JSON
                              -oJ  Pretty JSON
                              -om  Marshal
-                             -on  No Output (default)
-                             -op  Puts
+                             -on  No Output
+                             -op  Puts (default)
                              -os  to_s
                              -oy  YAML
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
@@ -160,7 +162,7 @@ def valkyries
 end
 ```
 
-To digress a bit, why would you want this? You might want to be able to go to another room until a long job completes, and be notified when it is done. The `valkyries` method will launch a browser window pointed to Richard Wagner's "Ride of the Valkyries" starting at a lively point in the music. (The `open` command is Mac specific and could be replaced with `start` on Windows, a browser command name, etc.) [^2]
+To digress a bit, why would you want this? You might want to be able to go to another room until a long job completes, and be notified when it is done. The `valkyries` method will launch a browser window pointed to Richard Wagner's "Ride of the Valkyries" starting at a lively point in the music. (The `open` command is Mac specific and could be replaced with `start` on Windows, a browser command name, etc.) [see footnote ^2]
  
  If you like this kind of audio notification, you could download public domain audio files and use a command like player like `afplay` on Mac OS, or `mpg123` or `ogg123` on Linux. This approach is lighter weight, requires no network access, and will not leave an open browser window for you to close.
 
@@ -373,12 +375,15 @@ Several output formats are provided for your convenience:
 * `-oi` - Inspect - calls `inspect` on the object
 * `-oj` - JSON - calls `to_json` on the object
 * `-oJ` - Pretty JSON calls `JSON.pretty_generate` with the object
-* `-on` - No Output - output is suppressed
+* `-on` - (default) No Output - output is suppressed
 * `-op` - Puts - produces what `puts` would output
 * `-os` - To String - calls `to_s` on the object
 * `-oy` - YAML - calls `to_yaml` on the object
 
 All formats will implicitly `require` anything needed to accomplish their task (e.g. `require 'yaml'`).
+
+If you are using `rexe` as a filter (to automatically send output to stdout), then you will either need to a) override
+the default output format with your desired format (e.g. `-op`), or b) do the output yourself (e.g. with `puts`).
 
 You may wonder why these formats are provided, given that their functionality 
 could be included in the custom code instead. Here's why:
@@ -700,40 +705,18 @@ Here are some more examples to illustrate the use of `rexe`.
 
 ----
 
-### Format Conversions -- JSON, YAML, AwesomePrint
-
-You may work with YAML or JSON a lot and need to inspect files from time to time.
-`rexe` makes it easy to convert from one format to another. For example, here's a
-command to convert from `countries.yaml` to AwesomePrint:
-
-```
-cat countries.yaml | rexe -iy -oa -mb self
-```
-
-You can easily create a script that automates this. Using your favorite editor,
-put this in a file:
-
-```
-cat $1 | rexe -iy -oa -mb self
-```
-
-I put mine in a file called `y2a` in my `~/bin` directory where I keep custom scripts like this.
-
-Now you can call `y2a` to output any YAML file using AwesomePrint.
-
-----
 
 #### Outputting ENV
 
-Output the contents of `ENV` using AwesomePrint [^3]:
+Output the contents of `ENV` using AwesomePrint [see footnote ^3]:
 
 ```
 ➜  ~   rexe -oa ENV
 {
 ...
-                          "LANG" => "en_US.UTF-8",
-                           "PWD" => "/Users/kbennett/work/rexe",
-                         "SHELL" => "/bin/zsh",
+  "LANG" => "en_US.UTF-8",
+   "PWD" => "/Users/kbennett/work/rexe",
+ "SHELL" => "/bin/zsh",
 ...
 }
 ```
@@ -791,11 +774,9 @@ alphabetically will result in sorting them numerically as well.
 
 ----
 
-----
-
 #### More YouTube: Differentiating Success and Failure 
 
-Let's go a little crazy with the YouTube example.
+Let's take the YouTube example from the "Loading Files" section further.
 Let's have the video that loads be different for the success or failure
 of the command.
 
@@ -844,13 +825,13 @@ Then when I issue a command that succeeds, the Hallelujah Chorus is played:
 Another formatting example...I wanted to reformat this source code...
 
 ```
-                                 'i' => Inspect
-                                 'j' => JSON
-                                 'J' => Pretty JSON
-                                 'n' => No Output
-                                 'p' => Puts (default)
-                                 's' => to_s
-                                 'y' => YAML
+         'i' => Inspect
+         'j' => JSON
+         'J' => Pretty JSON
+         'n' => No Output
+         'p' => Puts (default)
+         's' => to_s
+         'y' => YAML
 ```
 
 ...into something more suitable for my help text.
@@ -859,15 +840,17 @@ but it was an interesting exercise and made it easy to try different formats. He
 
 ```
 ➜  ~   pbpaste | rexe -ml "sub(%q{'}, '-o').sub(%q{' =>}, %q{ })"
-                                 -oi  Inspect
-                                 -oj  JSON
-                                 -oJ  Pretty JSON
-                                 -on  No Output
-                                 -op  Puts (default)
-                                 -os  to_s
-                                 -oy  YAML
-```                                 
-                                 
+         -oi  Inspect
+         -oj  JSON
+         -oJ  Pretty JSON
+         -on  No Output
+         -op  Puts (default)
+         -os  to_s
+         -oy  YAML
+```         
+         
+
+----
 
 #### Reformatting Grep Output
 
@@ -923,6 +906,8 @@ straightforward to follow. Here's what it does:
 * strip unwanted space because that will mess up the horizontal alignment of the output.
 * use C-style printf formatting to align the text into two columns
 
+----
+
  
 ### Conclusion
 
@@ -933,8 +918,8 @@ task at hand.
 
 When we consider a new piece of software, we usually think "what would this be
 helpful with now?". However, for me, the power of `rexe` is not so much what I can do
-with it in a single use case now, but rather what will I be able to do with it over time
-as I accumulate more experience and expertise.
+with it in a single use case now, but rather what will I be able to do over time
+as I accumulate more experience and expertise with it.
 
 I suggest starting to use `rexe` even for modest improvements in workflow, even
 if it doesn't seem compelling. There's a good chance that as you use it over
@@ -977,3 +962,6 @@ Here is a _start_ at a method that opens a resource portably across operating sy
 ```
 
 [^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, most of the other output formats will return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.
+
+- Keith Bennett (@keithrbennett on Github and Twitter)
+

@@ -213,7 +213,7 @@ to be evaluated, options (after parsing both the `REXE_OPTIONS` environment vari
 and the execution time of your Ruby code:
  
 ```
-➜  ~   echo $EUR_RATES_JSON | rexe -gy -ij -oa self
+➜  ~   echo $EUR_RATES_JSON | rexe -gy -ij -mb -oa self
 ...
 ---
 :count: 0
@@ -281,7 +281,7 @@ In this mode, your code would be called once per line of input,
 and in each call, `self` would evaluate to each line of text:
 
 ```
-➜  ~   echo "hello\ngoodbye" | rexe -ms reverse
+➜  ~   echo "hello\ngoodbye" | rexe -mb puts reverse
 olleh
 eybdoog
 ```
@@ -547,7 +547,7 @@ One of the previous examples downloaded currency conversion rates.
 To prepare for an example of how to do this, let's find out the available currency codes:
 
 ```
-➜  /   echo $EUR_RATES_JSON | rexe -ij -mb "self['rates'].keys.sort.join(' ')"
+➜  /   echo $EUR_RATES_JSON | rexe -ij -mb -op "self['rates'].keys.sort.join(' ')"
 AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR NOK NZD PHP PLN RON RUB SEK SGD THB TRY USD ZAR
 ```
 
@@ -555,7 +555,7 @@ The codes output are the legal arguments that could be sent to `rexe`'s stdin as
 Let's find out the Euro exchange rate for _PHP_, Philippine Pesos:
  
 ```
-➜  ~   echo PHP | rexe -ml -rjson \
+➜  ~   echo PHP | rexe -ml -op -rjson \
         "rate = JSON.parse(ENV['EUR_RATES_JSON'])['rates'][self];\
         %Q{1 EUR = #{rate} #{self}}"
 
@@ -589,7 +589,7 @@ whose values will be the display names of the currencies, e.g "Australian Dollar
 After copying this line to the clipboard, I could run this:
 
 ```
-➜  ~   pbpaste | rexe -ml "split.map(&:downcase).map { |s| %Q{    #{s}: '',} }.join(%Q{\n})"
+➜  ~   pbpaste | rexe -ml -op "split.map(&:downcase).map { |s| %Q{    #{s}: '',} }.join(%Q{\n})"
     aud: '',
     bgn: '',
     brl: '',
@@ -742,7 +742,7 @@ Show disk space used/free on a Mac's main hard drive's main partition:
 Show the 3 longest file names of the current directory, with their lengths, in descending order:
 
 ```
-➜  ~   ls  | rexe -ml "%Q{[%4d] %s} % [length, self]" | sort -r | head -3
+➜  ~   ls  | rexe -ml -op "%Q{[%4d] %s} % [length, self]" | sort -r | head -3
 [  50] Agoda_Booking_ID_9999999 49_–_RECEIPT_enclosed.pdf
 [  40] 679a5c034994544aab4635ecbd50ab73-big.jpg
 [  28] 2018-abc-2019-01-16-2340.zip
@@ -839,7 +839,7 @@ Admittedly, the time it took to do this with rexe probably exceeded the time to 
 but it was an interesting exercise and made it easy to try different formats. Here it is:
 
 ```
-➜  ~   pbpaste | rexe -ml "sub(%q{'}, '-o').sub(%q{' =>}, %q{ })"
+➜  ~   pbpaste | rexe -ml -op "sub(%q{'}, '-o').sub(%q{' =>}, %q{ })"
          -oi  Inspect
          -oj  JSON
          -oJ  Pretty JSON
@@ -870,7 +870,7 @@ lib/rock_books/documents/journal_entry.rb:
 So this is what worked well for me:
 
 ```
-➜  ~   grep Struct **/*.rb | grep -v OpenStruct | rexe -ml \
+➜  ~   grep Struct **/*.rb | grep -v OpenStruct | rexe -ml -op \
 "a = \
  gsub('lib/rock_books/', '')\
 .gsub('< Struct.new',    '')\
@@ -927,7 +927,7 @@ time, new ideas will come to you and the workflow improvements will increase
 exponentially.
 
 A word of caution though -- 
-the complexity and difficulty of sharing your `rexe` scripts across systems
+the complexity and difficulty of _sharing_ your `rexe` scripts across systems
 will be proportional to the extent to which you use environment variables
 and loaded files for configuration and shared code.
 Be responsible and disciplined in making this configuration and code as clean and organized as possible.
@@ -961,7 +961,7 @@ Here is a _start_ at a method that opens a resource portably across operating sy
   end
 ```
 
-[^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, most of the other output formats will return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.
+[^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, many of the other output formats will also return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.
 
 - Keith Bennett (@keithrbennett on Github and Twitter)
 

@@ -17,6 +17,15 @@ class Rexe
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
 
+  module Helpers
+    def error_exit(message)
+      $stderr.puts(message)
+      $stderr.puts("Use the -h option to get help.")
+      exit(-1)
+    end
+  end
+
+
   class Options < Struct.new(
       :input_filespec,
       :input_format,
@@ -127,6 +136,8 @@ class Rexe
 
   class CommandLineParser
 
+    include Helpers
+
     attr_reader :lookups, :options
 
     def initialize
@@ -218,7 +229,21 @@ class Rexe
     end
 
 
-    # Using 'optparse', parses the command line.
+    def open_resource(resource_identifier)
+      command = case (`uname`.chomp)
+                when 'Darwin'
+                  'open'
+                when 'Linux'
+                  'xdg-open'
+                else
+                  'start'
+                end
+
+      `#{command} #{resource_identifier}`
+    end
+
+
+  # Using 'optparse', parses the command line.
     # Settings go into this instance's properties (see Struct declaration).
     def parse
 
@@ -230,7 +255,7 @@ class Rexe
         parser.on('-f', '--input_file FILESPEC',
             'Use this file instead of stdin; autodetects YAML and JSON file extensions') do |v|
           unless File.exist?(v)
-            raise "File #{v} does not exist."
+            error_exit "File #{v} does not exist."
           end
           options.input_filespec = v
           options.input_format = autodetect_file_format(v)
@@ -242,8 +267,7 @@ class Rexe
         parser.on('-g', '--log_format FORMAT', 'Log format, logs to stderr, defaults to none (see -o for format options)') do |v|
           options.log_format = lookups.output_formats[v]
           if options.log_format.nil?
-            puts help_text
-            raise "Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}."
+            error_exit("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
           end
         end
 
@@ -257,8 +281,7 @@ class Rexe
 
           options.input_format = lookups.input_formats[v]
           if options.input_format.nil?
-            puts help_text
-            raise "Input mode was '#{v}' but must be one of #{lookups.input_formats.keys}."
+            error_exit("Input mode was '#{v}' but must be one of #{lookups.input_formats.keys}.")
           end
         end
 
@@ -271,7 +294,7 @@ class Rexe
 
             existent, nonexistent = adds.partition { |filespec| File.exists?(filespec) }
             if nonexistent.any?
-              raise("\nDid not find the following files to load: #{nonexistent}\n\n")
+              error_exit("\nDid not find the following files to load: #{nonexistent}\n\n")
             else
               existent.each { |filespec| options.loads << filespec }
             end
@@ -285,8 +308,7 @@ class Rexe
 
           options.input_mode = lookups.input_modes[v]
           if options.input_mode.nil?
-            puts help_text
-            raise "Input mode was '#{v}' but must be one of #{lookups.input_modes.keys}."
+            error_exit("Input mode was '#{v}' but must be one of #{lookups.input_modes.keys}.")
           end
         end
 
@@ -295,8 +317,7 @@ class Rexe
 
           options.output_format = lookups.output_formats[v]
           if options.output_format.nil?
-            puts help_text
-            raise "Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}."
+            error_exit("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
           end
         end
 
@@ -355,6 +376,8 @@ class Rexe
 
   class Main
 
+    include Helpers
+
     attr_reader :callable, :input_parser, :lookups,
                 :options, :output_formatter,
                 :log_formatter, :start_time, :user_source_code
@@ -363,20 +386,6 @@ class Rexe
     def initialize
       @lookups = Lookups.new
       @start_time = DateTime.now
-    end
-
-
-    def open_resource(resource_identifier)
-      command = case (`uname`.chomp)
-      when 'Darwin'
-        'open'
-      when 'Linux'
-        'xdg-open'
-      else
-        'start'
-      end
-
-      `#{command} #{resource_identifier}`
     end
 
 
@@ -429,7 +438,7 @@ class Rexe
 
     private def create_callable
       if user_source_code.empty? && (! options.noop)
-        raise "No source code provided.  Use -h to display help."
+        error_exit('No source code provided.')
       end
 
       eval("Proc.new { #{user_source_code} }")

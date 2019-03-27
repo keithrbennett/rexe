@@ -271,9 +271,6 @@ to your code as `self`.
 The last (and default) is the _executor_ mode. It merely assists you in
 executing the code you provide without any special implicit handling of standard input.
 
-All input modes automatically output to standard output the last value evaluated by your code.
-You can suppress automatic output with the `-on` option.
-
 
 #### -ml "Line" Filter Mode
 
@@ -287,14 +284,16 @@ eybdoog
 ```
 
 `reverse` is implicitly called on each line of standard input.  `self`
- is the input line in each call (we could also have used `self.reverse` but the `self.` would have been redundant.).
+ is the input line in each call (we could also have used `self.reverse` but the `self.` would have been redundant).
   
-Be aware that, in this mode, although you can control the _content_ of output records, 
+Be aware that, in this mode, if you are using an automatic output mode
+(anything other than the default `-on` no output mode),
+although you can control the _content_ of output records, 
 there is no way to selectively _exclude_ records from being output. Even if the result of the code
 is nil or the empty string, a newline will be output. To prevent this, you can do one of the following:
  
- * use `-me` Enumerator mode and call `select`, `filter`, `reject`, etc.
- * use the `-on` _no output_ mode and call `puts` explicitly for the output you _do_ want
+ * use `-me` Enumerator mode instead and call `select`, `filter`, `reject`, etc.
+ * use the (default) `-on` _no output_ mode and call `puts` explicitly for the output you _do_ want
 
 
 #### -me "Enumerator" Filter Mode
@@ -308,7 +307,7 @@ Here is an example of using `-me` to add line numbers to the first 3
 files in the directory listing:
 
 ```
-➜  ~   ls / | rexe -me -on "first(3).each_with_index { |ln,i| puts '%5d  %s' % [i, ln] }"
+➜  ~   ls / | rexe -me "first(3).each_with_index { |ln,i| puts '%5d  %s' % [i, ln] }"
 
     0  AndroidStudioProjects
     1  Applications
@@ -316,7 +315,8 @@ files in the directory listing:
 ```
 
 Since `self` is an enumerable, we can call `first` and then `each_with_index`.
-The `-on` says don't do any automatic output, just the output explicitly specified by `puts` in the source code.
+We've used the default output mode `-on` (_no output_ mode), which says don't do any automatic output,
+just the output explicitly specified by `puts` in the source code.
 
 
 #### -mb "Big String" Filter Mode
@@ -382,15 +382,12 @@ Several output formats are provided for your convenience:
 
 All formats will implicitly `require` anything needed to accomplish their task (e.g. `require 'yaml'`).
 
-If you are using `rexe` as a filter (to automatically send output to stdout), then you will either need to a) override
-the default output format with your desired format (e.g. `-op`), or b) do the output yourself (e.g. with `puts`).
-
 You may wonder why these formats are provided, given that their functionality 
 could be included in the custom code instead. Here's why:
 
 * The savings in command line length goes a long way to making these commands more readable and feasible.
-* It's much simpler to switch formats, as there is no need to change the code itself. This also enables
-parameterization of the output format.
+* It's much simpler to switch formats, as there is no need to change the code itself.
+* This approach enables parameterization of the output format.
 
 
 ### Reading Input from a File

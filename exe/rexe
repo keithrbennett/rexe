@@ -206,6 +206,9 @@ class Rexe
     -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                                  ! to clear all, or precede a name with '-' to remove
 
+    If source code is not specified, it will default to 'self', which is most likely useful
+    only in a filter mode (-ml, -me, -mb).
+
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
     before processing the input.
 
@@ -437,10 +440,6 @@ class Rexe
 
 
     private def create_callable
-      if user_source_code.empty? && (! options.noop)
-        error_exit('No source code provided.')
-      end
-
       eval("Proc.new { #{user_source_code} }")
     end
 
@@ -492,6 +491,8 @@ class Rexe
       options.loads.each { |file| load(file) }
 
       @user_source_code = ARGV.join(' ')
+      @user_source_code = 'self' if @user_source_code == ''
+
       @callable = create_callable
 
       init_rexe_context

@@ -369,8 +369,8 @@ RSpec.describe 'rexe integration tests' do
   end
 
   context 'source code' do
-    specify 'exits with error when there is no source code' do
-      expect(RUN.(%Q{rexe 2>/dev/null; echo $?}).chomp).not_to eq('0')
+    specify 'source code is "self" when there no source code is specified' do
+      expect(RUN.(%Q{echo '[1,2]' | rexe -ij -ml -oy})).to eq("---\n- 1\n- 2\n")
     end
   end
 end

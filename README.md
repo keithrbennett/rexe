@@ -68,7 +68,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is `rexe`'s help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.13.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v0.14.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally automating management of standard input
 and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
@@ -101,12 +101,15 @@ Options:
                              -oj  JSON
                              -oJ  Pretty JSON
                              -om  Marshal
-                             -on  No Output
-                             -op  Puts (default)
+                             -on  No Output (default)
+                             -op  Puts
                              -os  to_s
                              -oy  YAML
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                              ! to clear all, or precede a name with '-' to remove
+
+If source code is not specified, it will default to 'self', which is most likely useful
+only in a filter mode (-ml, -me, -mb).
 
 If there is an .rexerc file in your home directory, it will be run as Ruby code 
 before processing the input.
@@ -429,6 +432,29 @@ So the example we gave above:
 
 Another possible win for using `-f` is that since it is a command line option, it could be specified in `REXE_OPTIONS`.
 This could be useful if you are doing many operations on the same file.
+
+
+### 'self' as Default Source Code
+
+To make `rexe` even more concise, you do not need to specify any source code when you want that source code
+to be `self`. This would be the case for simple format conversions, such as the following JSON to YAML conversion
+of the currency coversion rates:
+
+```
+➜ ~  rexe -f eur_rates.json -oy
+# or
+➜ ~  echo $EUR_RATES_JSON | rexe -mb -ij -oy
+
+---
+rates:
+  JPY: 126.63
+  BRL: 4.3012
+  NOK: 9.6915
+  ...
+```
+
+This feature is probably only useful in the filter modes, since in the executor mode (`-mn`) self is a new
+instance of `Object` and hardly ever useful as an output value.
 
 ### The $RC Global OpenStruct
 

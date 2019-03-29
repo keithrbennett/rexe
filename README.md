@@ -3,10 +3,10 @@ title: The `rexe` Command Line Executor and Filter
 date: 2019-02-15
 ---
 
-[Caution: This is a long article! 
-You might want to skim the section headings first.
-Feel free to pass over any sections that don't interest you.
-I _do_ recommend reading the source code and the Conclusion.]
+[Caution: This is a long article!
+You might want to skim the section headings and source code first.
+Many sections can be skipped without sacrificing comprehensibility of the rest of them. 
+]
 
 ----
 
@@ -208,7 +208,8 @@ One of the examples at the end of this articles shows how you could have differe
 ### Logging
 
 A log entry is optionally output to standard error after completion of the code.
-The entry is a hash containing the version, date/time of execution, source code
+This entry is a hash representation (to be precise, `to_h`) of the `$RC` OpenStruct described in the $RC section below.
+It contains the version, date/time of execution, source code
 to be evaluated, options (after parsing both the `REXE_OPTIONS` environment variable and the command line),
 and the execution time of your Ruby code:
  
@@ -270,6 +271,7 @@ to your code as `self`.
 
 The last (and default) is the _executor_ mode. It merely assists you in
 executing the code you provide without any special implicit handling of standard input.
+Here is more detail on these modes:
 
 
 #### -ml "Line" Filter Mode
@@ -278,7 +280,7 @@ In this mode, your code would be called once per line of input,
 and in each call, `self` would evaluate to each line of text:
 
 ```
-➜  ~   echo "hello\ngoodbye" | rexe -mb puts reverse
+➜  ~   echo "hello\ngoodbye" | rexe -ml puts reverse
 olleh
 eybdoog
 ```
@@ -299,7 +301,8 @@ is nil or the empty string, a newline will be output. To prevent this, you can d
 #### -me "Enumerator" Filter Mode
 
 In this mode, your code is called only once, and `self` is an enumerator
-dispensing all lines of standard input. To be more precise, it is the enumerator returned by `STDIN.each_line`.
+dispensing all lines of standard input. To be more precise, it is the enumerator returned by the `each_line` method,
+on `$stdin` or the input file, whichever is applicable.
 
 Dealing with input as an enumerator enables you to use the wealth of `Enumerable` methods such as `select`, `to_a`, `map`, etc.
 
@@ -340,7 +343,8 @@ if you defined methods, constants, instance variables, etc., in your code.
 
 #### Filter Input Mode Memory Considerations
 
-If you may have more input than would fit in memory, you can do the following:
+If you are using one of the filter modes, and may have more input than would fit in memory,
+you can do one of the following:
 
 * use `-ml` (line) mode so you are fed only 1 line at a time
 * use an Enumerator, either by a) specifying the `-me` (enumerator) mode option,
@@ -393,7 +397,7 @@ could be included in the custom code instead. Here's why:
 ### Reading Input from a File
 
 `rexe` also simplifies getting input from a file rather than standard input. The `-f` option takes a filespec
-and does with exactly what it would have done with standard input. This shortens:
+and does with its content exactly what it would have done with standard input. This shortens:
 
 ```
 ➜  ~   cat filename.ext | rexe ...
@@ -452,7 +456,7 @@ OpenStruct {
 }
 ``` 
  
-Probably most useful in that object
+Probably most useful in that object at runtime
 is the record count, accessible with both `$RC.count` and `$RC.i`.
 This is only really useful in line mode, because in the others
 it will always be 0 or 1. Here is an example of how you might use it as a kind of progress indicator:
@@ -474,10 +478,15 @@ and removed by the shell.
 
 ### Implementing Domain Specific Languages (DSL's)
 
-Defining methods in your loaded files enables you to effectively define a [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for your command line use. You could use different load files for different projects, domains, or contexts, and define aliases or one line scripts to give them meaningful names. For example, if I wrote code to work with Ansible and put it in `~/projects/rexe-ansible.rb`, I could define an alias in my startup script:
+Defining methods in your loaded files enables you to effectively define a 
+[DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for your command line use. 
+You could use different load files for different projects, domains, or contexts, 
+and define aliases or one line scripts to give them meaningful names. 
+For example, if I wrote code to work with Ansible and put it in `~/projects/ansible-tools/rexe-ansible.rb`, 
+I could define an alias in my startup script:
 
 ```
-➜  ~   alias rxans="rexe -l ~/projects/rexe-ansible.rb $*"
+➜  ~   alias rxans="rexe -l ~/projects/ansible-tools/rexe-ansible.rb $*"
 ```
 ...and then I would have an Ansible DSL available for me to use by calling `rxans`.
 
@@ -507,32 +516,81 @@ true
 This could be really handy if you call `pry` on a custom object that has methods especially suited to your task:
 
 ```
-➜  ~   rexe -r  wifi-wand,pry  WifiWand::MacOsModel.new.pry
+➜  ~   rexe -r wifi-wand,pry  WifiWand::MacOsModel.new.pry
+[1] pry(#<WifiWand::MacOsModel>)> random_mac_address
+"a1:ea:69:d9:ca:05"
+[2] pry(#<WifiWand::MacOsModel>)> connected_network_name
+"My WiFi"
 ```
 
 Ruby is supremely well suited for DSL's since it does not require parentheses for method calls, 
 so calls to your custom methods _look_ like built in language commands and keywords. 
 
 
-### Quoting Strings in Your Ruby Code
+### Quotation Marks and Quoting Strings in Your Ruby Code
 
-One complication of using utilities like `rexe` where Ruby code is specified on the shell command line is that
+One complication of using utilities like `rexe` where Ruby code is specified on the command line is that
 you need to be careful about the shell's special treatment of certain characters. For this reason, it is often
 necessary to quote the Ruby code. You can use single or double quotes to have the shell treat your source code
-as a single argument. 
-An excellent reference for how they differ is [here](https://stackoverflow.com/questions/6697753/difference-between-single-and-double-quotes-in-bash).
+as a single argument. An excellent reference for how they differ is on StackOverflow at
+https://stackoverflow.com/questions/6697753/difference-between-single-and-double-quotes-in-bash.
 
-Personally, I find single quotes more useful since I usually don't want special characters in my Ruby code  like `$` to be processed by the shell.
+Personally, I find single quotes more useful since I usually don't want special characters in my Ruby code
+like `$` to be processed by the shell.
 
-When specifying the Ruby code, feel free to fall back on Ruby's super useful `%q{}` and `%Q{}`,
-equivalent to single and double quotes, respectively.
+Sometimes it doesn't matter:
+
+```
+➜  ~   rexe 'puts "hello"'
+hello
+➜  ~   rexe "puts 'hello'"
+hello
+```
+
+We can also use `%q` or `%Q`, and sometimes this eliminates the needs for the outer quotes:
+
+```
+➜  ~   rexe puts %q{hello}
+hello
+➜  ~   rexe puts %Q{hello}
+hello
+```
+
+Sometimes the quotes to use on the outside (quoting your command in the shell) need to be chosen
+based on which quotes are needed on the inside. For example, in the following command, we need
+double quotes in Ruby in order for interpolation to work, so we use single quotes on the outside:
+
+```
+➜  ~   rexe puts '"The time is now #{Time.now}"'
+The time is now 2019-03-29 16:41:26 +0800
+```
+
+In this case we also need to use single quotes on the outside,
+because we need literal double quotes in a `%Q{}` expression:
+
+```
+➜  ~   rexe 'puts %Q{The operating system name is "#{`uname`.chomp}".}'
+The operating system name is "Darwin".
+```
+
+We can eliminate the need for any quotes in the Ruby code using `%Q{}`:
+
+```
+➜  ~   rexe puts '%Q{The time is now #{Time.now}}'
+The time is now 2019-03-29 17:06:13 +0800
+```
+
+Of course you can always escape the quotes with backslashes instead, but in my experience
+that becomes difficult to read.
+
+
 
 
 ### No Op Mode
 
 The `-n` no-op mode will result in the specified source code _not_ being executed. This can sometimes be handy
-in conjunction with a `-g` (logging) option; if you have a command ready to go but 
-you want to see the configuration options before running it for real.
+in conjunction with a `-g` (logging) option, if you have are building a rexe command and
+want to inspect the configuration options before executing the Ruby code.
 
 
 ### Mimicking Method Arguments
@@ -544,11 +602,12 @@ One of the previous examples downloaded currency conversion rates.
 To prepare for an example of how to do this, let's find out the available currency codes:
 
 ```
-➜  /   echo $EUR_RATES_JSON | rexe -ij -mb -op "self['rates'].keys.sort.join(' ')"
+➜  /   echo $EUR_RATES_JSON | \
+rexe -ij -mb -op "self['rates'].keys.sort.join(' ')"
 AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR NOK NZD PHP PLN RON RUB SEK SGD THB TRY USD ZAR
 ```
 
-The codes output are the legal arguments that could be sent to `rexe`'s stdin as an argument.
+The codes output are the legal arguments that could be sent to `rexe`'s stdin as an argument in the command below.
 Let's find out the Euro exchange rate for _PHP_, Philippine Pesos:
  
 ```
@@ -572,17 +631,28 @@ make the command line too complex to be practical.
 
 Sometimes when editing text I need to do some one off text manipulation.
 Using the system's commands for pasting to and copying from the clipboard,
-this can easily be done. On the Mac, the `pbpaste` command outputs to stdout
-the clipboard content, and the `pbcopy` command copies its stdin to the clipboard.
-
-Let's say I have the following currency codes displayed on the screen:
+this can easily be done. On the Mac, we have the following commands:
+ 
+* `pbcopy` - copies the content of stdin _to_ the clipboard
+* `pbpaste` - copies the content _from_ the clipboard to stdout
+ 
+Let's say I have the following currency codes displayed on the screen
+(data abridged for brevity):
 
 ```
-AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR NOK NZD PHP PLN RON RUB SEK SGD THB TRY USD ZAR
+AUD BGN BRL PHP TRY USD ZAR
 ```
 
 ...and I want to turn them into Ruby symbols for inclusion in Ruby source code as keys in a hash
 whose values will be the display names of the currencies, e.g "Australian Dollar").
+
+I could manually select that text and use system menu commands or keys to copy it to the clipboard, 
+or I could do this:
+
+```
+➜  ~   echo AUD BGN BRL PHP TRY USD ZAR | pbcopy
+```
+
 After copying this line to the clipboard, I could run this:
 
 ```
@@ -594,7 +664,7 @@ After copying this line to the clipboard, I could run this:
 ```
 
 If I add `| pbcopy` to the rexe command, then that output text would be copied into the clipboard instead of
-displayed in the terminal, and I could then paste it in my editor.
+displayed in the terminal, and I could then paste it into my editor.
 
 Using the clipboard in manual operations is handy, but using it in automated scripts is a very bad idea, since
 there is only one clipboard per user session. If you use the clipboard in an automated script you risk
@@ -606,7 +676,8 @@ when you change the content of the clipboard.
 Although `rexe` is cleanest with short one liners, you may want to use it to include nontrivial Ruby code
 in your shell script as well. If you do this, you may need to add trailing backslashes to the lines of Ruby code.
 
-What might not be so obvious is that you will often need to use semicolons. For example, here is an example without a semicolon:
+What might not be so obvious is that you will often need to use semicolons as statement separators.
+For example, here is an example without a semicolon:
 
 ```
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m} \
@@ -619,7 +690,13 @@ puts to_a"
 ```
 
 The shell combines all backslash terminated lines into a single line of text, so when the Ruby
-interpreter sees your code, it's all in a single line. Adding the semicolon fixes the problem:
+interpreter sees your code, it's all in a single line:
+
+```
+➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m} puts to_a"
+```
+
+Adding the semicolon fixes the problem:
 
 ```
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; \
@@ -644,15 +721,24 @@ but you want to override it for a single invocation. Here are your options:
 1) Unspecify _all_ the requires or loads with the `-r!` and `-l!` command line options, respectively.
 
 2) Unspecify individual requires or loads by preceding the name with `-`, e.g. `-r -rails`.
-Array subtraction is used, so:
+Array subtraction is used, and array subtraction removes _all_
+occurrences of each element of the subtracted (subtrahend) array, so:
 
 ```
-➜  ~   rexe -n -r rails,rails,rails,-rails -ga
+➜  ~   rexe -n -r rails,rails,rails,-rails -gP
+...
+   :requires=>["pp"],
+...
 ```
 
 ...would show that the final `-rails` cancelled all the previous `rails` specifications.
 
+We could have also extracted the requires list programmatically using `$RC` (described above) by doing this:
 
+```
+➜  ~   rexe -oP -r rails,rails,rails,-rails '$RC[:options][:requires]'
+["pp"]
+```    
 
 
 ### Clearing _All_ Options
@@ -678,7 +764,7 @@ Files loaded with the `-l` option are treated the same way.
 
 ### Beware of Configured Requires
 
-Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using the redirection and grep):
+Requiring gems and modules for _all_ invocations of `rexe` will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using `grep`):
 
 ```
 ➜  ~   rexe -gy -r rails 123 2>&1 | grep duration
@@ -796,6 +882,8 @@ def play_result(success)
 end
 
 
+# Must pipe the exit code into this Ruby process, 
+# e.g. using `echo $? | rexe play_result_by_exit_code
 def play_result_by_exit_code
   play_result(STDIN.read.chomp == '0')
 end
@@ -833,7 +921,8 @@ Another formatting example...I wanted to reformat this source code...
 
 ...into something more suitable for my help text.
 Admittedly, the time it took to do this with rexe probably exceeded the time to do it manually,
-but it was an interesting exercise and made it easy to try different formats. Here it is:
+but it was an interesting exercise and made it easy to try different formats. Here it is, after
+copying the original text to the clipboard:
 
 ```
 ➜  ~   pbpaste | rexe -ml -op "sub(%q{'}, '-o').sub(%q{' =>}, %q{ })"
@@ -893,7 +982,8 @@ types/acct_amount.rb                     class AcctAmount (:date, :code, :amount
 types/journal_entry_context.rb           class JournalEntryContext (:journal, :linenum, :line)
 ``` 
 
-Although there's a lot going on here, the vertical and horizontal alignments and spacing make the code
+Although there's a lot going on in this code,
+the vertical and horizontal alignments and spacing make the code
 straightforward to follow. Here's what it does:
 
 * grep the code base for `"Struct"`

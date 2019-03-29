@@ -12,7 +12,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '0.15.0'
+  VERSION = '0.15.1'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 

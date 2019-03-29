@@ -1,5 +1,10 @@
 ## rexe -- Ruby Command Line Executor
 
+### 0.15.1
+
+* Fix help text in readme.
+
+
 ### 0.15.0
 
 * Source code now defaults to 'self' (#3).

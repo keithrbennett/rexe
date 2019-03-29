@@ -1,5 +1,10 @@
 ## rexe -- Ruby Command Line Executor
 
+### 0.15.0
+
+* Source code now defaults to 'self' (#3).
+* Change parse errors to not output help text and stack trace, but instead a short message with suggestion to use -h.
+
 
 ### 0.14.0
 

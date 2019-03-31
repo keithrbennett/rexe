@@ -171,7 +171,7 @@ class Rexe
     Executes Ruby code on the command line, optionally automating management of standard input
     and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
 
-    rexe [options] 'Ruby source code'
+    rexe [options] [Ruby source code]
 
     Options:
 

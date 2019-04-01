@@ -108,7 +108,7 @@ class Rexe
 
     def formatters
       @formatters ||=  {
-          awesome_print: ->(obj)  { obj.ai },
+          awesome_print: ->(obj)  { obj.ai << "\n" },
           inspect:       ->(obj)  { obj.inspect + "\n" },
           json:          ->(obj)  { obj.to_json },
           marshal:       ->(obj)  { Marshal.dump(obj) },

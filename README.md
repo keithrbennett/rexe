@@ -408,6 +408,9 @@ Several output formats are provided for your convenience:
 
 All formats will implicitly `require` anything needed to accomplish their task (e.g. `require 'yaml'`).
 
+The default is `-on` to produce no output at all (unless explicitly coded to do so). If you prefer a different
+default such as `-op` for _puts_ mode, you can specify that in your `REXE_OPTIONS` environment variable.
+
 You may wonder why these formats are provided, given that their functionality 
 could be included in the custom code instead. Here's why:
 
@@ -833,6 +836,31 @@ Here are some more examples to illustrate the use of Rexe.
 
 ----
 
+#### Using Rexe as a Simple Calculator
+
+To output the result to stdout, you can either call `puts` or specify the `-op` option:
+
+```
+➜  ~   rexe puts 1 / 3.0
+0.3333333333333333
+```
+
+or:
+
+```
+➜  ~   rexe -op 1 / 3.0
+0.3333333333333333
+```
+
+Since `*` is interpreted by the shell, if we do multiplication, we need to quote the expression:
+
+```
+➜  ~   rexe -op '2 * 7'
+14
+```
+
+----
+
 
 #### Outputting ENV
 
@@ -1125,3 +1153,4 @@ Here is a _start_ at a method that opens a resource portably across operating sy
 [^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, many of the other output formats will also return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.
 
 - Keith Bennett (@keithrbennett on Github and Twitter)
+

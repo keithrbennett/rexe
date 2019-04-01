@@ -18,10 +18,16 @@ class Rexe
 
 
   module Helpers
-    def error_exit(message)
-      $stderr.puts(message)
-      $stderr.puts("Use the -h option to get help.")
-      exit(-1)
+
+    # Try executing code. If error raised, print message (but not stack trace) & exit -1.
+    def try
+      begin
+        yield
+      rescue Exception => e
+        $stderr.puts('rexe: ' << e.to_s)
+        $stderr.puts("Use the -h option to get help.")
+        exit(-1)
+      end
     end
   end
 
@@ -258,7 +264,7 @@ class Rexe
         parser.on('-f', '--input_file FILESPEC',
             'Use this file instead of stdin; autodetects YAML and JSON file extensions') do |v|
           unless File.exist?(v)
-            error_exit "File #{v} does not exist."
+            raise "File #{v} does not exist."
           end
           options.input_filespec = v
           options.input_format = autodetect_file_format(v)
@@ -270,7 +276,7 @@ class Rexe
         parser.on('-g', '--log_format FORMAT', 'Log format, logs to stderr, defaults to none (see -o for format options)') do |v|
           options.log_format = lookups.output_formats[v]
           if options.log_format.nil?
-            error_exit("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
+            raise("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
           end
         end
 
@@ -284,7 +290,7 @@ class Rexe
 
           options.input_format = lookups.input_formats[v]
           if options.input_format.nil?
-            error_exit("Input mode was '#{v}' but must be one of #{lookups.input_formats.keys}.")
+            raise("Input mode was '#{v}' but must be one of #{lookups.input_formats.keys}.")
           end
         end
 
@@ -297,7 +303,7 @@ class Rexe
 
             existent, nonexistent = adds.partition { |filespec| File.exists?(filespec) }
             if nonexistent.any?
-              error_exit("\nDid not find the following files to load: #{nonexistent}\n\n")
+              raise("\nDid not find the following files to load: #{nonexistent}\n\n")
             else
               existent.each { |filespec| options.loads << filespec }
             end
@@ -311,7 +317,7 @@ class Rexe
 
           options.input_mode = lookups.input_modes[v]
           if options.input_mode.nil?
-            error_exit("Input mode was '#{v}' but must be one of #{lookups.input_modes.keys}.")
+            raise("Input mode was '#{v}' but must be one of #{lookups.input_modes.keys}.")
           end
         end
 
@@ -320,7 +326,7 @@ class Rexe
 
           options.output_format = lookups.output_formats[v]
           if options.output_format.nil?
-            error_exit("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
+            raise("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
           end
         end
 
@@ -484,24 +490,27 @@ class Rexe
     # This class' entry point.
     def call
 
-      @options = CommandLineParser.new.parse
+      try do
 
-      options.requires.each { |r| require!(r) }
-      load_global_config_if_exists
-      options.loads.each { |file| load(file) }
+        @options = CommandLineParser.new.parse
 
-      @user_source_code = ARGV.join(' ')
-      @user_source_code = 'self' if @user_source_code == ''
+        options.requires.each { |r| require!(r) }
+        load_global_config_if_exists
+        options.loads.each { |file| load(file) }
 
-      @callable = create_callable
+        @user_source_code = ARGV.join(' ')
+        @user_source_code = 'self' if @user_source_code == ''
 
-      init_rexe_context
-      init_parser_and_formatters
+        @callable = create_callable
 
-      # This is where the user's source code will be executed; the action will in turn call `execute`.
-      lookup_action(options.input_mode).call unless options.noop
+        init_rexe_context
+        init_parser_and_formatters
 
-      output_log_entry
+        # This is where the user's source code will be executed; the action will in turn call `execute`.
+        lookup_action(options.input_mode).call unless options.noop
+
+        output_log_entry
+      end
     end
   end
 end

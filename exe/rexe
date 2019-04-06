@@ -88,10 +88,10 @@ class Rexe
 
     def input_parsers
       @input_parsers ||= {
-          json:    ->(obj)  { JSON.parse(obj) },
-          marshal: ->(obj)  { Marshal.load(obj) },
-          none:    ->(obj)  { obj },
-          yaml:    ->(obj)  { YAML.load(obj) },
+          json:    ->(string)  { JSON.parse(string) },
+          marshal: ->(string)  { Marshal.load(string) },
+          none:    ->(string)  { string },
+          yaml:    ->(string)  { YAML.load(string) },
       }
     end
 
@@ -126,6 +126,7 @@ class Rexe
           yaml:          ->(obj)  { obj.to_yaml },
       }
     end
+
 
     def format_requires
       @format_requires ||= {
@@ -162,14 +163,14 @@ class Rexe
     end
 
 
-    def add_format_requires_to_requires_list
+    private def add_format_requires_to_requires_list
       formats = [options.input_format, options.output_format, options.log_format]
       requires = formats.map { |format| lookups.format_requires[format] }.uniq.compact
       requires.each { |r| options.requires << r }
     end
 
 
-    def help_text
+    private def help_text
       <<~HEREDOC
 
     rexe -- Ruby Command Line Executor/Filter -- v#{VERSION} -- #{PROJECT_URL}
@@ -226,7 +227,7 @@ class Rexe
 
 
     # File file input mode; detects the input mode (JSON, YAML, or None) from the extension.
-    def autodetect_file_format(filespec)
+    private def autodetect_file_format(filespec)
       extension = File.extname(filespec).downcase
       if extension == '.json'
         :json
@@ -238,7 +239,7 @@ class Rexe
     end
 
 
-    def open_resource(resource_identifier)
+    private def open_resource(resource_identifier)
       command = case (`uname`.chomp)
                 when 'Darwin'
                   'open'

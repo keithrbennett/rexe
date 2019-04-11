@@ -3,8 +3,7 @@ title: Boost Your Shell Scripting with Ruby and Rexe
 date: 2019-02-15
 ---
 
-[Caution: This is a long article!
-You might want to skim the section headings and source code first.
+[Caution: This is a long article! Feel free to skim the section headings and source code first.
 Many sections can be skipped without sacrificing comprehensibility of the rest of them. 
 ]
 
@@ -12,7 +11,7 @@ Many sections can be skipped without sacrificing comprehensibility of the rest o
 
 Rexe multiplies Ruby's usefulness and conciseness on the command line by:
 
-* automating parsing and formatting using JSON, YAML, Ruby marshalling, and Awesome Print
+* automating parsing and formatting using JSON, YAML, Ruby marshalling, Awesome Print, and others
 * simplifying the use of Ruby as a shell filter, optionally predigesting input as lines, an enumerator, or one big string
 * extracting the plumbing from the command line; requires and other options can be set in an environment variable
 * enabling the loading of Ruby files to keep your code DRY and your command line code high level
@@ -33,6 +32,7 @@ command line. Rexe multiplies your power to do so.
 
 ### Using the Ruby Interpreter on the Command Line
 
+Let's start by seeing what the Ruby interpreter already provides.
 Here we use `ruby` on the command line, using an intermediate environment variable to
 simplify the logic and save the data for use by future commands.
 An excerpt of the output follows the code:
@@ -50,15 +50,15 @@ base: EUR
 date: '2019-03-08'
 ```
 
-However, the configuration setup (the `require`s) along with the reading, parsing, and formatting
+Unfortunately, the configuration setup (the `require`s) along with the reading, parsing, and formatting
 make the command long and tedious, discouraging this approach.
 
 ### Rexe
 
 Rexe [see footnote ^1] can simplify such commands.
-Among other things, Rexe provides switch-activated input parsing and output formatting so that converting 
+Among other things, rexe provides switch-activated input parsing and output formatting so that converting 
 from one format to another is trivial.
-The previous `ruby` command can be expressed in Rexe as:
+The previous `ruby` command can be expressed in rexe as:
 
 ```
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
@@ -66,7 +66,7 @@ The previous `ruby` command can be expressed in Rexe as:
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy
 ```
 
-...and if input comes from a file, it's even simpler:
+...and if input comes from a file, rexe determines the format from the file's extension, and it's even simpler:
 
 ```
 ➜  ~   rexe -f eur_rates.json -oy
@@ -84,7 +84,7 @@ line, tipping the scale so that it is practical to do it more often.
 
 ----
 
-Here is Rexe's help text as of the time of this writing:
+Here is rexe's help text as of the time of this writing:
 
 ```
 rexe -- Ruby Command Line Executor/Filter -- v0.15.1 -- https://github.com/keithrbennett/rexe
@@ -139,7 +139,7 @@ so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesom
 
 ### Simplifying the Rexe Invocation
 
-There are two main ways we can make the Rexe command line even more concise:
+There are two main ways we can make the rexe command line even more concise:
 
 * by extracting configuration into the `REXE_OPTIONS` environment variable
 * by extracting low level and/or shared code into files that are loaded using `-l`,
@@ -149,7 +149,7 @@ There are two main ways we can make the Rexe command line even more concise:
 ### The REXE_OPTIONS Environment Variable
 
 The `REXE_OPTIONS` environment variable can contain command line options that would otherwise
-be specified on the Rexe command line:
+be specified on the rexe command line:
 
 Instead of this:
 
@@ -166,16 +166,17 @@ you can do this:
 ```
 
 Putting configuration options in `REXE_OPTIONS` effectively creates custom defaults,
- and is useful when you use options in most or all of your commands. Any options specified on the Rexe
+ and is useful when you use the same options in most or all of your commands.
+Any options specified on the rexe
 command line will override the environment variable options.
 
 Like any environment variable, `REXE_OPTIONS` could also be set in your startup script, input on a command line using `export`, or in another script loaded with `source` or `.`.
 
 ### Loading Files
 
-The environment variable approach works well for command line _options_, but what if we want to specify Ruby _code_ (e.g. methods) that can be used by your Rexe code?
+The environment variable approach works well for command line _options_, but what if we want to specify Ruby _code_ (e.g. methods) that can be used by your rexe code?
 
-For this, Rexe lets you _load_ Ruby files, using the `-l` option, or implicitly (without your specifying it) in the case of the `~/.rexerc` file. Here is an example of something you might include in such a file:
+For this, rexe lets you _load_ Ruby files, using the `-l` option, or implicitly (without your specifying it) in the case of the `~/.rexerc` file. Here is an example of something you might include in such a file:
 
 ```
 # Open YouTube to Wagner's "Ride of the Valkyries"
@@ -197,9 +198,12 @@ is loaded from your `~/.rexerc` file or an explicitly loaded file:
 
 (Note that `;` is used rather than `&&` because we want to hear the music whether or not the command succeeds.)
 
-You might be thinking that creating an alias or a minimal shell script for this `open` would be a simpler and more natural
+You might be thinking that creating an alias or a minimal shell script (instead of a Ruby script)
+for this `open` would be a simpler and more natural
 approach, and I would agree with you. However, over time the number of these could become unmanageable, whereas using Ruby
-you could build a pretty extensive and well organized library of functionality. Moreover, that functionality could be made available to _all_ your Ruby code (for example, by putting it in a gem), and not just command line one liners.
+you could build a pretty extensive and well organized library of functionality. 
+Moreover, that functionality could be made available to _all_ your Ruby code 
+(for example, by putting it in a gem), and not just command line one liners.
 
 For example, you could have something like this in a gem or loaded file:
 
@@ -339,7 +343,7 @@ files in the directory listing:
     2  Desktop
 ```
 
-Since `self` is an enumerable, we can call `first` and then `each_with_index`.
+Since `self` is an enumerable, we can call `first` on it.
 We've used the default output mode `-on` (_no output_ mode), which says don't do any automatic output,
 just the output explicitly specified by `puts` in the source code.
 
@@ -351,7 +355,7 @@ large) string, with newline characters joining the lines in the string.
 
 A good example of when you would use this is when you need to parse a multiline JSON or YAML representation of an object; 
 you need to pass the entire (probably) multiline string to the parse method. 
-This is the mode that was used in the first Rexe example in this article.
+This is the mode that was used in the first rexe example in this article.
 
 
 #### -mn "No Input" Executor Mode -- The Default
@@ -378,7 +382,7 @@ you can do one of the following:
 
 ### Input Formats
 
-Rexe can parse your input in any of several formats if you like. 
+rexe can parse your input in any of several formats if you like. 
 You would request this in the _input format_ (`-i`) option.
 Legal values are:
 
@@ -421,7 +425,7 @@ could be included in the custom code instead. Here's why:
 
 ### Reading Input from a File
 
-Rexe also simplifies getting input from a file rather than standard input. The `-f` option takes a filespec
+rexe also simplifies getting input from a file rather than standard input. The `-f` option takes a filespec
 and does with its content exactly what it would have done with standard input. This shortens:
 
 ```
@@ -458,9 +462,9 @@ This could be useful if you are doing many operations on the same file.
 
 ### 'self' as Default Source Code
 
-To make Rexe even more concise, you do not need to specify any source code when you want that source code
-to be `self`. This would be the case for simple format conversions, such as the following JSON to YAML conversion
-of the currency coversion rates:
+To make rexe even more concise, you do not need to specify any source code when you want that source code
+to be `self`. This would be the case for simple format conversions, as in JSON to YAML conversion
+mentioned earlier:
 
 ```
 ➜ ~  rexe -f eur_rates.json -oy
@@ -577,7 +581,7 @@ so calls to your custom methods _look_ like built in language commands and keywo
 
 ### Quotation Marks and Quoting Strings in Your Ruby Code
 
-One complication of using utilities like Rexe where Ruby code is specified on the command line is that
+One complication of using utilities like rexe where Ruby code is specified on the command line is that
 you need to be careful about the shell's special treatment of certain characters. For this reason, it is often
 necessary to quote the Ruby code. You can use single or double quotes to have the shell treat your source code
 as a single argument. An excellent reference for how they differ is on StackOverflow at
@@ -628,8 +632,7 @@ We can eliminate the need for any quotes in the Ruby code using `%Q{}`:
 The time is now 2019-03-29 17:06:13 +0800
 ```
 
-Of course you can always escape the quotes with backslashes instead, but in my experience
-that becomes difficult to read.
+Of course you can always escape the quotes with backslashes instead, but that is probably more difficult to read.
 
 
 
@@ -643,8 +646,8 @@ want to inspect the configuration options before executing the Ruby code.
 
 ### Mimicking Method Arguments
 
-You may want to support arguments in your Rexe commands. 
-You could do this by piping in the arguments as Rexe's stdin.
+You may want to support arguments in your rexe commands.
+It's a little kludgy, but you could do this by piping in the arguments as rexe's stdin.
 
 One of the previous examples downloaded currency conversion rates. 
 To prepare for an example of how to do this, let's find out the available currency codes:
@@ -655,7 +658,7 @@ rexe -ij -mb -op "self['rates'].keys.sort.join(' ')"
 AUD BGN BRL CAD CHF CNY CZK DKK GBP HKD HRK HUF IDR ILS INR ISK JPY KRW MXN MYR NOK NZD PHP PLN RON RUB SEK SGD THB TRY USD ZAR
 ```
 
-The codes output are the legal arguments that could be sent to Rexe's stdin as an argument in the command below.
+The codes output are the legal arguments that could be sent to rexe's stdin as an argument in the command below.
 Let's find out the Euro exchange rate for _PHP_, Philippine Pesos:
  
 ```
@@ -666,42 +669,42 @@ Let's find out the Euro exchange rate for _PHP_, Philippine Pesos:
 1 EUR = 58.986 PHP
 ```
 
-In this code, `self` is the currency code `PHP` (Philippine Peso). We have accessed the JSON text to parse from the environment variable we previously populated.
+In this code, `self` is the currency code `PHP` (Philippine Peso). 
+We have accessed the JSON text to parse from the environment variable we previously populated.
 
-Because we "used up" stdin for the argument, we could not make use of automatic parsing
- of the currency exchange data (using the `-ij` option),
-which would have greatly simplified the command. One possible solution to this would be 
-to pipe in the JSON or YAML representation of a hash
-with entries for both the argument and the currency exchange data...but this might
-make the command line too complex to be practical.
+Because we "used up" stdin for the `PHP` argument, we needed to read the JSON data explicitly from
+the environment variable, and that made the command more complex. A regular Ruby script would handle this more nicely.
+ 
 
 ### Using the Clipboard for Text Processing
 
-Sometimes when editing text I need to do some one off text manipulation.
-Using the system's commands for pasting to and copying from the clipboard,
-this can easily be done. On the Mac, we have the following commands:
+For editing text in an editor,
+rexe can be used for text transformations that would otherwise need to be done manually.
+
+The system's commands for pasting to and copying from the clipboard can handle the moving of the text
+between the editor and rexe. On the Mac, we have the following commands:
  
 * `pbcopy` - copies the content of stdin _to_ the clipboard
 * `pbpaste` - copies the content _from_ the clipboard to stdout
  
-Let's say I have the following currency codes displayed on the screen
+Let's say we have the following currency codes displayed on the screen
 (data abridged for brevity):
 
 ```
 AUD BGN BRL PHP TRY USD ZAR
 ```
 
-...and I want to turn them into Ruby symbols for inclusion in Ruby source code as keys in a hash
+...and we want to turn them into Ruby symbols for inclusion in Ruby source code as keys in a hash
 whose values will be the display names of the currencies, e.g "Australian Dollar").
 
-I could manually select that text and use system menu commands or keys to copy it to the clipboard, 
-or I could do this:
+We could manually select that text and use system menu commands or keys to copy it to the clipboard, 
+or we could do this:
 
 ```
 ➜  ~   echo AUD BGN BRL PHP TRY USD ZAR | pbcopy
 ```
 
-After copying this line to the clipboard, I could run this:
+After copying this line to the clipboard, we could run this:
 
 ```
 ➜  ~   pbpaste | rexe -ml -op "split.map(&:downcase).map { |s| %Q{    #{s}: '',} }.join(%Q{\n})"
@@ -721,7 +724,7 @@ when you change the content of the clipboard.
 
 ### Multiline Ruby Commands
 
-Although Rexe is cleanest with short one liners, you may want to use it to include nontrivial Ruby code
+Although rexe is cleanest with short one liners, you may want to use it to include nontrivial Ruby code
 in your shell script as well. If you do this, you may need to add trailing backslashes to the lines of Ruby code.
 
 What might not be so obvious is that you will often need to use semicolons as statement separators.
@@ -798,7 +801,7 @@ and want to ignore all of them.
 
 ### Comma Separated Requires and Loads
 
-For consistency with the `ruby` interpreter, Rexe supports requires with the `-r` option, but 
+For consistency with the `ruby` interpreter, rexe supports requires with the `-r` option, but 
 also allows grouping them together using commas:
 
 ```
@@ -812,7 +815,7 @@ Files loaded with the `-l` option are treated the same way.
 
 ### Beware of Configured Requires
 
-Requiring gems and modules for _all_ invocations of Rexe will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on my laptop by observing and comparing the execution times with and without the require (output has been abbreviated using `grep`):
+Requiring gems and modules for _all_ invocations of rexe will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on one system by observing and comparing the execution times with and without the require (output has been abbreviated using `grep`):
 
 ```
 ➜  ~   rexe -gy -r rails 123 2>&1 | grep duration
@@ -832,7 +835,7 @@ Windows non-Unix shells.
 
 ### More Examples
 
-Here are some more examples to illustrate the use of Rexe.
+Here are some more examples to illustrate the use of rexe.
 
 ----
 
@@ -857,6 +860,14 @@ Since `*` is interpreted by the shell, if we do multiplication, we need to quote
 ```
 ➜  ~   rexe -op '2 * 7'
 14
+```
+
+Of course, if you put the `-op` in the `REXE_OPTIONS` environment variable,
+you don't need to be explicit about the output:
+
+```
+➜  ~   export REXE_OPTIONS=-op
+➜  ~   rexe '2 * 7'
 ```
 
 ----
@@ -1106,17 +1117,17 @@ configuration from your command line so that you can focus on the high level
 task at hand.
 
 When we consider a new piece of software, we usually think "what would this be
-helpful with now?". However, for me, the power of Rexe is not so much what I can do
+helpful with now?". However, for me, the power of rexe is not so much what I can do
 with it in a single use case now, but rather what will I be able to do over time
 as I accumulate more experience and expertise with it.
 
-I suggest starting to use Rexe even for modest improvements in workflow, even
+I suggest starting to use rexe even for modest improvements in workflow, even
 if it doesn't seem compelling. There's a good chance that as you use it over
 time, new ideas will come to you and the workflow improvements will increase
 exponentially.
 
 A word of caution though -- 
-the complexity and difficulty of _sharing_ your Rexe scripts across systems
+the complexity and difficulty of _sharing_ your rexe scripts across systems
 will be proportional to the extent to which you use environment variables
 and loaded files for configuration and shared code.
 Be responsible and disciplined in making this configuration and code as clean and organized as possible.
@@ -1127,7 +1138,7 @@ Be responsible and disciplined in making this configuration and code as clean an
 
 [^1]: Rexe is an embellishment of the minimal but excellent `rb` script at
 https://github.com/thisredone/rb. I started using `rb` and thought of lots of
-other features I would like to have, so I started working on Rexe.
+other features I would like to have, so I started working on rexe.
 
 [^2]: Making this truly OS-portable is a lot more complex than it looks on the surface.
 On Linux, `xdg-open` may not be installed by default. Also, Windows Subsystem for Linux (WSL)
@@ -1151,6 +1162,3 @@ Here is a _start_ at a method that opens a resource portably across operating sy
 ```
 
 [^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, many of the other output formats will also return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.
-
-- Keith Bennett (@keithrbennett on Github and Twitter)
-

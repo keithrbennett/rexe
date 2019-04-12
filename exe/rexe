@@ -213,14 +213,19 @@ class Rexe
     -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                                  ! to clear all, or precede a name with '-' to remove
 
-    If source code is not specified, it will default to 'self', which is most likely useful
-    only in a filter mode (-ml, -me, -mb).
+    ---------------------------------------------------------------------------------------
+                                                                                                
+    In many cases you will need to enclose your source code in single or double quotes.
+
+    If source code is not specified, it will default to 'self', 
+    which is most likely useful only in a filter mode (-ml, -me, -mb).
 
     If there is an .rexerc file in your home directory, it will be run as Ruby code 
     before processing the input.
 
-    If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
-    so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+    If there is a REXE_OPTIONS environment variable, its content will be prepended
+    to the command line so that you can specify options implicitly 
+    (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
       HEREDOC
     end

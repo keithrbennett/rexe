@@ -1,21 +1,22 @@
 ---
 title: Boost Your Shell Scripting with Ruby and Rexe
-date: 2019-02-15
+date: 2019-04-12
 ---
 
-[Caution: This is a long article! Feel free to skim the section headings and source code first.
-Many sections can be skipped without sacrificing comprehensibility of the rest of them. 
-]
+[Caution: This is a long article! 
+Sections are mostly self contained, so feel free to skim or skip them.]
 
 ----
 
-Rexe multiplies Ruby's usefulness and conciseness on the command line by:
+Rexe is a Ruby script and gem that multiplies Ruby's usefulness and conciseness on the command line by:
 
 * automating parsing and formatting using JSON, YAML, Ruby marshalling, Awesome Print, and others
 * simplifying the use of Ruby as a shell filter, optionally predigesting input as lines, an enumerator, or one big string
 * extracting the plumbing from the command line; requires and other options can be set in an environment variable
-* enabling the loading of Ruby files to keep your code DRY and your command line code high level
+* enabling the loading of Ruby helper files to keep your code DRY and your command line code high level
 * reading and evaluating a ~/.rexerc file on startup for your shared custom code and common requires
+
+----
 
 Shell scripting is great for simple tasks but for anything nontrivial
 it can easily get cryptic and awkward (pun intended!).
@@ -58,18 +59,13 @@ make the command long and tedious, discouraging this approach.
 Rexe [see footnote ^1] can simplify such commands.
 Among other things, rexe provides switch-activated input parsing and output formatting so that converting 
 from one format to another is trivial.
-The previous `ruby` command can be expressed in rexe as:
+The previous `ruby` command can be expressed in `rexe` as:
 
 ```
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
-# or
+# you can also omit 'self' because it is the default
+# Ruby source code for rexe commands:
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy
-```
-
-...and if input comes from a file, rexe determines the format from the file's extension, and it's even simpler:
-
-```
-➜  ~   rexe -f eur_rates.json -oy
 ```
 
 The command options may seem cryptic, but they're logical so it shouldn't take long to learn them:
@@ -78,6 +74,12 @@ The command options may seem cryptic, but they're logical so it shouldn't take l
 * `-ij` - parse that __input__ with __JSON__; `self` will be the parsed object
 * `-oy` - __output__ the final value as __YAML__
  
+If input comes from a file, rexe determines the input format from the file's extension, and it's even simpler:
+
+```
+➜  ~   rexe -f eur_rates.json -oy
+```
+
 Rexe is at https://github.com/keithrbennett/rexe and can be installed with
 `gem install rexe`. Rexe provides several ways to simplify Ruby on the command
 line, tipping the scale so that it is practical to do it more often.
@@ -92,7 +94,7 @@ rexe -- Ruby Command Line Executor/Filter -- v0.15.1 -- https://github.com/keith
 Executes Ruby code on the command line, optionally automating management of standard input
 and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
 
-rexe [options] 'Ruby source code'
+rexe [options] [Ruby source code]
 
 Options:
 
@@ -127,14 +129,19 @@ Options:
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                              ! to clear all, or precede a name with '-' to remove
 
-If source code is not specified, it will default to 'self', which is most likely useful
-only in a filter mode (-ml, -me, -mb).
+---------------------------------------------------------------------------------------
+                                                                                            
+In many cases you will need to enclose your source code in single or double quotes.
+
+If source code is not specified, it will default to 'self', 
+which is most likely useful only in a filter mode (-ml, -me, -mb).
 
 If there is an .rexerc file in your home directory, it will be run as Ruby code 
 before processing the input.
 
-If there is a REXE_OPTIONS environment variable, its content will be prepended to the command line
-so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+If there is a REXE_OPTIONS environment variable, its content will be prepended
+to the command line so that you can specify options implicitly 
+(e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 ```
 
 ### Simplifying the Rexe Invocation
@@ -142,7 +149,7 @@ so that you can specify options implicitly (e.g. `export REXE_OPTIONS="-r awesom
 There are two main ways we can make the rexe command line even more concise:
 
 * by extracting configuration into the `REXE_OPTIONS` environment variable
-* by extracting low level and/or shared code into files that are loaded using `-l`,
+* by extracting low level and/or shared code into helper files that are loaded using `-l`,
   or implicitly with `~/.rexerc`
 
 
@@ -425,7 +432,7 @@ could be included in the custom code instead. Here's why:
 
 ### Reading Input from a File
 
-rexe also simplifies getting input from a file rather than standard input. The `-f` option takes a filespec
+Rexe also simplifies getting input from a file rather than standard input. The `-f` option takes a filespec
 and does with its content exactly what it would have done with standard input. This shortens:
 
 ```
@@ -464,7 +471,7 @@ This could be useful if you are doing many operations on the same file.
 
 To make rexe even more concise, you do not need to specify any source code when you want that source code
 to be `self`. This would be the case for simple format conversions, as in JSON to YAML conversion
-mentioned earlier:
+mentioned above:
 
 ```
 ➜ ~  rexe -f eur_rates.json -oy
@@ -534,13 +541,13 @@ Defining methods in your loaded files enables you to effectively define a
 [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for your command line use. 
 You could use different load files for different projects, domains, or contexts, 
 and define aliases or one line scripts to give them meaningful names. 
-For example, if I wrote code to work with Ansible and put it in `~/projects/ansible-tools/rexe-ansible.rb`, 
-I could define an alias in my startup script:
+For example, if you had Ansible helper code in `~/projects/ansible-tools/rexe-ansible.rb`, 
+you could define an alias in your startup script:
 
 ```
 ➜  ~   alias rxans="rexe -l ~/projects/ansible-tools/rexe-ansible.rb $*"
 ```
-...and then I would have an Ansible DSL available for me to use by calling `rxans`.
+...and then you would have an Ansible DSL available for me to use by calling `rxans`.
 
 In addition, since you can also call `pry` on the context of any object, you
 can provide a DSL in a [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) (shell)
@@ -684,8 +691,8 @@ rexe can be used for text transformations that would otherwise need to be done m
 The system's commands for pasting to and copying from the clipboard can handle the moving of the text
 between the editor and rexe. On the Mac, we have the following commands:
  
-* `pbcopy` - copies the content of stdin _to_ the clipboard
-* `pbpaste` - copies the content _from_ the clipboard to stdout
+* `pbcopy` - copies the content of its stdin _to_ the clipboard
+* `pbpaste` - copies the content _from_ the clipboard to its stdout
  
 Let's say we have the following currency codes displayed on the screen
 (data abridged for brevity):
@@ -719,7 +726,7 @@ displayed in the terminal, and I could then paste it into my editor.
 
 Using the clipboard in manual operations is handy, but using it in automated scripts is a very bad idea, since
 there is only one clipboard per user session. If you use the clipboard in an automated script you risk
-an error situation if its content is changed by others, or, conversely, you could mess up another task
+an error situation if its content is changed by another process, or, conversely, you could mess up another process
 when you change the content of the clipboard. 
 
 ### Multiline Ruby Commands
@@ -818,9 +825,9 @@ Files loaded with the `-l` option are treated the same way.
 Requiring gems and modules for _all_ invocations of rexe will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on one system by observing and comparing the execution times with and without the require (output has been abbreviated using `grep`):
 
 ```
-➜  ~   rexe -gy -r rails 123 2>&1 | grep duration
+➜  ~   rexe -gy -r rails 2>&1 | grep duration
 :duration_secs: 0.660138
-➜  ~   rexe -gy          123 2>&1 | grep duration
+➜  ~   rexe -gy          2>&1 | grep duration
 :duration_secs: 0.027781
 ```
 (For the above to work, the `rails` gem and its dependencies need to be installed.)
@@ -868,6 +875,7 @@ you don't need to be explicit about the output:
 ```
 ➜  ~   export REXE_OPTIONS=-op
 ➜  ~   rexe '2 * 7'
+14
 ```
 
 ----
@@ -921,6 +929,9 @@ alphabetically will result in sorting them numerically as well.
 ----
 
 #### Print yellow (trust me!):
+
+This uses an [ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code)
+to output text to the terminal in yellow:
 
 ```
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m}; puts to_a"

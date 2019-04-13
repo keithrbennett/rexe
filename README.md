@@ -192,7 +192,13 @@ def valkyries
 end
 ```
 
-To digress a bit, why would you want this? You might want to be able to go to another room until a long job completes, and be notified when it is done. The `valkyries` method will launch a browser window pointed to Richard Wagner's "Ride of the Valkyries" starting at a lively point in the music. (The `open` command is Mac specific and could be replaced with `start` on Windows, a browser command name, etc.) [see footnote ^2]
+To digress a bit, why would you want this? You might want to be able to go to another room
+until a long job completes, and be notified when it is done. 
+The `valkyries` method will launch a browser window pointed 
+to Richard Wagner's "Ride of the Valkyries" 
+starting at a lively point in the music [see footnote ^2]. 
+(The `open` command is Mac specific and could be replaced with `start` on Windows,
+a browser command name, etc.) [see footnote ^3]
  
  If you like this kind of audio notification, you could download public domain audio files and use a command like player like `afplay` on Mac OS, or `mpg123` or `ogg123` on Linux. This approach is lighter weight, requires no network access, and will not leave an open browser window for you to close.
 
@@ -883,7 +889,7 @@ you don't need to be explicit about the output:
 
 #### Outputting ENV
 
-Output the contents of `ENV` using AwesomePrint [see footnote ^3]:
+Output the contents of `ENV` using AwesomePrint [see footnote ^4]:
 
 ```
 ➜  ~   rexe -oa ENV
@@ -958,7 +964,7 @@ Let's take the YouTube example from the "Loading Files" section further.
 Let's have the video that loads be different for the success or failure
 of the command.
 
-If I put this in a load file (such as ~/.rexerc):
+If we put this in a load file (such as ~/.rexerc):
 
 ```
 def play(piece_code)
@@ -978,14 +984,14 @@ end
 
 
 # Must pipe the exit code into this Ruby process, 
-# e.g. using `echo $? | rexe play_result_by_exit_code
+# e.g. using `echo $? | rexe play_result_by_exit_code`
 def play_result_by_exit_code
   play_result(STDIN.read.chomp == '0')
 end
 
 ```
 
-Then when I issue a command that succeeds, the Hallelujah Chorus is played:
+Then when we issue a command that succeeds, the Hallelujah Chorus is played [see footnote ^2]:
 
 ```
 ➜  ~   uname; echo $? | rexe play_result_by_exit_code
@@ -1151,7 +1157,13 @@ Be responsible and disciplined in making this configuration and code as clean an
 https://github.com/thisredone/rb. I started using `rb` and thought of lots of
 other features I would like to have, so I started working on rexe.
 
-[^2]: Making this truly OS-portable is a lot more complex than it looks on the surface.
+[^2]: It's possible that when this page opens in your browser it will not play automatically.
+You may need to change your default browser, or change the code that opens the URL.
+Firefox's new (as of March 2019) version 66 suppresses autoplay; you can register
+exceptions to this policy: open Firefox Preferences, search for "autoplay" and add
+"https://www.youtube.com".
+ 
+[^3]: Making this truly OS-portable is a lot more complex than it looks on the surface.
 On Linux, `xdg-open` may not be installed by default. Also, Windows Subsystem for Linux (WSL)
 out of the box is not able to launch graphical applications.
 
@@ -1172,4 +1184,4 @@ Here is a _start_ at a method that opens a resource portably across operating sy
   end
 ```
 
-[^3]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, many of the other output formats will also return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.
+[^4]: It is an interesting quirk of the Ruby language that `ENV.to_s` returns `"ENV"` and not the contents of the `ENV` object. As a result, many of the other output formats will also return some form of `"ENV"`. You can handle this by specifying `ENV.to_h`.

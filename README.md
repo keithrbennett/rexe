@@ -8,7 +8,7 @@ Sections are mostly self contained, so feel free to skim or skip them.]
 
 ----
 
-Rexe is a Ruby script and gem that multiplies Ruby's usefulness and conciseness on the command line by:
+__Rexe__ is a Ruby script and gem that multiplies Ruby's usefulness and conciseness on the command line by:
 
 * automating parsing and formatting using JSON, YAML, Ruby marshalling, Awesome Print, and others
 * simplifying the use of Ruby as a shell filter, optionally predigesting input as lines, an enumerator, or one big string
@@ -20,8 +20,8 @@ Rexe is a Ruby script and gem that multiplies Ruby's usefulness and conciseness 
 
 Shell scripting is great for simple tasks but for anything nontrivial
 it can easily get cryptic and awkward (pun intended!).
- 
-Often, I solve this problem by writing a Ruby script instead. Ruby gives me fine
+
+This problem can often be solved by writing a Ruby script instead. Ruby provides fine
 grained control in a language that is all about clarity, conciseness, and expressiveness.
 
 Unfortunately, when there are multiple OS commands to be called, then Ruby can be
@@ -56,15 +56,18 @@ make the command long and tedious, discouraging this approach.
 
 ### Rexe
 
-Rexe [see footnote ^1] can simplify such commands.
+Rexe [see footnote ^1 regarding its origin] can simplify such commands.
 Among other things, rexe provides switch-activated input parsing and output formatting so that converting 
 from one format to another is trivial.
 The previous `ruby` command can be expressed in `rexe` as:
 
 ```
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy self
-# you can also omit 'self' because it is the default
-# Ruby source code for rexe commands:
+```
+
+Or, even more concisely (`self` is the default Ruby source code for rexe commands):
+
+```
 ➜  ~   echo $EUR_RATES_JSON | rexe -mb -ij -oy
 ```
 
@@ -74,7 +77,8 @@ The command options may seem cryptic, but they're logical so it shouldn't take l
 * `-ij` - parse that __input__ with __JSON__; `self` will be the parsed object
 * `-oy` - __output__ the final value as __YAML__
  
-If input comes from a file, rexe determines the input format from the file's extension, and it's even simpler:
+If input comes from a JSON or YAML file, rexe determines the input format from the file's extension,
+and it's even simpler:
 
 ```
 ➜  ~   rexe -f eur_rates.json -oy
@@ -196,9 +200,9 @@ To digress a bit, why would you want this? You might want to be able to go to an
 until a long job completes, and be notified when it is done. 
 The `valkyries` method will launch a browser window pointed 
 to Richard Wagner's "Ride of the Valkyries" 
-starting at a lively point in the music [see footnote ^2]. 
+starting at a lively point in the music [see footnote ^2 regarding autoplay]. 
 (The `open` command is Mac specific and could be replaced with `start` on Windows,
-a browser command name, etc.) [see footnote ^3]
+a browser command name, etc.) [see footnote ^3 regarding OS portability].
  
  If you like this kind of audio notification, you could download public domain audio files and use a command like player like `afplay` on Mac OS, or `mpg123` or `ogg123` on Linux. This approach is lighter weight, requires no network access, and will not leave an open browser window for you to close.
 
@@ -889,7 +893,7 @@ you don't need to be explicit about the output:
 
 #### Outputting ENV
 
-Output the contents of `ENV` using AwesomePrint [see footnote ^4]:
+Output the contents of `ENV` using AwesomePrint [see footnote ^4 regarding ENV.to_s]:
 
 ```
 ➜  ~   rexe -oa ENV

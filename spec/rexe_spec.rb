@@ -25,6 +25,22 @@ RSpec.describe 'rexe integration tests' do
     specify 'version returned with -v is a valid version string' do
       expect(RUN.("#{REXE_FILE} -v")).to match(/\d+\.\d+\.\d+/)
     end
+
+    specify 'version in README help output matches current version' do
+
+      software_version = RUN.("#{REXE_FILE} --version").chomp
+      readme_filespec = File.join(File.dirname(__FILE__), '..', 'README.md')
+      version_line_regex = %r{rexe -- Ruby Command Line Executor/Filter -- v}
+
+      lines_to_inspect = File.readlines(readme_filespec).grep(version_line_regex)
+      expect(lines_to_inspect).not_to be_empty
+
+      version_is_correct = lines_to_inspect.all? do |line|
+        version_in_readme = line.split(' -- ')[2][1..-1]  # remove 'v'
+        version_in_readme == software_version
+      end
+      expect(version_is_correct).to eq(true)
+    end
   end
 
 

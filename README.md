@@ -260,22 +260,23 @@ and the execution time of your Ruby code:
 ➜  ~   echo $EUR_RATES_JSON | rexe -gy -ij -mb -oa self
 ...
 ---
-:count: 0
-:rexe_version: 0.13.0
-:start_time: '2019-03-21T20:58:51+08:00'
-:source_code: ap JSON.parse(STDIN.read)
+:count: 1
+:rexe_version: 0.15.1
+:start_time: '2019-04-14T16:01:57+08:00'
+:source_code: self
 :options:
-  :input_format: :none
-  :input_mode: :no_input
+  :input_filespec:
+  :input_format: :json
+  :input_mode: :one_big_string
   :loads: []
-  :output_format: :puts
+  :output_format: :awesome_print
   :requires:
   - awesome_print
   - json
   - yaml
   :log_format: :yaml
   :noop: false
-:duration_secs: 0.070381
+:duration_secs: 0.043704
 ``` 
 
 We specified `-gy` for YAML format; there are other formats as well (see the help output or this document)
@@ -303,10 +304,10 @@ and in different ways. Here is the help text relating to input modes:
 
 ```
 -m, --input_mode MODE      Mode with which to handle input (i.e. what `self` will be in your code):
-                           -ml line mode; each line is ingested as a separate string
-                           -me enumerator mode
-                           -mb big string mode; all lines combined into single multiline string
-                           -mn (default) no input mode; no special handling of input; self is not input 
+  -ml  line mode; each line is ingested as a separate string
+  -me  enumerator mode
+  -mb  big string mode; all lines combined into single multiline string
+  -mn  (default) no input mode; no special handling of input; self is an Object.new
 ```
 
 The first three are _filter_ modes; they make standard input available
@@ -368,10 +369,10 @@ just the output explicitly specified by `puts` in the source code.
 #### -mb "Big String" Filter Mode
 
 In this mode, all standard input is combined into a single (possibly
-large) string, with newline characters joining the lines in the string.
+large and possibly multiline) string.
 
 A good example of when you would use this is when you need to parse a multiline JSON or YAML representation of an object; 
-you need to pass the entire (probably) multiline string to the parse method. 
+you need to pass all the standard input to the parse method. 
 This is the mode that was used in the first rexe example in this article.
 
 
@@ -399,7 +400,7 @@ you can do one of the following:
 
 ### Input Formats
 
-rexe can parse your input in any of several formats if you like. 
+Rexe can parse your input in any of several formats if you like. 
 You would request this in the _input format_ (`-i`) option.
 Legal values are:
 
@@ -475,6 +476,15 @@ So the example we gave above:
 
 Another possible win for using `-f` is that since it is a command line option, it could be specified in `REXE_OPTIONS`.
 This could be useful if you are doing many operations on the same file.
+
+If you need to override the input mode and format automatically configured for file input, you can simply specify
+the desired options on the command line _after_ the `-f`:
+
+```
+➜  ~   rexe -f eur_rates.json -mb -in 'puts self.class, self[0..20]'
+String
+{"base":"EUR","rates"
+```
 
 
 ### 'self' as Default Source Code
@@ -832,7 +842,7 @@ Files loaded with the `-l` option are treated the same way.
 
 ### Beware of Configured Requires
 
-Requiring gems and modules for _all_ invocations of rexe will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being wasted. For example, we can find out that rails takes about 0.63 seconds to load on one system by observing and comparing the execution times with and without the require (output has been abbreviated using `grep`):
+Requiring gems and modules for _all_ invocations of rexe will make your commands simpler and more concise, but will be a waste of execution time if they are not needed. You can inspect the execution times to see just how much time is being consumed. For example, we can find out that rails takes about 0.63 seconds to load on one system by observing and comparing the execution times with and without the require (output has been abbreviated using `grep`):
 
 ```
 ➜  ~   rexe -gy -r rails 2>&1 | grep duration
@@ -1091,13 +1101,13 @@ So this is what worked well for me:
 
 ```
 ➜  ~   grep Struct **/*.rb | grep -v OpenStruct | rexe -ml -op \
-"a = \
- gsub('lib/rock_books/', '')\
-.gsub('< Struct.new',    '')\
-.gsub('; end',           '')\
-.split('.rb:')\
-.map(&:strip);\
-\
+"a =                            \
+ gsub('lib/rock_books/', '')    \
+.gsub('< Struct.new',    '')    \
+.gsub('; end',           '')    \
+.split('.rb:')                  \
+.map(&:strip);                  \
+                                \
 %q{%-40s %-s} % [a[0] + %q{.rb}, a[1]]"
 ```
 

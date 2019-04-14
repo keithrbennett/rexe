@@ -1,12 +1,4 @@
----
-title: Boost Your Shell Scripting with Ruby and Rexe
-date: 2019-04-12
----
-
-[Caution: This is a long article! 
-Sections are mostly self contained, so feel free to skim or skip them.]
-
-----
+# Rexe
 
 __Rexe__ is a Ruby script and gem that multiplies Ruby's usefulness and conciseness on the command line by:
 
@@ -93,7 +85,7 @@ line, tipping the scale so that it is practical to do it more often.
 Here is rexe's help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v0.15.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v1.0.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, optionally automating management of standard input
 and standard output, and optionally parsing input and formatting output with YAML, JSON, etc.
@@ -261,8 +253,8 @@ and the execution time of your Ruby code:
 ...
 ---
 :count: 1
-:rexe_version: 0.15.1
-:start_time: '2019-04-14T16:01:57+08:00'
+:rexe_version: 1.0.0
+:start_time: '2019-04-14T19:15:50+08:00'
 :source_code: self
 :options:
   :input_filespec:
@@ -276,7 +268,7 @@ and the execution time of your Ruby code:
   - yaml
   :log_format: :yaml
   :noop: false
-:duration_secs: 0.043704
+:duration_secs: 0.064798
 ``` 
 
 We specified `-gy` for YAML format; there are other formats as well (see the help output or this document)
@@ -518,19 +510,20 @@ by accessing the `$RC` global variable, which contains an OpenStruct. Let's prin
 ➜  ~   rexe -oa '$RC'
 OpenStruct {
            :count => 0,
-    :rexe_version => "0.13.0",
-      :start_time => "2019-03-23T20:17:59+08:00",
+    :rexe_version => "1.0.0",
+      :start_time => "2019-04-14T19:16:26+08:00",
      :source_code => "$RC",
          :options => {
-         :input_format => :none,
-           :input_mode => :no_input,
-                :loads => [],
-        :output_format => :awesome_print,
-             :requires => [
+        :input_filespec => nil,
+          :input_format => :none,
+            :input_mode => :none,
+                 :loads => [],
+         :output_format => :awesome_print,
+              :requires => [
             [0] "awesome_print"
         ],
-           :log_format => :none,
-                 :noop => false
+            :log_format => :none,
+                  :noop => false
     }
 }
 ``` 
@@ -626,7 +619,7 @@ hello
 hello
 ```
 
-We can also use `%q` or `%Q`, and sometimes this eliminates the needs for the outer quotes:
+We can also use `%q` or `%Q`, and sometimes this eliminates the needs for the outer quotes altogether:
 
 ```
 ➜  ~   rexe puts %q{hello}
@@ -761,8 +754,7 @@ For example, here is an example without a semicolon:
 ➜  ~   cowsay hello | rexe -me "print %Q{\u001b[33m} \
 puts to_a"
 
-/Users/kbennett/.rvm/gems/ruby-2.6.0/gems/rexe-0.10.1/exe/rexe:256:in `eval':
-   (eval):1: syntax error, unexpected tIDENTIFIER, expecting '}' (SyntaxError)
+rexe: (eval):1: syntax error, unexpected tIDENTIFIER, expecting '}'
 ...new { print %Q{\u001b[33m} puts to_a }
 ...                           ^~~~
 ```

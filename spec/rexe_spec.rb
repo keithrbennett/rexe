@@ -10,12 +10,14 @@ require 'yaml'
 # but that makes the executable more complex, probably without necessity.
 
 
-RSpec.describe 'rexe integration tests' do
+RSpec.describe 'Rexe integration tests' do
 
   let(:test_data)        {    [ { 'color' => 'blue' }, 200 ] }
   let(:test_data_string) { %Q{[ { 'color' => 'blue' }, 200 ]} }
   let(:load_filespec)    { File.join(File.dirname(__FILE__), 'dummy.rb') }
-
+  let(:readme_filespec)  { File.join(File.dirname(__FILE__), '..', 'README.md') }
+  let(:readme_text)      { File.read(readme_filespec) }
+  let(:readme_lines)     { File.readlines(readme_filespec) }
 
   context '-v --version option' do
     specify 'version returned with --version is a valid version string' do
@@ -29,10 +31,9 @@ RSpec.describe 'rexe integration tests' do
     specify 'version in README help output matches current version' do
 
       software_version = RUN.("#{REXE_FILE} --version").chomp
-      readme_filespec = File.join(File.dirname(__FILE__), '..', 'README.md')
       version_line_regex = %r{rexe -- Ruby Command Line Executor/Filter -- v}
 
-      lines_to_inspect = File.readlines(readme_filespec).grep(version_line_regex)
+      lines_to_inspect = readme_lines.grep(version_line_regex)
       expect(lines_to_inspect).not_to be_empty
 
       version_is_correct = lines_to_inspect.all? do |line|
@@ -46,7 +47,7 @@ RSpec.describe 'rexe integration tests' do
 
   context '-h help text' do
     specify 'includes version' do
-      expect(RUN.("#{REXE_FILE} -h")).to include(`#{REXE_FILE} --version`.chomp)
+      expect(RUN.("#{REXE_FILE} 2>/dev/null -h")).to include(`#{REXE_FILE} --version`.chomp)
     end
 
     specify 'includes Github URL' do
@@ -260,21 +261,13 @@ RSpec.describe 'rexe integration tests' do
     end
 
     specify 'clearing requires using -r ! works' do
-      command = "#{REXE_FILE} -c -mn -op -r yaml -r! YAML"
-
-      # Suppress distracting error output, but the redirection requires Posix compatibility:
-      command << " 2>/dev/null" if OS.posix?
-
+      command = "#{REXE_FILE} 2>/dev/null -c -mn -op -r yaml -r! YAML"
       RUN.(command) # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).not_to eq(0)
     end
 
     specify 'clearing a single require using -r -gem works' do
-      command = "#{REXE_FILE} -c -mn -op -r yaml -r -yaml YAML"
-
-      # Suppress distracting error output, but the redirection requires Posix compatibility:
-      command << " 2>/dev/null" if OS.posix?
-
+      command = "#{REXE_FILE} 2>/dev/null -c -mn -op -r yaml -r -yaml YAML"
       RUN.(command) # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).not_to eq(0)
     end
@@ -289,21 +282,13 @@ RSpec.describe 'rexe integration tests' do
     end
 
     specify 'clearing loads using -l ! works' do
-      command = "#{REXE_FILE} -c -mn -op -l #{load_filespec} -l! Dummy"
-
-      # Suppress distracting error output, but the redirection requires Posix compatibility:
-      command << " 2>/dev/null" if OS.posix?
-
+      command = "#{REXE_FILE} 2>/dev/null -c -mn -op -l #{load_filespec} -l! Dummy"
       RUN.(command) # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).not_to eq(0)
     end
 
     specify 'clearing a single load using -r -file works' do
-      command = "#{REXE_FILE} -c -mn -op -l #{load_filespec} -l -#{load_filespec} Dummy"
-
-      # Suppress distracting error output, but the redirection requires Posix compatibility:
-      command << " 2>/dev/null" if OS.posix?
-
+      command = "#{REXE_FILE} 2>/dev/null -c -mn -op -l #{load_filespec} -l -#{load_filespec} Dummy"
       RUN.(command) # just refer to the YAML module and see if it breaks
       expect($?.exitstatus).not_to eq(0)
     end
@@ -387,6 +372,13 @@ RSpec.describe 'rexe integration tests' do
   context 'source code' do
     specify 'source code is "self" when there no source code is specified' do
       expect(RUN.(%Q{echo '[1,2]' | rexe -ij -ml -oy})).to eq("---\n- 1\n- 2\n")
+    end
+  end
+
+  context 'article text metadata' do
+    specify ' should not be copied to the readme' do
+      expect(readme_text).not_to include("---\ntitle: ")
+      expect(readme_text).not_to include("[Caution: This is a long article!")
     end
   end
 end

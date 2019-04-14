@@ -1,4 +1,14 @@
-## rexe -- Ruby Command Line Executor
+## rexe -- Ruby Command Line Executor/Filter
+
+
+### 1.0.0
+
+* Suppress help message on SystemExit.
+* Eliminate stack trace from all error messages.
+* Fix Awesome Print output to have a "\n" at the end of it.
+* Add eur_rates.json sample data.
+* Remove gem post-commit message.
+
 
 ### 0.15.1
 

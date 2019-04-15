@@ -12,7 +12,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.0.1'
+  VERSION = '1.0.2'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -218,6 +218,7 @@ class Rexe
                                  -oy  YAML
     -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                                  ! to clear all, or precede a name with '-' to remove
+    -v, --version              Prints version and exits
 
     ---------------------------------------------------------------------------------------
                                                                                                 
@@ -272,6 +273,9 @@ class Rexe
 
       OptionParser.new do |parser|
 
+        parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
+          options.clear
+        end
 
         parser.on('-f', '--input_file FILESPEC',
             'Use this file instead of stdin; autodetects YAML and JSON file extensions') do |v|
@@ -333,6 +337,14 @@ class Rexe
           end
         end
 
+        # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
+        # for an excellent explanation of this optparse incantation.
+        # According to the answer, valid options are:
+        # -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -.
+        parser.on('-n', '--[no-]noop [FLAG]', TrueClass, "Do not execute the code (useful with -g)") do |v|
+          options.noop = (v.nil? ? true : v)
+        end
+
         parser.on('-o', '--output_format FORMAT',
                   'Mode with which to format values for output (`-o` + [aijJmnpsy])') do |v|
 
@@ -355,18 +367,6 @@ class Rexe
               end
             end
           end
-        end
-
-        parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
-          options.clear
-        end
-
-        # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
-        # for an excellent explanation of this optparse incantation.
-        # According to the answer, valid options are:
-        # -n no, -n yes, -n false, -n true, -n n, -n y, -n +, but not -n -.
-        parser.on('-n', '--[no-]noop [FLAG]', TrueClass, "Do not execute the code (useful with -g)") do |v|
-          options.noop = (v.nil? ? true : v)
         end
 
         parser.on('-v', '--version', 'Print version') do

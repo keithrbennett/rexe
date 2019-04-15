@@ -1,6 +1,12 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
 
+### 1.0.1
+
+* Improve help text.
+* Improve code block display in readme.
+
+
 ### 1.0.0
 
 * Suppress help message on SystemExit.

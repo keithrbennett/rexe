@@ -1,9 +1,14 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
 
+### 1.0.3
+
+* Fix/improve help text.
+
+
 ### 1.0.2
 
-Add mention of -v/--version to help text.
+* Add mention of -v/--version to help text.
 
 
 ### 1.0.1

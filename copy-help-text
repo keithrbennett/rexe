@@ -1,0 +1,7 @@
+# Here's a sample rexe script that I've been using in my development of rexe. It:
+#
+# 1) pipes the help output of rexe into another call to rexe, which
+# 2) removes the first and last blank lines for easier pasting into the source code, and
+# 3) pastes the result back into the clipboard for easy insertion into the editor.
+
+rexe -h | rexe -mb -op 'self.split("\n")[1..-1]' | pbcopy

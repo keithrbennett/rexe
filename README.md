@@ -73,7 +73,7 @@ Rexe is at https://github.com/keithrbennett/rexe and can be installed with `gem 
 Here is rexe's help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v1.0.2 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v1.0.3 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, 
 optionally automating management of standard input and standard output,
@@ -87,17 +87,18 @@ Options:
 -f  --input_file           Use this file instead of stdin for preprocessed input; 
                            if filespec has a YAML and JSON file extension,
                            sets input format accordingly and sets input mode to -mb
--g  --log_format FORMAT    Log format, logs to stderr, defaults to none
+-g  --log_format FORMAT    Log format, logs to stderr, defaults to -gn (none)
                            (see -o for format options)
 -h, --help                 Print help and exit
--i, --input_format FORMAT  Input format
+-i, --input_format FORMAT  Input format, defaults to -in (None)
                              -ij  JSON
                              -im  Marshal
                              -in  None (default)
                              -iy  YAML
 -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
                              ! to clear all, or precede a name with '-' to remove
--m, --input_mode MODE      Input preprocessing mode (determines what `self` will be):
+-m, --input_mode MODE      Input preprocessing mode (determines what `self` will be)
+                           defaults to -mn (none)
                              -ml  line; each line is ingested as a separate string
                              -me  enumerator (each_line on STDIN or File)
                              -mb  big string; all lines combined into one string
@@ -105,7 +106,7 @@ Options:
                                   self is an Object.new 
 -n, --[no-]noop            Do not execute the code (useful with -g);
                            For true: yes, true, y, +; for false: no, false, n
--o, --output_format FORMAT Output format (defaults to puts):
+-o, --output_format FORMAT Output format, defaults to -on (no output):
                              -oi  Inspect
                              -oj  JSON
                              -oJ  Pretty JSON

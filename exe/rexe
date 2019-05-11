@@ -25,7 +25,7 @@ class Rexe
         yield
       rescue Exception => e
         unless e.class == SystemExit
-          $stderr.puts('rexe: ' << e.class.to_s)
+          $stderr.puts('rexe: ' << e.to_s)
           $stderr.puts("Use the -h option to get help.")
           exit(-1)
         end

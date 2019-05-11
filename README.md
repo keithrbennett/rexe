@@ -263,12 +263,13 @@ If you would like to append this informational output to a file(e.g. `rexe.log`)
 Rexe tries to make it simple and convenient for you to handle standard input, and in different ways. Here is the help text relating to input modes:
 
 ```
--m, --input_mode MODE      Input preprocessing mode (determines what `self` will be):
+-m, --input_mode MODE      Input preprocessing mode (determines what `self` will be)
+                           defaults to -mn (none)
                              -ml  line; each line is ingested as a separate string
                              -me  enumerator (each_line on STDIN or File)
                              -mb  big string; all lines combined into one string
-                             -mn  none (default); no input preprocessing; 
-                                  self is an Object.new 
+                             -mn  none (default); no input preprocessing;
+                                  self is an Object.new
 ```
 
 The first three are _filter_ modes; they make standard input available to your code as `self`.

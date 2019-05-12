@@ -40,6 +40,8 @@ class Rexe
       :input_mode,
       :loads,
       :output_format,
+      :output_format_tty,
+      :output_format_block,
       :requires,
       :log_format,
       :noop)
@@ -53,13 +55,15 @@ class Rexe
 
     def clear
       self.input_filespec = nil
-      self.input_format   = :none
-      self.input_mode     = :none
-      self.output_format  = :none
-      self.loads          = []
-      self.requires       = []
-      self.log_format     = :none
-      self.noop           = false
+      self.input_format        = :none
+      self.input_mode          = :none
+      self.output_format       = :none
+      self.output_format_tty   = :none
+      self.output_format_block = :none
+      self.loads               = []
+      self.requires            = []
+      self.log_format          = :none
+      self.noop                = false
     end
   end
 
@@ -217,6 +221,7 @@ class Rexe
                                  -op  Puts
                                  -os  to_s
                                  -oy  YAML
+                                 If 2 letters are provided, 1st is for tty devices, 2nd for block
     -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                                  ! to clear all, or precede a name with '-' to remove
     -v, --version              Prints version and exits
@@ -348,10 +353,11 @@ class Rexe
 
         parser.on('-o', '--output_format FORMAT',
                   'Mode with which to format values for output (`-o` + [aijJmnpsy])') do |v|
-
-          options.output_format = lookups.output_formats[v]
-          if options.output_format.nil?
-            raise("Output mode was '#{v}' but must be one of #{lookups.output_formats.keys}.")
+          options.output_format_tty   = lookups.output_formats[v[0]]
+          options.output_format_block = lookups.output_formats[v[-1]]
+          options.output_format = ($stdout.tty? ? options.output_format_tty : options.output_format_block)
+          if [options.output_format_tty, options.output_format_block].include?(nil)
+            raise("Bad output mode '#{v}'; each must be one of #{lookups.output_formats.keys}.")
           end
         end
 

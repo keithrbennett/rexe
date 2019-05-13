@@ -381,9 +381,15 @@ class Rexe
           exit(0)
         end
 
-        # Undocumented feature
+        # Undocumented feature: open Github project with default web browser on a Mac
         parser.on('', '--open-project') do
           open_resource(PROJECT_URL)
+          exit(0)
+        end
+
+        # Undocumented feature: open Github project with default web browser on a Mac
+        parser.on('', '--project-url') do
+          puts PROJECT_URL
           exit(0)
         end
 

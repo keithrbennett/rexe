@@ -73,7 +73,7 @@ Rexe is at https://github.com/keithrbennett/rexe and can be installed with `gem 
 Here is rexe's help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v1.0.3 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v1.1.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, 
 optionally automating management of standard input and standard output,
@@ -115,6 +115,7 @@ Options:
                              -op  Puts
                              -os  to_s
                              -oy  YAML
+                             If 2 letters are provided, 1st is for tty devices, 2nd for block
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                              ! to clear all, or precede a name with '-' to remove
 -v, --version              Prints version and exits
@@ -369,6 +370,8 @@ Several output formats are provided for your convenience:
 All formats will implicitly `require` anything needed to accomplish their task (e.g. `require 'yaml'`).
 
 The default is `-on` to produce no output at all (unless explicitly coded to do so). If you prefer a different default such as `-op` for _puts_ mode, you can specify that in your `REXE_OPTIONS` environment variable.
+
+If two letters are provided, the first will be used for tty devices (e.g. the terminal when not redirected or piped), and the second for block devices (e.g. when redirected or piped to another process).
 
 You may wonder why these formats are provided, given that their functionality could be included in the custom code instead. Here's why:
 

@@ -1,6 +1,12 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
 
+### 1.1.0
+
+* Enable specifying different output formats for tty and block devices. (#4)
+* Outputs exception text on error instead of just exception class.
+
+
 ### 1.0.3
 
 * Fix/improve help text.

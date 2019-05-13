@@ -1,6 +1,11 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
 
+### 1.2.0
+
+* Add --project-url option to output project URL on Github, then exit
+
+
 ### 1.1.0
 
 * Enable specifying different output formats for tty and block devices. (#4)

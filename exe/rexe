@@ -12,7 +12,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.1.0'
+  VERSION = '1.1.0.1'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -222,6 +222,7 @@ class Rexe
                                  -os  to_s
                                  -oy  YAML
                                  If 2 letters are provided, 1st is for tty devices, 2nd for block
+    --project-url              Outputs project URL on Github, then exits
     -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                                  ! to clear all, or precede a name with '-' to remove
     -v, --version              Prints version and exits
@@ -387,7 +388,6 @@ class Rexe
           exit(0)
         end
 
-        # Undocumented feature: open Github project with default web browser on a Mac
         parser.on('', '--project-url') do
           puts PROJECT_URL
           exit(0)

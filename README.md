@@ -73,7 +73,7 @@ Rexe is at https://github.com/keithrbennett/rexe and can be installed with `gem 
 Here is rexe's help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v1.1.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v1.1.0.1 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, 
 optionally automating management of standard input and standard output,
@@ -116,6 +116,7 @@ Options:
                              -os  to_s
                              -oy  YAML
                              If 2 letters are provided, 1st is for tty devices, 2nd for block
+--project-url              Outputs project URL on Github, then exits
 -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
                              ! to clear all, or precede a name with '-' to remove
 -v, --version              Prints version and exits

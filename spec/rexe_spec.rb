@@ -381,4 +381,26 @@ RSpec.describe 'Rexe integration tests' do
       expect(readme_text).not_to include("[Caution: This is a long article!")
     end
   end
+
+  context 'important strings are frozen'
+
+    tester = ->(string_to_attempt_to_modify) do
+      command = %Q{rexe -op '#{string_to_attempt_to_modify} << "foo"' 2>&1}
+      output = `#{command}`
+      unless /frozen/ === output
+        fail %Q{String '#{string_to_attempt_to_modify}' should have raised frozen error but did not.}
+      end
+    end
+
+    specify 'VERSION' do
+      tester.('Rexe::VERSION')
+    end
+
+    specify 'PROJECT_URL' do
+      tester.('Rexe::PROJECT_URL')
+    end
+
+    specify 'help_text' do
+      tester.('Rexe::CommandLineParser.new.send(:help_text)')
+    end
 end

@@ -12,9 +12,9 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.1.0.1'
+  VERSION = '1.1.0.1'.freeze
 
-  PROJECT_URL = 'https://github.com/keithrbennett/rexe'
+  PROJECT_URL = 'https://github.com/keithrbennett/rexe'.freeze
 
 
   module Helpers
@@ -177,71 +177,77 @@ class Rexe
 
 
     private def help_text
-      <<~HEREDOC
+      unless @help_text
+        @help_text ||= <<~HEREDOC
 
-    rexe -- Ruby Command Line Executor/Filter -- v#{VERSION} -- #{PROJECT_URL}
-
-    Executes Ruby code on the command line, 
-    optionally automating management of standard input and standard output,
-    and optionally parsing input and formatting output with YAML, JSON, etc.
-
-    rexe [options] [Ruby source code]
-
-    Options:
-
-    -c  --clear_options        Clear all previous command line options specified up to now
-    -f  --input_file           Use this file instead of stdin for preprocessed input; 
-                               if filespec has a YAML and JSON file extension,
-                               sets input format accordingly and sets input mode to -mb
-    -g  --log_format FORMAT    Log format, logs to stderr, defaults to -gn (none)
-                               (see -o for format options)
-    -h, --help                 Print help and exit
-    -i, --input_format FORMAT  Input format, defaults to -in (None)
-                                 -ij  JSON
-                                 -im  Marshal
-                                 -in  None (default)
-                                 -iy  YAML
-    -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
-                                 ! to clear all, or precede a name with '-' to remove
-    -m, --input_mode MODE      Input preprocessing mode (determines what `self` will be)
-                               defaults to -mn (none)
-                                 -ml  line; each line is ingested as a separate string
-                                 -me  enumerator (each_line on STDIN or File)
-                                 -mb  big string; all lines combined into one string
-                                 -mn  none (default); no input preprocessing; 
-                                      self is an Object.new 
-    -n, --[no-]noop            Do not execute the code (useful with -g);
-                               For true: yes, true, y, +; for false: no, false, n
-    -o, --output_format FORMAT Output format, defaults to -on (no output):
-                                 -oi  Inspect
-                                 -oj  JSON
-                                 -oJ  Pretty JSON
-                                 -om  Marshal
-                                 -on  No Output (default)
-                                 -op  Puts
-                                 -os  to_s
-                                 -oy  YAML
-                                 If 2 letters are provided, 1st is for tty devices, 2nd for block
-    --project-url              Outputs project URL on Github, then exits
-    -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
-                                 ! to clear all, or precede a name with '-' to remove
-    -v, --version              Prints version and exits
-
-    ---------------------------------------------------------------------------------------
-                                                                                                
-    In many cases you will need to enclose your source code in single or double quotes.
-
-    If source code is not specified, it will default to 'self', 
-    which is most likely useful only in a filter mode (-ml, -me, -mb).
-
-    If there is a .rexerc file in your home directory, it will be run as Ruby code 
-    before processing the input.
-
-    If there is a REXE_OPTIONS environment variable, its content will be prepended
-    to the command line so that you can specify options implicitly 
-    (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+          rexe -- Ruby Command Line Executor/Filter -- v#{VERSION} -- #{PROJECT_URL}
+      
+          Executes Ruby code on the command line, 
+          optionally automating management of standard input and standard output,
+          and optionally parsing input and formatting output with YAML, JSON, etc.
+      
+          rexe [options] [Ruby source code]
+      
+          Options:
+      
+          -c  --clear_options        Clear all previous command line options specified up to now
+          -f  --input_file           Use this file instead of stdin for preprocessed input; 
+                                     if filespec has a YAML and JSON file extension,
+                                     sets input format accordingly and sets input mode to -mb
+          -g  --log_format FORMAT    Log format, logs to stderr, defaults to -gn (none)
+                                     (see -o for format options)
+          -h, --help                 Print help and exit
+          -i, --input_format FORMAT  Input format, defaults to -in (None)
+                                       -ij  JSON
+                                       -im  Marshal
+                                       -in  None (default)
+                                       -iy  YAML
+          -l, --load RUBY_FILE(S)    Ruby file(s) to load, comma separated;
+                                       ! to clear all, or precede a name with '-' to remove
+          -m, --input_mode MODE      Input preprocessing mode (determines what `self` will be)
+                                     defaults to -mn (none)
+                                       -ml  line; each line is ingested as a separate string
+                                       -me  enumerator (each_line on STDIN or File)
+                                       -mb  big string; all lines combined into one string
+                                       -mn  none (default); no input preprocessing; 
+                                            self is an Object.new 
+          -n, --[no-]noop            Do not execute the code (useful with -g);
+                                     For true: yes, true, y, +; for false: no, false, n
+          -o, --output_format FORMAT Output format, defaults to -on (no output):
+                                       -oi  Inspect
+                                       -oj  JSON
+                                       -oJ  Pretty JSON
+                                       -om  Marshal
+                                       -on  No Output (default)
+                                       -op  Puts
+                                       -os  to_s
+                                       -oy  YAML
+                                       If 2 letters are provided, 1st is for tty devices, 2nd for block
+          --project-url              Outputs project URL on Github, then exits
+          -r, --require REQUIRE(S)   Gems and built-in libraries to require, comma separated;
+                                       ! to clear all, or precede a name with '-' to remove
+          -v, --version              Prints version and exits
+      
+          ---------------------------------------------------------------------------------------
+                                                                                                      
+          In many cases you will need to enclose your source code in single or double quotes.
+      
+          If source code is not specified, it will default to 'self', 
+          which is most likely useful only in a filter mode (-ml, -me, -mb).
+      
+          If there is a .rexerc file in your home directory, it will be run as Ruby code 
+          before processing the input.
+      
+          If there is a REXE_OPTIONS environment variable, its content will be prepended
+          to the command line so that you can specify options implicitly 
+          (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
       HEREDOC
+
+        @help_text.freeze
+      end
+
+      @help_text
     end
 
 

@@ -273,7 +273,6 @@ RSpec.describe 'Rexe integration tests' do
     end
   end
 
-
   context '-l loads' do
 
     specify 'loading using -l works' do
@@ -382,7 +381,7 @@ RSpec.describe 'Rexe integration tests' do
     end
   end
 
-  context 'important strings are frozen'
+  context 'important strings are frozen' do
 
     tester = ->(string_to_attempt_to_modify) do
       command = %Q{rexe -op '#{string_to_attempt_to_modify} << "foo"' 2>&1}
@@ -403,4 +402,5 @@ RSpec.describe 'Rexe integration tests' do
     specify 'help_text' do
       tester.('Rexe::CommandLineParser.new.send(:help_text)')
     end
+  end
 end

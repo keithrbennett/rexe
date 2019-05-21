@@ -382,25 +382,16 @@ RSpec.describe 'Rexe integration tests' do
   end
 
   context 'important strings are frozen' do
-
-    tester = ->(string_to_attempt_to_modify) do
-      command = %Q{rexe -op '#{string_to_attempt_to_modify} << "foo"' 2>&1}
-      output = `#{command}`
-      unless /frozen/ === output
-        fail %Q{String '#{string_to_attempt_to_modify}' should have raised frozen error but did not.}
+    [
+        'Rexe::VERSION',
+        'Rexe::PROJECT_URL',
+        'Rexe::CommandLineParser.new.send(:help_text)'
+    ].each do |important_string|
+      it "prevents modifying '#{important_string}' because it is frozen" do
+        command = %Q{rexe -op '#{important_string} << "foo"' 2>&1}
+        output = `#{command}`
+        expect(output).to match(/can't modify frozen String/)
       end
-    end
-
-    specify 'VERSION' do
-      tester.('Rexe::VERSION')
-    end
-
-    specify 'PROJECT_URL' do
-      tester.('Rexe::PROJECT_URL')
-    end
-
-    specify 'help_text' do
-      tester.('Rexe::CommandLineParser.new.send(:help_text)')
     end
   end
 end

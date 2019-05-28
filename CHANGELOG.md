@@ -1,5 +1,13 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
+### 1.3.0
+
+* Document --project-url option.
+* Add undocumented option --open-project to output Github project URL.
+* Simplify test as per @davetron5000's array based approach.
+* Fix context do/end in test code.
+* Froze strings: VERSION, PROJECT_URL, help_text.
+
 
 ### 1.2.0
 

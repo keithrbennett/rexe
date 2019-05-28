@@ -34,13 +34,15 @@ RSpec.describe 'Rexe integration tests' do
       version_line_regex = %r{rexe -- Ruby Command Line Executor/Filter -- v}
 
       lines_to_inspect = readme_lines.grep(version_line_regex)
-      expect(lines_to_inspect).not_to be_empty
+      expect(lines_to_inspect.size).to eq(1)
 
-      version_is_correct = lines_to_inspect.all? do |line|
-        version_in_readme = line.split(' -- ')[2][1..-1]  # remove 'v'
-        version_in_readme == software_version
+      readme_version_line = lines_to_inspect.first
+      readme_version = readme_version_line.split(' -- ')[2][1..-1]  # remove 'v'
+
+      unless software_version == readme_version
+        fail "Version in software was #{software_version.inspect} but " +
+                 "version in README help was #{readme_version.inspect}."
       end
-      expect(version_is_correct).to eq(true)
     end
   end
 

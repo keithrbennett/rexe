@@ -1,5 +1,11 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
+
+### 1.3.1
+
+* Add Awesome Print and Pretty Print output formats to help.
+
+
 ### 1.3.0
 
 * Document --project-url option.

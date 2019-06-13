@@ -73,7 +73,7 @@ Rexe is at https://github.com/keithrbennett/rexe and can be installed with `gem 
 Here is rexe's help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v1.3.0 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v1.3.1 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, 
 optionally automating management of standard input and standard output,
@@ -107,12 +107,14 @@ Options:
 -n, --[no-]noop            Do not execute the code (useful with -g);
                            For true: yes, true, y, +; for false: no, false, n
 -o, --output_format FORMAT Output format, defaults to -on (no output):
+                             -oa  Awesome Print
                              -oi  Inspect
                              -oj  JSON
                              -oJ  Pretty JSON
                              -om  Marshal
                              -on  No Output (default)
                              -op  Puts
+                             -oP  Pretty Print
                              -os  to_s
                              -oy  YAML
                              If 2 letters are provided, 1st is for tty devices, 2nd for block

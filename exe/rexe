@@ -548,4 +548,19 @@ class Rexe
   end
 end
 
-Bundler.with_clean_env { Rexe::Main.new.call }
+
+def bundler_run(&block)
+  # This used to be an unconditional call to with_clean_env but that method is now deprecated:
+  # [DEPRECATED] `Bundler.with_clean_env` has been deprecated in favor of `Bundler.with_unbundled_env`.
+  # If you instead want the environment before bundler was originally loaded,
+  # use `Bundler.with_original_env`
+
+  if Bundler.respond_to?(:with_unbundled_env)
+    Bundler.with_unbundled_env { block.call }
+  else
+    Bundler.with_clean_env { block.call }
+  end
+end
+
+
+bundler_run { Rexe::Main.new.call }

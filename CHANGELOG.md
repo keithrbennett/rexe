@@ -1,6 +1,12 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
 
+### 1.4.0
+
+* Handle Bundler deprecation of `with_clean_env` method.
+* Mark entire file frozen_string_literal: true.
+
+
 ### 1.3.1
 
 * Add Awesome Print and Pretty Print output formats to help.

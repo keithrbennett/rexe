@@ -15,7 +15,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.4.0'
+  VERSION = '1.4.1'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -130,7 +130,7 @@ class Rexe
           none:          ->(_obj) { nil },
           pretty_json:   ->(obj)  { JSON.pretty_generate(obj) },
           pretty_print:  ->(obj)  { obj.pretty_inspect },
-          puts:          ->(obj)  { sio = StringIO.new; sio.puts(obj); sio.string },   # default
+          puts:          ->(obj)  { require 'stringio'; sio = StringIO.new; sio.puts(obj); sio.string },
           to_s:          ->(obj)  { obj.to_s + "\n" },
           yaml:          ->(obj)  { obj.to_yaml },
       }

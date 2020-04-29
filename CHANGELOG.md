@@ -1,6 +1,10 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
 
+### 1.4.1
+
+* As of later versions of Ruby, `stringio` is a gem and must be required. Fixed.
+
 ### 1.4.0
 
 * Handle Bundler deprecation of `with_clean_env` method.

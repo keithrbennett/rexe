@@ -15,7 +15,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.4.1'
+  VERSION = '1.5.0'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -107,7 +107,7 @@ class Rexe
 
     def output_formats
       @output_formats ||= {
-          'a' => :awesome_print,
+          'a' => :amazing_print,
           'i' => :inspect,
           'j' => :json,
           'J' => :pretty_json,
@@ -123,7 +123,7 @@ class Rexe
 
     def formatters
       @formatters ||=  {
-          awesome_print: ->(obj)  { obj.ai << "\n" },
+          amazing_print: ->(obj)  { obj.ai << "\n" },
           inspect:       ->(obj)  { obj.inspect + "\n" },
           json:          ->(obj)  { obj.to_json },
           marshal:       ->(obj)  { Marshal.dump(obj) },
@@ -141,7 +141,7 @@ class Rexe
       @format_requires ||= {
           json:          'json',
           pretty_json:   'json',
-          awesome_print: 'awesome_print',
+          amazing_print: 'amazing_print',
           pretty_print:  'pp',
           yaml:          'yaml'
       }
@@ -217,7 +217,7 @@ class Rexe
           -n, --[no-]noop            Do not execute the code (useful with -g);
                                      For true: yes, true, y, +; for false: no, false, n
           -o, --output_format FORMAT Output format, defaults to -on (no output):
-                                       -oa  Awesome Print
+                                       -oa  Amazing Print
                                        -oi  Inspect
                                        -oj  JSON
                                        -oJ  Pretty JSON
@@ -245,7 +245,7 @@ class Rexe
       
           If there is a REXE_OPTIONS environment variable, its content will be prepended
           to the command line so that you can specify options implicitly 
-          (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+          (e.g. `export REXE_OPTIONS="-r amazing_print,yaml"`)
 
       HEREDOC
 

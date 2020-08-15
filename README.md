@@ -2,7 +2,7 @@
 
 __Rexe__ is a Ruby script and gem that multiplies Ruby's usefulness and conciseness on the command line by:
 
-* automating parsing and formatting using JSON, YAML, Ruby marshalling, Awesome Print, and others
+* automating parsing and formatting using JSON, YAML, Ruby marshalling, Amazing Print, and others
 * simplifying the use of Ruby as a shell filter, optionally predigesting input as lines, an enumerator, or one big string
 * extracting the plumbing from the command line; requires and other options can be set in an environment variable
 * enabling the loading of Ruby helper files to keep your code DRY and your command line code high level
@@ -73,7 +73,7 @@ Rexe is at https://github.com/keithrbennett/rexe and can be installed with `gem 
 Here is rexe's help text as of the time of this writing:
 
 ```
-rexe -- Ruby Command Line Executor/Filter -- v1.3.1 -- https://github.com/keithrbennett/rexe
+rexe -- Ruby Command Line Executor/Filter -- v1.5.0 -- https://github.com/keithrbennett/rexe
 
 Executes Ruby code on the command line, 
 optionally automating management of standard input and standard output,
@@ -107,7 +107,7 @@ Options:
 -n, --[no-]noop            Do not execute the code (useful with -g);
                            For true: yes, true, y, +; for false: no, false, n
 -o, --output_format FORMAT Output format, defaults to -on (no output):
-                             -oa  Awesome Print
+                             -oa  Amazing Print
                              -oi  Inspect
                              -oj  JSON
                              -oJ  Pretty JSON
@@ -135,7 +135,7 @@ before processing the input.
 
 If there is a REXE_OPTIONS environment variable, its content will be prepended
 to the command line so that you can specify options implicitly 
-(e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
+(e.g. `export REXE_OPTIONS="-r amazing_print,yaml"`)
 ```
 
 ### Simplifying the Rexe Invocation
@@ -239,11 +239,11 @@ $ echo $EUR_RATES_JSON | rexe -gy -ij -mb -oa -n self
   :input_format: :json
   :input_mode: :one_big_string
   :loads: []
-  :output_format: :awesome_print
-  :output_format_tty: :awesome_print
-  :output_format_block: :awesome_print
+  :output_format: :amazing_print
+  :output_format_tty: :amazing_print
+  :output_format_block: :amazing_print
   :requires:
-  - awesome_print
+  - amazing_print
   - json
   - yaml
   :log_format: :yaml
@@ -363,7 +363,7 @@ The input format option is ignored if the input _mode_ is `-mn` ("no input" exec
 
 Several output formats are provided for your convenience:
 
-* `-oa` - Awesome Print - calls `.ai` on the object to get the string that `ap` would print
+* `-oa` - Amazing Print - calls `.ai` on the object to get the string that `ap` would print
 * `-oi` - Inspect - calls `inspect` on the object
 * `-oj` - JSON - calls `to_json` on the object
 * `-oJ` - Pretty JSON calls `JSON.pretty_generate` with the object
@@ -740,9 +740,9 @@ You can also clear _all_ options specified up to a certain point in time with th
 For consistency with the `ruby` interpreter, rexe supports requires with the `-r` option, but also allows grouping them together using commas:
 
 ```bash
-                                    vvvvvvvvvvvvvvvvvvvvv
-$ echo $EUR_RATES_JSON | rexe -r json,awesome_print 'ap JSON.parse(STDIN.read)'
-                                    ^^^^^^^^^^^^^^^^^^^^^
+                                 vvvvvvvvvvvvvvvvvv
+$ echo $EUR_RATES_JSON | rexe -r json,amazing_print 'ap JSON.parse(STDIN.read)'
+                                 ^^^^^^^^^^^^^^^^^^
 ```
 
 Files loaded with the `-l` option are treated the same way.
@@ -808,7 +808,7 @@ $ rexe '2 * 7'
 
 #### Outputting ENV
 
-Output the contents of `ENV` using AwesomePrint [see footnote ^4 regarding ENV.to_s]:
+Output the contents of `ENV` using AmazingPrint [see footnote ^4 regarding ENV.to_s]:
 
 ```bash
 $ rexe -oa ENV

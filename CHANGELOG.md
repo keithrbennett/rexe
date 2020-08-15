@@ -1,9 +1,14 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
+### 1.5.0
+
+* Switch from AwesomePrint to AmazingPrint, and change all references in text, help, etc.
+
 
 ### 1.4.1
 
 * As of later versions of Ruby, `stringio` is a gem and must be required. Fixed.
+
 
 ### 1.4.0
 

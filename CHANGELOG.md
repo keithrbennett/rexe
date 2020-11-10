@@ -1,5 +1,10 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
+### 1.5.1
+
+* Change string concatenations using << to creation of new strings with += to accommodate default-frozen strings.
+
+
 ### 1.5.0
 
 * Switch from AwesomePrint to AmazingPrint, and change all references in text, help, etc.

@@ -15,7 +15,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.5.0'
+  VERSION = '1.5.1'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -123,7 +123,7 @@ class Rexe
 
     def formatters
       @formatters ||=  {
-          amazing_print: ->(obj)  { obj.ai << "\n" },
+          amazing_print: ->(obj)  { obj.ai + "\n" },
           inspect:       ->(obj)  { obj.inspect + "\n" },
           json:          ->(obj)  { obj.to_json },
           marshal:       ->(obj)  { Marshal.dump(obj) },
@@ -516,7 +516,7 @@ class Rexe
           raise error # re-raise the error, can't fix it
         else
           load_dir = File.dirname(gem_path)
-          $LOAD_PATH << load_dir
+          $LOAD_PATH += load_dir
           require the_require
         end
       end

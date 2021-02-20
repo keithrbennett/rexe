@@ -57,7 +57,7 @@ class Rexe
 
 
     def clear
-      self.input_filespec = nil
+      self.input_filespec      = nil
       self.input_format        = :none
       self.input_mode          = :none
       self.output_format       = :none
@@ -82,7 +82,7 @@ class Rexe
           'b' => :one_big_string,
           'n' => :none
       }
-    end
+    # end
 
 
     def input_formats
@@ -247,7 +247,7 @@ class Rexe
           to the command line so that you can specify options implicitly 
           (e.g. `export REXE_OPTIONS="-r amazing_print,yaml"`)
 
-      HEREDOC
+    HEREDOC
 
         @help_text.freeze
       end

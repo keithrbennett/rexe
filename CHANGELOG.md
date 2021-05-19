@@ -1,5 +1,10 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
+### 1.6
+
+* Add warning messages to stderr for unspecified options (input/output format, input mode), 
+  but only when logging is disabled.
+
 ### 1.5.1
 
 * Change string concatenations using << to creation of new strings with += to accommodate default-frozen strings.

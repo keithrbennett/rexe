@@ -1,6 +1,6 @@
 require "bundler/setup"
 
-REXE_FILE = File.join(File.dirname(__FILE__), '..', 'exe', 'rexe')
+REXE_FILE = File.expand_path(File.join(File.dirname(__FILE__), '..', 'exe', 'rexe'))
 
 # Use this so that testing rexe with requires not in the bundle will load successfully:
 RUN = ->(command) do

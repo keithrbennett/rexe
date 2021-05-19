@@ -21,6 +21,7 @@ RSpec.describe 'Rexe integration tests' do
 
   context '-v --version option' do
     specify 'version returned with --version is a valid version string' do
+
       expect(RUN.("#{REXE_FILE} --version")).to match(/\d+\.\d+\.\d+/)
     end
 
@@ -138,8 +139,8 @@ RSpec.describe 'Rexe integration tests' do
     end
 
     specify 'inspect (-oi), and to_s (-os) mode return equal and correct strings' do
-      inspect_output = RUN.(%Q{#{REXE_FILE} -c -mn -oi '[ { 10 => 100 }, 200 ]' 2>&1})
-      to_s_output    = RUN.(%Q{#{REXE_FILE} -c -mn -os '[ { 10 => 100 }, 200 ]' 2>&1})
+      inspect_output = RUN.(%Q{#{REXE_FILE} -c -mn -oi '[ { 10 => 100 }, 200 ]' })
+      to_s_output    = RUN.(%Q{#{REXE_FILE} -c -mn -os '[ { 10 => 100 }, 200 ]' })
 
       expect(to_s_output).to eq(inspect_output)
       expect(to_s_output).to eq(%Q{[{10=>100}, 200]\n})
@@ -147,11 +148,8 @@ RSpec.describe 'Rexe integration tests' do
 
 
     specify '-op (puts) format works correctly' do
-      puts_output = RUN.(%Q{#{REXE_FILE} -c -mn -op "[ { 10 => 100 }, 200 ]" 2>&1})
-      expect(puts_output).to eq( \
-%q{{10=>100}
-200
-})
+      puts_output = RUN.(%Q{#{REXE_FILE} -c -mn -op "[ { 10 => 100 }, 200 ]"})
+      expect(puts_output).to eq( %Q{{10=>100}\n200\n})
     end
 
     specify '-om marshall mode works' do
@@ -166,7 +164,7 @@ RSpec.describe 'Rexe integration tests' do
   context '-g logging' do
 
     specify '-gy option enables log in YAML format mode' do
-      text = RUN.(%Q{#{REXE_FILE} -c -mn -gy -on String.new 2>&1})
+      text = RUN.(%Q{#{REXE_FILE} -c -in -mn -gy -on String.new 2>&1})
       reconstructed_hash = YAML.load(text)
       expect(reconstructed_hash).to be_a(Hash)
       expect(reconstructed_hash[:count]).to eq(0)
@@ -218,11 +216,11 @@ RSpec.describe 'Rexe integration tests' do
     end
 
     specify '-gn option disables log' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -gn -mn -on 3 2>&1}).chomp).to eq('')
+      expect(RUN.(%Q{#{REXE_FILE} -c -in -gn -mn -on 3 2>&1}).chomp).to eq('')
     end
 
     specify 'not specifying a -g option disables log' do
-      expect(RUN.(%Q{#{REXE_FILE} -c -mn -on 3 2>&1}).chomp).to eq('')
+      expect(RUN.(%Q{#{REXE_FILE} -c -in -mn -on 3 2>&1}).chomp).to eq('')
     end
 
     specify '-gm marshall mode works' do
@@ -329,7 +327,7 @@ RSpec.describe 'Rexe integration tests' do
       file_containing('', '.txt') do |filespec|
         log_yaml = RUN.(%Q{rexe -f #{filespec} -n -gy 2>&1})
         log = YAML.load(log_yaml)
-        expect(log[:options][:input_mode]).to   eq(:none)
+        expect(log[:options][:input_mode]).to eq(:none)
         expect(log[:options][:input_format]).to eq(:none)
       end
     end

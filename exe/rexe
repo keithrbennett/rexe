@@ -15,7 +15,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.5.1'
+  VERSION = '1.6.0'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -82,7 +82,7 @@ class Rexe
           'b' => :one_big_string,
           'n' => :none
       }
-    # end
+    end
 
 
     def input_formats
@@ -289,6 +289,29 @@ class Rexe
 
       prepend_environment_options
 
+      input_mode_specified = false
+      input_format_specified = false
+      output_format_specified = false
+
+      report_unspecified_options = ->() do
+        messages = []
+
+        unless input_mode_specified
+          messages << 'Input mode not specified. Defaulting to -mn (none).'
+        end
+        unless input_format_specified
+          messages << 'Input format not specified. Defaulting to -in (none).'
+        end
+        unless output_format_specified
+          messages << 'Output mode not specified. Defaulting to -on (none).'
+        end
+
+        if messages.any?
+          $stderr.puts("#{messages.join("\n")}")
+          $stderr.puts("See help (run with -h) for more information.\n\n")
+        end
+      end
+
       OptionParser.new do |parser|
 
         parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
@@ -302,8 +325,10 @@ class Rexe
           end
           options.input_filespec = v
           options.input_format = autodetect_file_format(v)
+          input_format_specified = true
           if [:json, :yaml].include?(options.input_format)
             options.input_mode = :one_big_string
+            input_mode_specified = true
           end
         end
 
@@ -326,6 +351,7 @@ class Rexe
           if options.input_format.nil?
             raise("Input mode was '#{v}' but must be one of #{lookups.input_formats.keys}.")
           end
+          input_format_specified = true
         end
 
         parser.on('-l', '--load RUBY_FILE(S)', 'Ruby file(s) to load, comma separated, or ! to clear') do |v|
@@ -353,6 +379,7 @@ class Rexe
           if options.input_mode.nil?
             raise("Input mode was '#{v}' but must be one of #{lookups.input_modes.keys}.")
           end
+          input_mode_specified = true
         end
 
         # See https://stackoverflow.com/questions/54576873/ruby-optionparser-short-code-for-boolean-option
@@ -371,6 +398,7 @@ class Rexe
           if [options.output_format_tty, options.output_format_block].include?(nil)
             raise("Bad output mode '#{v}'; each must be one of #{lookups.output_formats.keys}.")
           end
+          output_format_specified = true
         end
 
         parser.on('-r', '--require REQUIRE(S)',
@@ -413,6 +441,7 @@ class Rexe
       options.requires = options.requires.sort.uniq
       options.loads.uniq!
 
+      report_unspecified_options.() if options.log_format == :none
       options
 
     end

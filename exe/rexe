@@ -361,7 +361,7 @@ class Rexe
             loadfiles = v.split(',').map(&:strip).map { |s| File.expand_path(s) }
             removes, adds = loadfiles.partition { |filespec| filespec[0] == '-' }
 
-            existent, nonexistent = adds.partition { |filespec| File.exists?(filespec) }
+            existent, nonexistent = adds.partition { |filespec| File.exist?(filespec) }
             if nonexistent.any?
               raise("\nDid not find the following files to load: #{nonexistent}\n\n")
             else
@@ -465,7 +465,7 @@ class Rexe
 
     private def load_global_config_if_exists
       filespec = File.join(Dir.home, '.rexerc')
-      load(filespec) if File.exists?(filespec)
+      load(filespec) if File.exist?(filespec)
     end
 
 

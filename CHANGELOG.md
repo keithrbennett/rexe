@@ -1,7 +1,8 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
-### 1.6
+### 1.6.0
 
+* Replace calls to `exists?`, which has been removed, with `exist?`.
 * Add warning messages to stderr for unspecified options (input/output format, input mode), 
   but only when logging is disabled.
 

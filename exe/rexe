@@ -24,14 +24,12 @@ class Rexe
 
     # Try executing code. If error raised, print message (but not stack trace) & exit -1.
     def try
-      begin
-        yield
-      rescue StandardError => e
-        unless e.class == SystemExit
-          $stderr.puts("rexe: #{e}")
-          $stderr.puts("Use the -h option to get help.")
-          exit(-1)
-        end
+      yield
+    rescue StandardError => e
+      unless e.instance_of?(SystemExit)
+        $stderr.puts("rexe: #{e}")
+        $stderr.puts('Use the -h option to get help.')
+        exit(-1)
       end
     end
   end
@@ -257,7 +255,7 @@ class Rexe
       extension = File.extname(filespec).downcase
       if extension == '.json'
         :json
-      elsif extension == '.yml' || extension == '.yaml'
+      elsif %w{.yml .yaml}.include?(extension)
         :yaml
       else
         :none
@@ -289,7 +287,7 @@ class Rexe
       input_format_specified = false
       output_format_specified = false
 
-      report_unspecified_options = ->() do
+      report_unspecified_options = -> do
         messages = []
 
         unless input_mode_specified
@@ -303,14 +301,14 @@ class Rexe
         end
 
         if messages.any?
-          $stderr.puts("#{messages.join("\n")}")
+          $stderr.puts(messages.join("\n"))
           $stderr.puts("See help (run with -h) for more information.\n\n")
         end
       end
 
       OptionParser.new do |parser|
 
-        parser.on('-c', '--clear_options', "Clear all previous command line options") do |v|
+        parser.on('-c', '--clear_options', 'Clear all previous command line options') do |v|
           options.clear
         end
 
@@ -335,7 +333,7 @@ class Rexe
           end
         end
 
-        parser.on("-h", "--help", "Show help") do |_help_requested|
+        parser.on("-h", "--help", 'Show help') do |_help_requested|
           puts help_text
           exit
         end
@@ -533,17 +531,15 @@ class Rexe
     # Bypasses Bundler's restriction on loading gems
     # (see https://stackoverflow.com/questions/55144094/bundler-doesnt-permit-using-gems-in-project-home-directory)
     private def require!(the_require)
-      begin
+      require the_require
+    rescue LoadError => error
+      gem_path = `gem which #{the_require}`
+      if gem_path.chomp.strip.empty?
+        raise error # re-raise the error, can't fix it
+      else
+        load_dir = File.dirname(gem_path)
+        $LOAD_PATH += load_dir
         require the_require
-      rescue LoadError => error
-        gem_path = `gem which #{the_require}`
-        if gem_path.chomp.strip.empty?
-          raise error # re-raise the error, can't fix it
-        else
-          load_dir = File.dirname(gem_path)
-          $LOAD_PATH += load_dir
-          require the_require
-        end
       end
     end
 

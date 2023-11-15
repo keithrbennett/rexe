@@ -135,7 +135,7 @@ before processing the input.
 
 If there is a REXE_OPTIONS environment variable, its content will be prepended
 to the command line so that you can specify options implicitly 
-(e.g. `export REXE_OPTIONS="-r amazing_print,yaml"`)
+(e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 ```
 
 ### Simplifying the Rexe Invocation
@@ -239,11 +239,11 @@ $ echo $EUR_RATES_JSON | rexe -gy -ij -mb -oa -n self
   :input_format: :json
   :input_mode: :one_big_string
   :loads: []
-  :output_format: :amazing_print
-  :output_format_tty: :amazing_print
-  :output_format_block: :amazing_print
+  :output_format: :awesome_print
+  :output_format_tty: :awesome_print
+  :output_format_block: :awesome_print
   :requires:
-  - amazing_print
+  - awesome_print
   - json
   - yaml
   :log_format: :yaml
@@ -741,7 +741,7 @@ For consistency with the `ruby` interpreter, rexe supports requires with the `-r
 
 ```bash
                                  vvvvvvvvvvvvvvvvvv
-$ echo $EUR_RATES_JSON | rexe -r json,amazing_print 'ap JSON.parse(STDIN.read)'
+$ echo $EUR_RATES_JSON | rexe -r json,awesome_print 'ap JSON.parse(STDIN.read)'
                                  ^^^^^^^^^^^^^^^^^^
 ```
 

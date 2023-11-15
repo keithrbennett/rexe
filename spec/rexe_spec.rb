@@ -209,7 +209,7 @@ RSpec.describe 'Rexe integration tests' do
     end
 
 
-    specify '-ga option enables log in Amazing Print format mode' do
+    specify '-ga option enables log in Awesome Print format mode' do
       text = RUN.(%Q{#{REXE_FILE} -c -mn -ga -on String.new 2>&1})
       expect(text).to include(':count =>')
       expect(text).to include(':rexe_version =>')

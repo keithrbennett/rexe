@@ -15,7 +15,7 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.6.0'
+  VERSION = '1.6.1-pre'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
@@ -26,7 +26,7 @@ class Rexe
     def try
       begin
         yield
-      rescue Exception => e
+      rescue StandardError => e
         unless e.class == SystemExit
           $stderr.puts("rexe: #{e}")
           $stderr.puts("Use the -h option to get help.")
@@ -71,9 +71,6 @@ class Rexe
   end
 
 
-
-
-
   class Lookups
     def input_modes
       @input_modes ||= {
@@ -107,7 +104,7 @@ class Rexe
 
     def output_formats
       @output_formats ||= {
-          'a' => :amazing_print,
+          'a' => :awesome_print,
           'i' => :inspect,
           'j' => :json,
           'J' => :pretty_json,
@@ -123,7 +120,7 @@ class Rexe
 
     def formatters
       @formatters ||=  {
-          amazing_print: ->(obj)  { obj.ai + "\n" },
+          awesome_print: ->(obj)  { obj.ai + "\n" },
           inspect:       ->(obj)  { obj.inspect + "\n" },
           json:          ->(obj)  { obj.to_json },
           marshal:       ->(obj)  { Marshal.dump(obj) },
@@ -141,13 +138,12 @@ class Rexe
       @format_requires ||= {
           json:          'json',
           pretty_json:   'json',
-          amazing_print: 'amazing_print',
+          awesome_print: 'awesome_print',
           pretty_print:  'pp',
           yaml:          'yaml'
       }
     end
   end
-
 
 
   class CommandLineParser
@@ -245,7 +241,7 @@ class Rexe
       
           If there is a REXE_OPTIONS environment variable, its content will be prepended
           to the command line so that you can specify options implicitly 
-          (e.g. `export REXE_OPTIONS="-r amazing_print,yaml"`)
+          (e.g. `export REXE_OPTIONS="-r awesome_print,yaml"`)
 
     HEREDOC
 

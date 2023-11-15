@@ -1,5 +1,10 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
+### 1.6.1
+
+* Replace amazing_print dependency with awesome_print.
+
+
 ### 1.6.0
 
 * Replace calls to `exists?`, which has been removed, with `exist?`.

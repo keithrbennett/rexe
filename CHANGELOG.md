@@ -1,6 +1,6 @@
 ## rexe -- Ruby Command Line Executor/Filter
 
-### 1.6.1
+### 1.7.0
 
 * Replace amazing_print dependency with awesome_print.
 * Effectively disable `try` method, i.e. print stack trace on errors.

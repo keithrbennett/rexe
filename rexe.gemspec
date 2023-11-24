@@ -51,7 +51,6 @@ Gem::Specification.new do |spec|
   # Remove this message (added November 2023) later (maybe July 2024).
   spec.post_install_message = <<~MESSAGE
     Starting with v1.6.1, awesome_print is now used instead of amazing_print 
-    for fancy human readable output. Rexe will still function without it, 
-    but if it is present, it will be used.
+    for fancy human readable output.
   MESSAGE
 end

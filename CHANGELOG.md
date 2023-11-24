@@ -3,6 +3,8 @@
 ### 1.6.1
 
 * Replace amazing_print dependency with awesome_print.
+* Effectively disable `try` method, i.e. print stack trace on errors.
+* In `try` method, rescue StandardError instead of Exception.
 
 
 ### 1.6.0

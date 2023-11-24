@@ -15,22 +15,26 @@ require 'shellwords'
 
 class Rexe
 
-  VERSION = '1.6.1-pre'
+  VERSION = '1.6.1'
 
   PROJECT_URL = 'https://github.com/keithrbennett/rexe'
 
 
   module Helpers
 
-    # Try executing code. If error raised, print message (but not stack trace) & exit -1.
+    # Originally the entire run was wrapped in this rescue to make error output more concise.
+    # However, I am concerned that hiding the stack trace will make it harder to debug,
+    # and be worse than the ugliness of showing it when it is not needed. So, I am commenting
+    # out the rescue for now, and will see how it goes. If you have any opinions on this,
+    # please let me know at https://github.com/keithrbennett/rexe/issues/5 .
+    #
+    # (disabled) Try executing code. If error raised, print message (but not stack trace) & exit -1.
     def try
       yield
-    rescue StandardError => e
-      unless e.instance_of?(SystemExit)
-        $stderr.puts("rexe: #{e}")
-        $stderr.puts('Use the -h option to get help.')
-        exit(-1)
-      end
+    # rescue StandardError => e
+    #   $stderr.puts("rexe ERROR: #{e}")
+    #   $stderr.puts('Use the -h option to get help.')
+    #   exit(-1)
     end
   end
 

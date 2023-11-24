@@ -3,6 +3,9 @@ Gem::Specification.new do |spec|
   spec.name          = "rexe"
 
   spec.version       = -> do
+    # This is a bit of a kludge. If there is a commented out VERSION line preceding the active line,
+    # this will read the commented line.
+    # TODO: Ignore comment lines.
     rexe_file = File.join(File.dirname(__FILE__), 'exe', 'rexe')
     version_line = File.readlines(rexe_file).grep(/\s*VERSION\s*=\s*'/).first.chomp
     version_line.match(/'(.+)'/)[0].gsub("'", '')
@@ -43,5 +46,12 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "os"
   spec.add_development_dependency "rake", "~> 12.3"
-  spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "rspec", "~> 3.12"
+
+  # Remove this message (added November 2023) later (maybe July 2024).
+  spec.post_install_message = <<~MESSAGE
+    Starting with v1.6.1, awesome_print is now used instead of amazing_print 
+    for fancy human readable output. Rexe will still function without it, 
+    but if it is present, it will be used.
+  MESSAGE
 end

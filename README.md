@@ -2,7 +2,7 @@
 
 __Rexe__ is a Ruby script and gem that multiplies Ruby's usefulness and conciseness on the command line by:
 
-* automating parsing and formatting using JSON, YAML, Ruby marshalling, Amazing Print, and others
+* automating parsing and formatting using JSON, YAML, CSV, Ruby marshalling, Amazing Print, and others
 * simplifying the use of Ruby as a shell filter, optionally predigesting input as lines, an enumerator, or one big string
 * extracting the plumbing from the command line; requires and other options can be set in an environment variable
 * enabling the loading of Ruby helper files to keep your code DRY and your command line code high level

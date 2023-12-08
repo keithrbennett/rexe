@@ -86,6 +86,7 @@ class Rexe
 
     def input_formats
       @input_formats ||=  {
+          'c' => :csv,
           'j' => :json,
           'm' => :marshal,
           'n' => :none,
@@ -96,6 +97,7 @@ class Rexe
 
     def input_parsers
       @input_parsers ||= {
+          csv:     ->(string)  { CSV.parse(string, headers: true) },
           json:    ->(string)  { JSON.parse(string) },
           marshal: ->(string)  { Marshal.load(string) },
           none:    ->(string)  { string },
@@ -107,6 +109,7 @@ class Rexe
     def output_formats
       @output_formats ||= {
           'a' => :awesome_print,
+          'c' => :csv,
           'i' => :inspect,
           'j' => :json,
           'J' => :pretty_json,
@@ -123,6 +126,7 @@ class Rexe
     def formatters
       @formatters ||=  {
           awesome_print: ->(obj)  { obj.ai + "\n" },
+          csv:           ->(obj)  { obj.to_csv },
           inspect:       ->(obj)  { obj.inspect + "\n" },
           json:          ->(obj)  { obj.to_json },
           marshal:       ->(obj)  { Marshal.dump(obj) },

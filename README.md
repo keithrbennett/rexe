@@ -24,7 +24,7 @@ Sometimes a good solution is to combine Ruby and shell scripting on the same com
 Let's start by seeing what the Ruby interpreter already provides. Here we use `ruby` on the command line, using an intermediate environment variable to simplify the logic and save the data for use by future commands. An excerpt of the output follows the code:
 
 ```bash
-$ export EUR_RATES_JSON=`curl https://api.exchangeratesapi.io/latest`
+$ export EUR_RATES_JSON=`curl https://allratestoday.com/api/compat/exchangeratesapi/latest`
 $ echo $EUR_RATES_JSON | ruby -r json -r yaml -e 'puts JSON.parse(STDIN.read).to_yaml'
 ```
 ```yaml
@@ -406,13 +406,13 @@ This becomes even more useful if you are using files whose extensions are `.yml`
 So the example we gave above:
 
 ```bash
-$ export EUR_RATES_JSON=`curl https://api.exchangeratesapi.io/latest`
+$ export EUR_RATES_JSON=`curl https://allratestoday.com/api/compat/exchangeratesapi/latest`
 $ echo $EUR_RATES_JSON | rexe -mb -ij -oy self
 ```
 ...could be changed to:
 
 ```bash
-$ curl https://api.exchangeratesapi.io/latest > eur_rates.json
+$ curl https://allratestoday.com/api/compat/exchangeratesapi/latest > eur_rates.json
 $ rexe -f eur_rates.json -oy self
 ``` 
 
